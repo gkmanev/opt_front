@@ -26,9 +26,14 @@ const normalizeWeeklyInvestment = (idea) => ({
 });
 
 export const getWeeklyInvestments = async () => {
-  const data = await request(weeklyInvestmentsPath);
-  const list = Array.isArray(data) ? data : data.results ?? data.investments ?? [];
-  return list.map((idea) => normalizeWeeklyInvestment(idea));
+  try {
+    const data = await request(weeklyInvestmentsPath);
+    console.log('[getWeeklyInvestments] raw response', data);
+    const list = Array.isArray(data) ? data : data.results ?? data.investments ?? [];
+    return list.map((idea) => normalizeWeeklyInvestment(idea));
+  } catch (error) {
+    console.error('[getWeeklyInvestments] request failed', error);
+    return [];
+  }
 };
-console.log(getWeeklyInvestments)
 export const apiBaseUrl = baseUrl;
