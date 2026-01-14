@@ -247,6 +247,49 @@ main {
   color: rgba(255, 255, 255, 0.5);
 }
 
+.table-head .table-sort {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.table-head .table-sort .sort-indicator {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.table-head .table-sort.active .sort-indicator {
+  opacity: 1;
+  color: #4ee1ff;
+}
+
+.table-pagination {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.table-pagination .ghost:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .ticker {
   display: flex;
   flex-direction: column;
@@ -302,5 +345,10 @@ main {
 
   .investments-table .table-row {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .table-pagination {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

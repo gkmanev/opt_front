@@ -9,14 +9,62 @@
     </header>
     <div class="table investments-table">
       <div class="table-row table-head">
-        <span>Ticker</span>
-        <span>Exp. Date</span>
-        <span>Price</span>
-        <span>Delta</span>
-        <span>RSI</span>
-        <span>ROI</span>
+        <button
+          class="table-sort"
+          type="button"
+          :class="{ active: sortKey === 'ticker' }"
+          @click="toggleSort('ticker')"
+        >
+          Ticker
+          <span class="sort-indicator">{{ sortIndicator('ticker') }}</span>
+        </button>
+        <button
+          class="table-sort"
+          type="button"
+          :class="{ active: sortKey === 'expDate' }"
+          @click="toggleSort('expDate')"
+        >
+          Exp. Date
+          <span class="sort-indicator">{{ sortIndicator('expDate') }}</span>
+        </button>
+        <button
+          class="table-sort"
+          type="button"
+          :class="{ active: sortKey === 'price' }"
+          @click="toggleSort('price')"
+        >
+          Price
+          <span class="sort-indicator">{{ sortIndicator('price') }}</span>
+        </button>
+        <button
+          class="table-sort"
+          type="button"
+          :class="{ active: sortKey === 'delta' }"
+          @click="toggleSort('delta')"
+        >
+          Delta
+          <span class="sort-indicator">{{ sortIndicator('delta') }}</span>
+        </button>
+        <button
+          class="table-sort"
+          type="button"
+          :class="{ active: sortKey === 'rsi' }"
+          @click="toggleSort('rsi')"
+        >
+          RSI
+          <span class="sort-indicator">{{ sortIndicator('rsi') }}</span>
+        </button>
+        <button
+          class="table-sort"
+          type="button"
+          :class="{ active: sortKey === 'roi' }"
+          @click="toggleSort('roi')"
+        >
+          ROI
+          <span class="sort-indicator">{{ sortIndicator('roi') }}</span>
+        </button>
       </div>
-      <div v-for="idea in investments" :key="ideaKey(idea)" class="table-row">
+      <div v-for="idea in paginatedInvestments" :key="ideaKey(idea)" class="table-row">
         <span class="ticker">
           <strong>{{ idea.ticker ?? '—' }}</strong>
         </span>
@@ -28,19 +76,130 @@
       </div>
       <p v-if="!investments.length" class="subtle">No weekly options ideas available.</p>
     </div>
+    <div v-if="investments.length" class="table-pagination">
+      <p class="subtle">
+        Showing {{ pageStart }}-{{ pageEnd }} of {{ sortedInvestments.length }}
+      </p>
+      <div class="pagination-controls">
+        <button
+          class="ghost"
+          type="button"
+          :disabled="currentPage === 1"
+          @click="goToPage(currentPage - 1)"
+        >
+          Previous
+        </button>
+        <span>{{ currentPage }} / {{ totalPages }}</span>
+        <button
+          class="ghost"
+          type="button"
+          :disabled="currentPage === totalPages"
+          @click="goToPage(currentPage + 1)"
+        >
+          Next
+        </button>
+      </div>
+    </div>
   </section>
 </template>
 
 <script setup>
-defineProps({
+import { computed, ref, watch } from 'vue';
+
+const props = defineProps({
   investments: {
     type: Array,
     required: true,
   },
 });
 
+const sortKey = ref('expDate');
+const sortDirection = ref('asc');
+const currentPage = ref(1);
+const pageSize = ref(6);
+
+const columns = [
+  {
+    key: 'ticker',
+    type: 'string',
+    getValue: (idea) => idea.ticker ?? '',
+  },
+  {
+    key: 'expDate',
+    type: 'date',
+    getValue: (idea) => idea.exp_date ?? idea.expiration_date ?? idea.expDate,
+  },
+  {
+    key: 'price',
+    type: 'number',
+    getValue: (idea) => idea.price,
+  },
+  {
+    key: 'delta',
+    type: 'number',
+    getValue: (idea) => idea.delta,
+  },
+  {
+    key: 'rsi',
+    type: 'number',
+    getValue: (idea) => idea.rsi,
+  },
+  {
+    key: 'roi',
+    type: 'number',
+    getValue: (idea) => idea.roi,
+  },
+];
+
+const columnByKey = new Map(columns.map((column) => [column.key, column]));
+
 const ideaKey = (idea) =>
   `${idea.ticker ?? 'unknown'}-${idea.exp_date ?? idea.expiration_date ?? idea.expDate ?? ''}-${idea.strike ?? ''}`;
+
+const normalizedSortValue = (column, idea) => {
+  const rawValue = column.getValue(idea);
+  if (rawValue === null || rawValue === undefined || rawValue === '') {
+    return column.type === 'string' ? '' : Number.NEGATIVE_INFINITY;
+  }
+  if (column.type === 'date') {
+    const timestamp = Date.parse(rawValue);
+    return Number.isNaN(timestamp) ? Number.NEGATIVE_INFINITY : timestamp;
+  }
+  if (column.type === 'number') {
+    const number = Number(rawValue);
+    return Number.isNaN(number) ? Number.NEGATIVE_INFINITY : number;
+  }
+  return String(rawValue).toLowerCase();
+};
+
+const sortedInvestments = computed(() => {
+  const column = columnByKey.get(sortKey.value);
+  if (!column) return [...props.investments];
+  const direction = sortDirection.value === 'asc' ? 1 : -1;
+  return [...props.investments].sort((first, second) => {
+    const firstValue = normalizedSortValue(column, first);
+    const secondValue = normalizedSortValue(column, second);
+    if (firstValue === secondValue) return 0;
+    return firstValue > secondValue ? direction : -direction;
+  });
+});
+
+const totalPages = computed(() =>
+  Math.max(1, Math.ceil(sortedInvestments.value.length / pageSize.value)),
+);
+
+const paginatedInvestments = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return sortedInvestments.value.slice(start, start + pageSize.value);
+});
+
+const pageStart = computed(() =>
+  sortedInvestments.value.length ? (currentPage.value - 1) * pageSize.value + 1 : 0,
+);
+
+const pageEnd = computed(() =>
+  Math.min(currentPage.value * pageSize.value, sortedInvestments.value.length),
+);
 
 const formatDate = (value) => {
   if (!value) return '—';
@@ -71,4 +230,30 @@ const numberClass = (value) => {
   if (number < 0) return 'negative';
   return '';
 };
+
+const toggleSort = (key) => {
+  if (sortKey.value === key) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortKey.value = key;
+    sortDirection.value = 'asc';
+  }
+  currentPage.value = 1;
+};
+
+const sortIndicator = (key) => {
+  if (sortKey.value !== key) return '↕';
+  return sortDirection.value === 'asc' ? '↑' : '↓';
+};
+
+const goToPage = (page) => {
+  const next = Math.min(Math.max(page, 1), totalPages.value);
+  currentPage.value = next;
+};
+
+watch(totalPages, (value) => {
+  if (currentPage.value > value) {
+    currentPage.value = value;
+  }
+});
 </script>
