@@ -236,6 +236,10 @@ main {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.investments-table .table-row {
+  grid-template-columns: 1fr 1fr 0.8fr 0.7fr 0.6fr 0.7fr;
+}
+
 .table-head {
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -294,5 +298,9 @@ main {
   .table-row {
     grid-template-columns: 1fr 1fr;
     row-gap: 0.5rem;
+  }
+
+  .investments-table .table-row {
+    grid-template-columns: 1fr 1fr;
   }
 }
