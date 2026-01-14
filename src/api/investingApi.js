@@ -1,4 +1,4 @@
-const baseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
+const baseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://209.38.208.230:8080';
 const weeklyInvestmentsPath =
   '/api/investments/?weekly_options=true&screener_type=Custom%20screener%20filterV3';
 
@@ -30,5 +30,5 @@ export const getWeeklyInvestments = async () => {
   const list = Array.isArray(data) ? data : data.results ?? data.investments ?? [];
   return list.map((idea) => normalizeWeeklyInvestment(idea));
 };
-
+console.log(getWeeklyInvestments)
 export const apiBaseUrl = baseUrl;
