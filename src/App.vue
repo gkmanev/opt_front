@@ -210,6 +210,7 @@ const loadData = async () => {
       getMarketMovers(),
       getWeeklyInvestments(),
     ]);
+    console.log('investmentsData', investmentsData);
 
     applyData({
       summary: summaryData,
