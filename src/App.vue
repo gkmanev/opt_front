@@ -59,6 +59,7 @@
         </div>
 
         <SummaryCards :summary="summary" />
+        <InvestmentsTable :investments="investments" />
         <PositionsTable :positions="positions" />
         <MarketMovers :movers="movers" />
       </div>
@@ -68,8 +69,15 @@
 
 <script setup>
 import { onMounted, ref } from 'vue';
-import { apiBaseUrl, getMarketMovers, getPositions, getSummary } from './api/investingApi';
+import {
+  apiBaseUrl,
+  getMarketMovers,
+  getPositions,
+  getSummary,
+  getWeeklyInvestments,
+} from './api/investingApi';
 import SummaryCards from './components/SummaryCards.vue';
+import InvestmentsTable from './components/InvestmentsTable.vue';
 import PositionsTable from './components/PositionsTable.vue';
 import MarketMovers from './components/MarketMovers.vue';
 
@@ -84,6 +92,7 @@ const summary = ref({
 });
 const positions = ref([]);
 const movers = ref({ gainers: [], losers: [] });
+const investments = ref([]);
 
 const summarySnapshot = ref({
   openPositions: 0,
@@ -147,6 +156,32 @@ const fallback = {
       { ticker: 'DIS', name: 'Disney', change: -2.1 },
     ],
   },
+  investments: [
+    {
+      ticker: 'SPY',
+      exp_date: '2024-08-02',
+      price: 2.15,
+      delta: 0.32,
+      rsi: 58,
+      roi: 12.4,
+    },
+    {
+      ticker: 'QQQ',
+      exp_date: '2024-08-02',
+      price: 1.88,
+      delta: 0.28,
+      rsi: 61,
+      roi: 10.1,
+    },
+    {
+      ticker: 'TSLA',
+      exp_date: '2024-08-02',
+      price: 3.42,
+      delta: -0.21,
+      rsi: 44,
+      roi: -4.6,
+    },
+  ],
   snapshot: {
     openPositions: 14,
     watchlist: 6,
@@ -161,6 +196,7 @@ const applyData = (data) => {
   positions.value = data.positions;
   movers.value = data.movers;
   summarySnapshot.value = data.snapshot;
+  investments.value = data.investments;
 };
 
 const loadData = async () => {
@@ -168,16 +204,18 @@ const loadData = async () => {
   error.value = '';
 
   try {
-    const [summaryData, positionsData, moversData] = await Promise.all([
+    const [summaryData, positionsData, moversData, investmentsData] = await Promise.all([
       getSummary(),
       getPositions(),
       getMarketMovers(),
+      getWeeklyInvestments(),
     ]);
 
     applyData({
       summary: summaryData,
       positions: positionsData,
       movers: moversData,
+      investments: investmentsData,
       snapshot: {
         openPositions: positionsData.length,
         watchlist: moversData.losers?.length ?? 0,
