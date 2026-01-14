@@ -69,13 +69,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue';
-import {
-  apiBaseUrl,
-  getMarketMovers,
-  getPositions,
-  getSummary,
-  getWeeklyInvestments,
-} from './api/investingApi';
+import { apiBaseUrl, getWeeklyInvestments } from './api/investingApi';
 import SummaryCards from './components/SummaryCards.vue';
 import InvestmentsTable from './components/InvestmentsTable.vue';
 import PositionsTable from './components/PositionsTable.vue';
@@ -204,31 +198,26 @@ const loadData = async () => {
   error.value = '';
 
   try {
-    const [summaryData, positionsData, moversData, investmentsData] = await Promise.all([
-      getSummary(),
-      getPositions(),
-      getMarketMovers(),
-      getWeeklyInvestments(),
-    ]);
+    const investmentsData = await getWeeklyInvestments();
     console.log('investmentsData', investmentsData);
 
     applyData({
-      summary: summaryData,
-      positions: positionsData,
-      movers: moversData,
+      summary: fallback.summary,
+      positions: fallback.positions,
+      movers: fallback.movers,
       investments: investmentsData,
-      snapshot: {
-        openPositions: positionsData.length,
-        watchlist: moversData.losers?.length ?? 0,
-        cashRunway: summaryData.cashRunway ?? 'N/A',
-        riskSummary: summaryData.riskSummary ?? 'Risk signals are within expected thresholds.',
-        tags: summaryData.tags ?? ['Diversified', 'Options enabled'],
-      },
+      snapshot: fallback.snapshot,
     });
   } catch (err) {
-    applyData(fallback);
+    applyData({
+      summary: fallback.summary,
+      positions: fallback.positions,
+      movers: fallback.movers,
+      investments: [],
+      snapshot: fallback.snapshot,
+    });
     error.value =
-      'We could not reach the investing API. Set VITE_API_BASE_URL to your backend address to see live data.';
+      'We could not reach the weekly investments API. Set VITE_API_BASE_URL to your backend address to see live data.';
   } finally {
     loading.value = false;
   }
