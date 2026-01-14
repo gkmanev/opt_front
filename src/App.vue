@@ -59,7 +59,13 @@
         </div>
 
         <SummaryCards :summary="summary" />
-        <InvestmentsTable :investments="investments" />
+        <InvestmentsTable
+          :investments="investments"
+          :min-price="minPrice"
+          :max-price="maxPrice"
+          @update:min-price="minPrice = $event"
+          @update:max-price="maxPrice = $event"
+        />
         <PositionsTable :positions="positions" />
         <MarketMovers :movers="movers" />
       </div>
@@ -68,7 +74,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { apiBaseUrl, getWeeklyInvestments } from './api/investingApi';
 import SummaryCards from './components/SummaryCards.vue';
 import InvestmentsTable from './components/InvestmentsTable.vue';
@@ -87,6 +93,8 @@ const summary = ref({
 const positions = ref([]);
 const movers = ref({ gainers: [], losers: [] });
 const investments = ref([]);
+const minPrice = ref(0);
+const maxPrice = ref(200);
 
 const summarySnapshot = ref({
   openPositions: 0,
@@ -198,7 +206,10 @@ const loadData = async () => {
   error.value = '';
 
   try {
-    const investmentsData = await getWeeklyInvestments();
+    const investmentsData = await getWeeklyInvestments({
+      minPrice: minPrice.value,
+      maxPrice: maxPrice.value,
+    });
     console.log('investmentsData', investmentsData);
 
     applyData({
@@ -226,6 +237,14 @@ const loadData = async () => {
 const refresh = () => {
   loadData();
 };
+
+let priceFilterTimer;
+watch([minPrice, maxPrice], () => {
+  clearTimeout(priceFilterTimer);
+  priceFilterTimer = setTimeout(() => {
+    loadData();
+  }, 300);
+});
 
 onMounted(loadData);
 </script>

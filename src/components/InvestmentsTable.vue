@@ -7,6 +7,37 @@
       </div>
       <button class="ghost" type="button">Export</button>
     </header>
+    <div class="table-filters">
+      <div class="filter-group">
+        <div class="filter-header">
+          <span>Price range</span>
+          <strong>
+            ${{ formatFilterValue(localMinPrice) }} - ${{ formatFilterValue(localMaxPrice) }}
+          </strong>
+        </div>
+        <div class="range-slider">
+          <div class="range-track">
+            <span class="range-selection" :style="rangeSelectionStyle"></span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="200"
+            step="1"
+            :value="localMinPrice"
+            @input="onMinPriceInput"
+          />
+          <input
+            type="range"
+            min="0"
+            max="200"
+            step="1"
+            :value="localMaxPrice"
+            @input="onMaxPriceInput"
+          />
+        </div>
+      </div>
+    </div>
     <div class="table investments-table">
       <div class="table-row table-head">
         <button
@@ -111,12 +142,24 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  minPrice: {
+    type: Number,
+    default: 0,
+  },
+  maxPrice: {
+    type: Number,
+    default: 200,
+  },
 });
+
+const emit = defineEmits(['update:minPrice', 'update:maxPrice']);
 
 const sortKey = ref('expDate');
 const sortDirection = ref('asc');
 const currentPage = ref(1);
 const pageSize = ref(6);
+const localMinPrice = ref(props.minPrice);
+const localMaxPrice = ref(props.maxPrice);
 
 const columns = [
   {
@@ -201,6 +244,27 @@ const pageEnd = computed(() =>
   Math.min(currentPage.value * pageSize.value, sortedInvestments.value.length),
 );
 
+const rangeSelectionStyle = computed(() => {
+  const min = Number(localMinPrice.value);
+  const max = Number(localMaxPrice.value);
+  if (Number.isNaN(min) || Number.isNaN(max)) {
+    return { left: '0%', width: '100%' };
+  }
+  const clampedMin = Math.min(Math.max(min, 0), 200);
+  const clampedMax = Math.min(Math.max(max, 0), 200);
+  const start = Math.min(clampedMin, clampedMax);
+  const end = Math.max(clampedMin, clampedMax);
+  const left = (start / 200) * 100;
+  const width = ((end - start) / 200) * 100;
+  return { left: `${left}%`, width: `${width}%` };
+});
+
+const formatFilterValue = (value) => {
+  const number = Number(value);
+  if (Number.isNaN(number)) return '0';
+  return number.toFixed(0);
+};
+
 const formatDate = (value) => {
   if (!value) return '—';
   const date = new Date(value);
@@ -251,9 +315,45 @@ const goToPage = (page) => {
   currentPage.value = next;
 };
 
+const onMinPriceInput = (event) => {
+  const nextValue = Number(event.target.value);
+  if (Number.isNaN(nextValue)) return;
+  localMinPrice.value = nextValue;
+  if (nextValue > localMaxPrice.value) {
+    localMaxPrice.value = nextValue;
+    emit('update:maxPrice', nextValue);
+  }
+  emit('update:minPrice', nextValue);
+};
+
+const onMaxPriceInput = (event) => {
+  const nextValue = Number(event.target.value);
+  if (Number.isNaN(nextValue)) return;
+  localMaxPrice.value = nextValue;
+  if (nextValue < localMinPrice.value) {
+    localMinPrice.value = nextValue;
+    emit('update:minPrice', nextValue);
+  }
+  emit('update:maxPrice', nextValue);
+};
+
 watch(totalPages, (value) => {
   if (currentPage.value > value) {
     currentPage.value = value;
   }
 });
+
+watch(
+  () => props.minPrice,
+  (value) => {
+    localMinPrice.value = value;
+  },
+);
+
+watch(
+  () => props.maxPrice,
+  (value) => {
+    localMaxPrice.value = value;
+  },
+);
 </script>
