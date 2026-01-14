@@ -223,6 +223,85 @@ main {
   margin-bottom: 1rem;
 }
 
+.table-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 0.75rem 0 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.table-filters .filter-group {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.table-filters .filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.table-filters .range-slider {
+  position: relative;
+  display: grid;
+  align-items: center;
+  min-height: 28px;
+}
+
+.table-filters .range-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.table-filters .range-selection {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4ee1ff, #7a6cff);
+}
+
+.table-filters .range-slider input[type='range'] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  background: transparent;
+  pointer-events: none;
+  margin: 0;
+}
+
+.table-filters .range-slider input[type='range']::-webkit-slider-thumb {
+  pointer-events: auto;
+}
+
+.table-filters .range-slider input[type='range']::-moz-range-thumb {
+  pointer-events: auto;
+}
+
+.table-filters .range-slider input[type='range']::-webkit-slider-runnable-track {
+  background: transparent;
+}
+
+.table-filters .range-slider input[type='range']::-moz-range-track {
+  background: transparent;
+}
+
+.table-filters .range-slider input[type='range']:first-of-type {
+  z-index: 2;
+}
+
+.table-filters .range-slider input[type='range']:last-of-type {
+  z-index: 3;
+}
+
 .table {
   display: grid;
   gap: 0.6rem;
