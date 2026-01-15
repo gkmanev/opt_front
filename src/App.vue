@@ -281,6 +281,18 @@ const refresh = () => {
   loadData();
 };
 
+const buildTradingViewLink = (ticker) => {
+  if (!ticker) return '';
+  const cleaned = ticker.trim();
+  const normalized = cleaned.includes(':') ? cleaned.replace(':', '-') : cleaned;
+  return `https://www.tradingview.com/symbols/${normalized}/technicals/`;
+};
+
+const buildTradingViewSymbol = (ticker) => {
+  if (!ticker) return '';
+  return ticker.trim();
+};
+
 const renderWidget = () => {
   if (!widgetContainer.value || !activeTicker.value) return;
   widgetContainer.value.innerHTML = '';
@@ -294,7 +306,7 @@ const renderWidget = () => {
   copyright.className = 'tradingview-widget-copyright';
 
   const link = document.createElement('a');
-  link.href = `https://www.tradingview.com/symbols/NASDAQ-${activeTicker.value}/technicals/`;
+  link.href = buildTradingViewLink(activeTicker.value);
   link.rel = 'noopener nofollow';
   link.target = '_blank';
 
@@ -322,7 +334,7 @@ const renderWidget = () => {
     disableInterval: false,
     width: '100%',
     height: '100%',
-    symbol: `NASDAQ:${activeTicker.value}`,
+    symbol: buildTradingViewSymbol(activeTicker.value),
     showIntervalTabs: true,
   });
 
@@ -332,7 +344,7 @@ const renderWidget = () => {
 
 const openTicker = (ticker) => {
   if (!ticker) return;
-  activeTicker.value = ticker;
+  activeTicker.value = ticker.trim();
   isModalOpen.value = true;
   nextTick(renderWidget);
 };
