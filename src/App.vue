@@ -63,9 +63,13 @@
           :investments="investments"
           :min-price="minPrice"
           :max-price="maxPrice"
+          :min-rsi="minRsi"
+          :max-rsi="maxRsi"
           :min-roi="minRoi"
           @update:min-price="minPrice = $event"
           @update:max-price="maxPrice = $event"
+          @update:min-rsi="minRsi = $event"
+          @update:max-rsi="maxRsi = $event"
           @update:min-roi="minRoi = $event"
         />
         <PositionsTable :positions="positions" />
@@ -97,6 +101,8 @@ const movers = ref({ gainers: [], losers: [] });
 const investments = ref([]);
 const minPrice = ref(0);
 const maxPrice = ref(200);
+const minRsi = ref(0);
+const maxRsi = ref(100);
 const minRoi = ref(null);
 
 const summarySnapshot = ref({
@@ -212,6 +218,8 @@ const loadData = async () => {
     const investmentsData = await getWeeklyInvestments({
       minPrice: minPrice.value,
       maxPrice: maxPrice.value,
+      minRsi: minRsi.value,
+      maxRsi: maxRsi.value,
       minRoi: minRoi.value,
     });
     console.log('investmentsData', investmentsData);
@@ -243,7 +251,7 @@ const refresh = () => {
 };
 
 let priceFilterTimer;
-watch([minPrice, maxPrice, minRoi], () => {
+watch([minPrice, maxPrice, minRsi, maxRsi, minRoi], () => {
   clearTimeout(priceFilterTimer);
   priceFilterTimer = setTimeout(() => {
     loadData();
