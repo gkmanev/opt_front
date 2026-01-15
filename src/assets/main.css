@@ -526,7 +526,7 @@ main {
 }
 
 .modal-card {
-  width: min(900px, 100%);
+  width: min(1120px, 100%);
   background: #10162b;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
@@ -549,6 +549,7 @@ main {
 
 .modal-grid {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.5rem;
 }
 
@@ -627,6 +628,10 @@ main {
 }
 
 @media (max-width: 900px) {
+  .modal-grid {
+    grid-template-columns: 1fr;
+  }
+
   .hero-metrics {
     flex-direction: column;
   }
