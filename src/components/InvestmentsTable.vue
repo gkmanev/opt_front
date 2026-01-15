@@ -106,6 +106,28 @@
           </button>
         </div>
       </div>
+      <div class="filter-group">
+        <div class="filter-header">
+          <span>Prob. of expiration</span>
+          <strong>{{ expirationLabel }}</strong>
+        </div>
+        <div class="filter-controls">
+          <select class="select" :value="localMinExpiration" @change="onMinExpirationChange">
+            <option value="">Any</option>
+            <option value="70">&gt; 70%</option>
+            <option value="75">&gt; 75%</option>
+            <option value="80">&gt; 80%</option>
+          </select>
+          <button
+            class="ghost find-button"
+            type="button"
+            :disabled="!hasExpirationChanges"
+            @click="applyExpirationFilter"
+          >
+            Find
+          </button>
+        </div>
+      </div>
     </div>
     <div class="table investments-table">
       <div class="table-row table-head">
@@ -231,6 +253,10 @@ const props = defineProps({
     type: Number,
     default: null,
   },
+  minDelta: {
+    type: Number,
+    default: null,
+  },
 });
 
 const emit = defineEmits([
@@ -239,6 +265,7 @@ const emit = defineEmits([
   'update:minRsi',
   'update:maxRsi',
   'update:minRoi',
+  'update:minDelta',
 ]);
 
 const sortKey = ref('expDate');
@@ -252,6 +279,22 @@ const localMaxRsi = ref(props.maxRsi);
 const localMinRoi = ref(
   props.minRoi === null || props.minRoi === undefined ? '' : String(props.minRoi),
 );
+const localMinExpiration = ref(
+  props.minDelta === null || props.minDelta === undefined
+    ? ''
+    : String(100 + Number(props.minDelta) * 100),
+);
+
+const expirationThreshold = (minDelta) => {
+  if (minDelta === null || minDelta === undefined || minDelta === '') {
+    return '';
+  }
+  const deltaValue = Number(minDelta);
+  if (Number.isNaN(deltaValue)) {
+    return '';
+  }
+  return String(100 + deltaValue * 100);
+};
 
 const columns = [
   {
@@ -382,11 +425,22 @@ const hasRoiChanges = computed(
   () => String(localMinRoi.value ?? '') !== String(props.minRoi ?? ''),
 );
 
+const hasExpirationChanges = computed(
+  () => String(localMinExpiration.value ?? '') !== String(expirationThreshold(props.minDelta) ?? ''),
+);
+
 const roiLabel = computed(() => {
   if (localMinRoi.value === '' || localMinRoi.value === null) {
     return 'Any';
   }
   return `> ${localMinRoi.value}%`;
+});
+
+const expirationLabel = computed(() => {
+  if (localMinExpiration.value === '' || localMinExpiration.value === null) {
+    return 'Any';
+  }
+  return `> ${localMinExpiration.value}%`;
 });
 
 const formatFilterValue = (value) => {
@@ -504,6 +558,24 @@ const applyRoiFilter = () => {
   emit('update:minRoi', Number.isNaN(parsed) ? null : parsed);
 };
 
+const onMinExpirationChange = (event) => {
+  localMinExpiration.value = event.target.value;
+};
+
+const applyExpirationFilter = () => {
+  if (localMinExpiration.value === '' || localMinExpiration.value === null) {
+    emit('update:minDelta', null);
+    return;
+  }
+  const parsed = Number(localMinExpiration.value);
+  if (Number.isNaN(parsed)) {
+    emit('update:minDelta', null);
+    return;
+  }
+  const minDeltaValue = (parsed - 100) / 100;
+  emit('update:minDelta', minDeltaValue);
+};
+
 watch(totalPages, (value) => {
   if (currentPage.value > value) {
     currentPage.value = value;
@@ -542,6 +614,13 @@ watch(
   () => props.minRoi,
   (value) => {
     localMinRoi.value = value === null || value === undefined ? '' : String(value);
+  },
+);
+
+watch(
+  () => props.minDelta,
+  (value) => {
+    localMinExpiration.value = expirationThreshold(value);
   },
 );
 </script>
