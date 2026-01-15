@@ -313,6 +313,7 @@ const renderWidget = () => {
     height: '100%',
     symbol: buildTradingViewSymbol(activeTicker.value),
     showIntervalTabs: true,
+    backgroundColor: 'rgba(0, 0, 0, 0)',
   });
 
   container.append(widget, copyright, script);
