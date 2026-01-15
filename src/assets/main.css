@@ -223,6 +223,25 @@ main {
   margin-bottom: 1rem;
 }
 
+.screener-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.screener-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.screener-option input {
+  accent-color: #4ee1ff;
+}
+
 .table-filters {
   display: flex;
   flex-direction: column;
