@@ -251,13 +251,6 @@ const refresh = () => {
   loadData();
 };
 
-const buildTradingViewLink = (ticker) => {
-  if (!ticker) return '';
-  const cleaned = ticker.trim();
-  const normalized = cleaned.includes(':') ? cleaned.replace(':', '-') : cleaned;
-  return `https://www.tradingview.com/symbols/${normalized}/technicals/`;
-};
-
 const buildTradingViewSymbol = (ticker) => {
   if (!ticker) return '';
   return ticker.trim();
@@ -283,13 +276,13 @@ const renderWidget = () => {
   copyright.className = 'tradingview-widget-copyright';
 
   const link = document.createElement('a');
-  link.href = buildTradingViewLink(activeTicker.value);
+  link.href = 'https://www.tradingview.com/symbols/NASDAQ-AAPL/technicals/';
   link.rel = 'noopener nofollow';
   link.target = '_blank';
 
   const linkText = document.createElement('span');
   linkText.className = 'blue-text';
-  linkText.textContent = `${activeTicker.value} stock analysis`;
+  linkText.textContent = 'AAPL stock analysis';
 
   const trademark = document.createElement('span');
   trademark.className = 'trademark';
@@ -311,7 +304,7 @@ const renderWidget = () => {
     disableInterval: false,
     width: '100%',
     height: '100%',
-    symbol: buildTradingViewSymbol(activeTicker.value),
+    symbol: 'NASDAQ:AAPL',
     showIntervalTabs: true,
   });
 
