@@ -75,16 +75,34 @@
           @update:min-roi="minRoi = $event"
           @update:min-delta="minDelta = $event"
           @update:screener-type="screenerType = $event"
+          @select-ticker="openTicker"
         />
-        <PositionsTable :positions="positions" />
-        <MarketMovers :movers="movers" />
+        <PositionsTable :positions="positions" @select-ticker="openTicker" />
+        <MarketMovers :movers="movers" @select-ticker="openTicker" />
       </div>
     </main>
+
+    <teleport to="body">
+      <div v-if="isModalOpen" class="modal-backdrop" @click.self="closeModal">
+        <div class="modal-card">
+          <header class="modal-header">
+            <div>
+              <p class="eyebrow">Ticker overview</p>
+              <h3>{{ activeTicker }}</h3>
+            </div>
+            <button class="ghost" type="button" @click="closeModal">Close</button>
+          </header>
+          <div class="modal-body">
+            <div ref="widgetContainer" class="tradingview-wrapper"></div>
+          </div>
+        </div>
+      </div>
+    </teleport>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { nextTick, onMounted, ref, watch } from 'vue';
 import { apiBaseUrl, getWeeklyInvestments } from './api/investingApi';
 import SummaryCards from './components/SummaryCards.vue';
 import InvestmentsTable from './components/InvestmentsTable.vue';
@@ -111,6 +129,9 @@ const minRoi = ref(null);
 const minDelta = ref(null);
 const maxDelta = ref(null);
 const screenerType = ref('Stocks by Quant');
+const isModalOpen = ref(false);
+const activeTicker = ref('');
+const widgetContainer = ref(null);
 
 const summarySnapshot = ref({
   openPositions: 0,
@@ -260,12 +281,94 @@ const refresh = () => {
   loadData();
 };
 
+const buildTradingViewLink = (ticker) => {
+  if (!ticker) return '';
+  const cleaned = ticker.trim();
+  const normalized = cleaned.includes(':') ? cleaned.replace(':', '-') : cleaned;
+  return `https://www.tradingview.com/symbols/${normalized}/technicals/`;
+};
+
+const buildTradingViewSymbol = (ticker) => {
+  if (!ticker) return '';
+  return ticker.trim();
+};
+
+const renderWidget = () => {
+  if (!widgetContainer.value || !activeTicker.value) return;
+  widgetContainer.value.innerHTML = '';
+  const container = document.createElement('div');
+  container.className = 'tradingview-widget-container';
+
+  const widget = document.createElement('div');
+  widget.className = 'tradingview-widget-container__widget';
+
+  const copyright = document.createElement('div');
+  copyright.className = 'tradingview-widget-copyright';
+
+  const link = document.createElement('a');
+  link.href = buildTradingViewLink(activeTicker.value);
+  link.rel = 'noopener nofollow';
+  link.target = '_blank';
+
+  const linkText = document.createElement('span');
+  linkText.className = 'blue-text';
+  linkText.textContent = `${activeTicker.value} stock analysis`;
+
+  const trademark = document.createElement('span');
+  trademark.className = 'trademark';
+  trademark.textContent = ' by TradingView';
+
+  link.appendChild(linkText);
+  copyright.append(link, trademark);
+
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js';
+  script.async = true;
+  script.text = JSON.stringify({
+    colorTheme: 'light',
+    displayMode: 'single',
+    isTransparent: false,
+    locale: 'en',
+    interval: '1m',
+    disableInterval: false,
+    width: '100%',
+    height: '100%',
+    symbol: buildTradingViewSymbol(activeTicker.value),
+    showIntervalTabs: true,
+  });
+
+  container.append(widget, copyright, script);
+  widgetContainer.value.appendChild(container);
+};
+
+const openTicker = (ticker) => {
+  if (!ticker) return;
+  activeTicker.value = ticker.trim();
+  isModalOpen.value = true;
+  nextTick(renderWidget);
+};
+
+const closeModal = () => {
+  isModalOpen.value = false;
+  activeTicker.value = '';
+  if (widgetContainer.value) {
+    widgetContainer.value.innerHTML = '';
+  }
+};
+
 let priceFilterTimer;
 watch([minPrice, maxPrice, minRsi, maxRsi, minRoi, minDelta, maxDelta, screenerType], () => {
   clearTimeout(priceFilterTimer);
   priceFilterTimer = setTimeout(() => {
     loadData();
   }, 300);
+});
+
+watch([isModalOpen, activeTicker], ([isOpen]) => {
+  if (isOpen) {
+    nextTick(renderWidget);
+  }
 });
 
 onMounted(loadData);
