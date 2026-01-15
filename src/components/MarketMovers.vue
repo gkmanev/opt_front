@@ -8,7 +8,9 @@
       <ul class="list">
         <li v-for="mover in movers.gainers" :key="mover.ticker">
           <div>
-            <strong>{{ mover.ticker }}</strong>
+            <button class="ticker-button" type="button" @click="emit('select-ticker', mover.ticker)">
+              <strong>{{ mover.ticker }}</strong>
+            </button>
             <small>{{ mover.name }}</small>
           </div>
           <span class="positive">+{{ mover.change }}%</span>
@@ -23,7 +25,9 @@
       <ul class="list">
         <li v-for="mover in movers.losers" :key="mover.ticker">
           <div>
-            <strong>{{ mover.ticker }}</strong>
+            <button class="ticker-button" type="button" @click="emit('select-ticker', mover.ticker)">
+              <strong>{{ mover.ticker }}</strong>
+            </button>
             <small>{{ mover.name }}</small>
           </div>
           <span class="negative">{{ mover.change }}%</span>
@@ -40,4 +44,6 @@ defineProps({
     required: true,
   },
 });
+
+const emit = defineEmits(['select-ticker']);
 </script>
