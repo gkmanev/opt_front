@@ -47,6 +47,28 @@
           </button>
         </div>
       </div>
+      <div class="filter-group">
+        <div class="filter-header">
+          <span>Min ROI</span>
+          <strong>{{ roiLabel }}</strong>
+        </div>
+        <div class="filter-controls">
+          <select class="select" :value="localMinRoi" @change="onMinRoiChange">
+            <option value="">Any ROI</option>
+            <option value="2">&gt; 2%</option>
+            <option value="2.5">&gt; 2.5%</option>
+            <option value="3">&gt; 3%</option>
+          </select>
+          <button
+            class="ghost find-button"
+            type="button"
+            :disabled="!hasRoiChanges"
+            @click="applyRoiFilter"
+          >
+            Find
+          </button>
+        </div>
+      </div>
     </div>
     <div class="table investments-table">
       <div class="table-row table-head">
@@ -160,9 +182,13 @@ const props = defineProps({
     type: Number,
     default: 200,
   },
+  minRoi: {
+    type: Number,
+    default: null,
+  },
 });
 
-const emit = defineEmits(['update:minPrice', 'update:maxPrice']);
+const emit = defineEmits(['update:minPrice', 'update:maxPrice', 'update:minRoi']);
 
 const sortKey = ref('expDate');
 const sortDirection = ref('asc');
@@ -170,6 +196,9 @@ const currentPage = ref(1);
 const pageSize = ref(6);
 const localMinPrice = ref(props.minPrice);
 const localMaxPrice = ref(props.maxPrice);
+const localMinRoi = ref(
+  props.minRoi === null || props.minRoi === undefined ? '' : String(props.minRoi),
+);
 
 const columns = [
   {
@@ -275,6 +304,17 @@ const hasPriceChanges = computed(
     Number(localMaxPrice.value) !== Number(props.maxPrice),
 );
 
+const hasRoiChanges = computed(
+  () => String(localMinRoi.value ?? '') !== String(props.minRoi ?? ''),
+);
+
+const roiLabel = computed(() => {
+  if (localMinRoi.value === '' || localMinRoi.value === null) {
+    return 'Any';
+  }
+  return `> ${localMinRoi.value}%`;
+});
+
 const formatFilterValue = (value) => {
   const number = Number(value);
   if (Number.isNaN(number)) return '0';
@@ -354,6 +394,19 @@ const applyPriceFilter = () => {
   emit('update:maxPrice', localMaxPrice.value);
 };
 
+const onMinRoiChange = (event) => {
+  localMinRoi.value = event.target.value;
+};
+
+const applyRoiFilter = () => {
+  if (localMinRoi.value === '' || localMinRoi.value === null) {
+    emit('update:minRoi', null);
+    return;
+  }
+  const parsed = Number(localMinRoi.value);
+  emit('update:minRoi', Number.isNaN(parsed) ? null : parsed);
+};
+
 watch(totalPages, (value) => {
   if (currentPage.value > value) {
     currentPage.value = value;
@@ -371,6 +424,13 @@ watch(
   () => props.maxPrice,
   (value) => {
     localMaxPrice.value = value;
+  },
+);
+
+watch(
+  () => props.minRoi,
+  (value) => {
+    localMinRoi.value = value === null || value === undefined ? '' : String(value);
   },
 );
 </script>
