@@ -303,9 +303,9 @@ const renderWidget = () => {
   script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js';
   script.async = true;
   script.text = JSON.stringify({
-    colorTheme: 'light',
+    colorTheme: 'dark',
     displayMode: 'single',
-    isTransparent: false,
+    isTransparent: true,
     locale: 'en',
     interval: '1m',
     disableInterval: false,
