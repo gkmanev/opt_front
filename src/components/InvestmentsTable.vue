@@ -79,7 +79,6 @@
       <div class="filter-group">
         <div class="filter-header">
           <span>Min ROI</span>
-          <strong>{{ roiLabel }}</strong>
         </div>
         <div class="filter-controls">
           <select class="select" :value="localMinRoi" @change="onMinRoiChange">
@@ -93,7 +92,6 @@
       <div class="filter-group">
         <div class="filter-header">
           <span>Prob. of expiration</span>
-          <strong>{{ expirationLabel }}</strong>
         </div>
         <div class="filter-controls">
           <select class="select" :value="localMinExpiration" @change="onMinExpirationChange">
@@ -436,20 +434,6 @@ const hasDefaultChanges = computed(
     String(localMinRoi.value ?? '') !== defaultMinRoi ||
     String(localMinExpiration.value ?? '') !== defaultMinExpiration,
 );
-
-const roiLabel = computed(() => {
-  if (localMinRoi.value === '' || localMinRoi.value === null) {
-    return 'All';
-  }
-  return `> ${localMinRoi.value}%`;
-});
-
-const expirationLabel = computed(() => {
-  if (localMinExpiration.value === '' || localMinExpiration.value === null) {
-    return 'All';
-  }
-  return `> ${localMinExpiration.value}%`;
-});
 
 const formatFilterValue = (value) => {
   const number = Number(value);
