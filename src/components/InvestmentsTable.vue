@@ -37,14 +37,6 @@
               @input="onMaxPriceInput"
             />
           </div>
-          <button
-            class="ghost find-button"
-            type="button"
-            :disabled="!hasPriceChanges"
-            @click="applyPriceFilter"
-          >
-            Find
-          </button>
         </div>
       </div>
       <div class="filter-group">
@@ -74,14 +66,6 @@
               @input="onMaxRsiInput"
             />
           </div>
-          <button
-            class="ghost find-button"
-            type="button"
-            :disabled="!hasRsiChanges"
-            @click="applyRsiFilter"
-          >
-            Find
-          </button>
         </div>
       </div>
       <div class="filter-group">
@@ -96,14 +80,6 @@
             <option value="2.5">&gt; 2.5%</option>
             <option value="3">&gt; 3%</option>
           </select>
-          <button
-            class="ghost find-button"
-            type="button"
-            :disabled="!hasRoiChanges"
-            @click="applyRoiFilter"
-          >
-            Find
-          </button>
         </div>
       </div>
       <div class="filter-group">
@@ -118,16 +94,16 @@
             <option value="75">&gt; 75%</option>
             <option value="80">&gt; 80%</option>
           </select>
-          <button
-            class="ghost find-button"
-            type="button"
-            :disabled="!hasExpirationChanges"
-            @click="applyExpirationFilter"
-          >
-            Find
-          </button>
         </div>
       </div>
+    </div>
+    <div class="filter-actions">
+      <button class="ghost" type="button" :disabled="!hasFilterChanges" @click="applyAllFilters">
+        Apply
+      </button>
+      <button class="ghost" type="button" :disabled="!hasDefaultChanges" @click="resetAllFilters">
+        Reset
+      </button>
     </div>
     <div class="table investments-table">
       <div class="table-row table-head">
@@ -284,6 +260,12 @@ const localMinExpiration = ref(
     ? ''
     : String(100 + Number(props.minDelta) * 100),
 );
+const defaultMinPrice = 0;
+const defaultMaxPrice = 200;
+const defaultMinRsi = 0;
+const defaultMaxRsi = 100;
+const defaultMinRoi = '';
+const defaultMinExpiration = '';
 
 const expirationThreshold = (minDelta) => {
   if (minDelta === null || minDelta === undefined || minDelta === '') {
@@ -427,6 +409,24 @@ const hasRoiChanges = computed(
 
 const hasExpirationChanges = computed(
   () => String(localMinExpiration.value ?? '') !== String(expirationThreshold(props.minDelta) ?? ''),
+);
+
+const hasFilterChanges = computed(
+  () =>
+    hasPriceChanges.value ||
+    hasRsiChanges.value ||
+    hasRoiChanges.value ||
+    hasExpirationChanges.value,
+);
+
+const hasDefaultChanges = computed(
+  () =>
+    Number(localMinPrice.value) !== defaultMinPrice ||
+    Number(localMaxPrice.value) !== defaultMaxPrice ||
+    Number(localMinRsi.value) !== defaultMinRsi ||
+    Number(localMaxRsi.value) !== defaultMaxRsi ||
+    String(localMinRoi.value ?? '') !== defaultMinRoi ||
+    String(localMinExpiration.value ?? '') !== defaultMinExpiration,
 );
 
 const roiLabel = computed(() => {
@@ -574,6 +574,28 @@ const applyExpirationFilter = () => {
   }
   const minDeltaValue = (parsed - 100) / 100;
   emit('update:minDelta', minDeltaValue);
+};
+
+const applyAllFilters = () => {
+  applyPriceFilter();
+  applyRsiFilter();
+  applyRoiFilter();
+  applyExpirationFilter();
+};
+
+const resetAllFilters = () => {
+  localMinPrice.value = defaultMinPrice;
+  localMaxPrice.value = defaultMaxPrice;
+  localMinRsi.value = defaultMinRsi;
+  localMaxRsi.value = defaultMaxRsi;
+  localMinRoi.value = defaultMinRoi;
+  localMinExpiration.value = defaultMinExpiration;
+  emit('update:minPrice', defaultMinPrice);
+  emit('update:maxPrice', defaultMaxPrice);
+  emit('update:minRsi', defaultMinRsi);
+  emit('update:maxRsi', defaultMaxRsi);
+  emit('update:minRoi', null);
+  emit('update:minDelta', null);
 };
 
 watch(totalPages, (value) => {
