@@ -11,60 +11,68 @@
       <div class="filter-group">
         <div class="filter-header">
           <span>Price range</span>
-          <strong>
-            ${{ formatFilterValue(localMinPrice) }} - ${{ formatFilterValue(localMaxPrice) }}
-          </strong>
         </div>
         <div class="filter-controls">
-          <div class="range-slider">
-            <div class="range-track">
-              <span class="range-selection" :style="rangeSelectionStyle"></span>
+          <div class="range-slider-group">
+            <div class="range-slider">
+              <div class="range-track">
+                <span class="range-selection" :style="rangeSelectionStyle"></span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="200"
+                step="1"
+                :value="localMinPrice"
+                @input="onMinPriceInput"
+              />
+              <input
+                type="range"
+                min="0"
+                max="200"
+                step="1"
+                :value="localMaxPrice"
+                @input="onMaxPriceInput"
+              />
             </div>
-            <input
-              type="range"
-              min="0"
-              max="200"
-              step="1"
-              :value="localMinPrice"
-              @input="onMinPriceInput"
-            />
-            <input
-              type="range"
-              min="0"
-              max="200"
-              step="1"
-              :value="localMaxPrice"
-              @input="onMaxPriceInput"
-            />
+            <div class="range-values">
+              <span>${{ formatFilterValue(localMinPrice) }}</span>
+              <span>${{ formatFilterValue(localMaxPrice) }}</span>
+            </div>
           </div>
         </div>
       </div>
       <div class="filter-group">
         <div class="filter-header">
           <span>RSI range</span>
-          <strong>{{ formatFilterValue(localMinRsi) }} - {{ formatFilterValue(localMaxRsi) }}</strong>
         </div>
         <div class="filter-controls">
-          <div class="range-slider">
-            <div class="range-track">
-              <span class="range-selection" :style="rsiRangeSelectionStyle"></span>
+          <div class="range-slider-group">
+            <div class="range-slider">
+              <div class="range-track">
+                <span class="range-selection" :style="rsiRangeSelectionStyle"></span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                :value="localMinRsi"
+                @input="onMinRsiInput"
+              />
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                :value="localMaxRsi"
+                @input="onMaxRsiInput"
+              />
             </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              :value="localMinRsi"
-              @input="onMinRsiInput"
-            />
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="1"
-              :value="localMaxRsi"
-              @input="onMaxRsiInput"
-            />
+            <div class="range-values">
+              <span>{{ formatFilterValue(localMinRsi) }}</span>
+              <span>{{ formatFilterValue(localMaxRsi) }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -431,14 +439,14 @@ const hasDefaultChanges = computed(
 
 const roiLabel = computed(() => {
   if (localMinRoi.value === '' || localMinRoi.value === null) {
-    return 'Any';
+    return 'All';
   }
   return `> ${localMinRoi.value}%`;
 });
 
 const expirationLabel = computed(() => {
   if (localMinExpiration.value === '' || localMinExpiration.value === null) {
-    return 'Any';
+    return 'All';
   }
   return `> ${localMinExpiration.value}%`;
 });
