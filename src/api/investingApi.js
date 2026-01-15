@@ -16,7 +16,6 @@ const request = async (path) => {
 };
 
 export const getSummary = () => request('/api/summary');
-export const getPositions = () => request('/api/positions');
 export const getMarketMovers = () => request('/api/market-movers');
 const normalizeWeeklyInvestment = (idea) => ({
   ...idea,

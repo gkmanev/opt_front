@@ -77,7 +77,6 @@
           @update:screener-type="screenerType = $event"
           @select-ticker="openTicker"
         />
-        <PositionsTable :positions="positions" @select-ticker="openTicker" />
         <MarketMovers :movers="movers" @select-ticker="openTicker" />
       </div>
     </main>
@@ -106,7 +105,6 @@ import { nextTick, onMounted, ref, watch } from 'vue';
 import { apiBaseUrl, getWeeklyInvestments } from './api/investingApi';
 import SummaryCards from './components/SummaryCards.vue';
 import InvestmentsTable from './components/InvestmentsTable.vue';
-import PositionsTable from './components/PositionsTable.vue';
 import MarketMovers from './components/MarketMovers.vue';
 
 const loading = ref(true);
@@ -118,7 +116,6 @@ const summary = ref({
   cash: 0,
   riskScore: 0,
 });
-const positions = ref([]);
 const movers = ref({ gainers: [], losers: [] });
 const investments = ref([]);
 const minPrice = ref(0);
@@ -149,40 +146,6 @@ const fallback = {
     cash: 31200,
     riskScore: 62,
   },
-  positions: [
-    {
-      ticker: 'AAPL',
-      name: 'Apple Inc.',
-      value: 58400,
-      avgCost: 154,
-      dayChange: 1.2,
-      allocation: 23,
-    },
-    {
-      ticker: 'NVDA',
-      name: 'NVIDIA',
-      value: 46120,
-      avgCost: 468,
-      dayChange: 2.9,
-      allocation: 18,
-    },
-    {
-      ticker: 'MSFT',
-      name: 'Microsoft',
-      value: 40210,
-      avgCost: 295,
-      dayChange: -0.4,
-      allocation: 16,
-    },
-    {
-      ticker: 'TSLA',
-      name: 'Tesla',
-      value: 29850,
-      avgCost: 212,
-      dayChange: -1.1,
-      allocation: 12,
-    },
-  ],
   movers: {
     gainers: [
       { ticker: 'PLTR', name: 'Palantir', change: 6.1 },
@@ -232,7 +195,6 @@ const fallback = {
 
 const applyData = (data) => {
   summary.value = data.summary;
-  positions.value = data.positions;
   movers.value = data.movers;
   summarySnapshot.value = data.snapshot;
   investments.value = data.investments;
@@ -257,7 +219,6 @@ const loadData = async () => {
 
     applyData({
       summary: fallback.summary,
-      positions: fallback.positions,
       movers: fallback.movers,
       investments: investmentsData,
       snapshot: fallback.snapshot,
@@ -265,7 +226,6 @@ const loadData = async () => {
   } catch (err) {
     applyData({
       summary: fallback.summary,
-      positions: fallback.positions,
       movers: fallback.movers,
       investments: [],
       snapshot: fallback.snapshot,
