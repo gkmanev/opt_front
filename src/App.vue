@@ -406,7 +406,6 @@ const openTicker = (ticker) => {
   if (!ticker) return;
   activeTicker.value = ticker.trim();
   isModalOpen.value = true;
-  nextTick(renderModalCharts);
 };
 
 const closeModal = () => {
@@ -428,11 +427,18 @@ watch([minPrice, maxPrice, minRsi, maxRsi, minRoi, minDelta, maxDelta, screenerT
   }, 300);
 });
 
-watch([isModalOpen, activeTicker], ([isOpen]) => {
-  if (isOpen) {
-    nextTick(renderModalCharts);
-  }
-});
+watch(
+  [isModalOpen, activeTicker],
+  ([isOpen, ticker], [wasOpen, previousTicker]) => {
+    if (!isOpen || !ticker) return;
+    if (isOpen === wasOpen && ticker === previousTicker) return;
+    nextTick(() => {
+      if (!isModalOpen.value || !activeTicker.value) return;
+      renderModalCharts();
+    });
+  },
+  { flush: 'post' },
+);
 
 onMounted(loadData);
 
