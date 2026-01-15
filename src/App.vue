@@ -305,7 +305,7 @@ const renderWidget = () => {
   script.text = JSON.stringify({
     colorTheme: 'dark',
     displayMode: 'single',
-    isTransparent: false,
+    isTransparent: true,
     locale: 'en',
     interval: '1m',
     disableInterval: false,
@@ -313,7 +313,6 @@ const renderWidget = () => {
     height: '100%',
     symbol: buildTradingViewSymbol(activeTicker.value),
     showIntervalTabs: true,
-    backgroundColor: '#10162b',
   });
 
   container.append(widget, copyright, script);
