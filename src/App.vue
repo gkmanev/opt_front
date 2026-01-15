@@ -360,7 +360,7 @@ const renderSymbolOverviewWidget = () => {
     gridLineColor: 'rgba(242, 242, 242, 0.06)',
     volumeUpColor: 'rgba(34, 171, 148, 0.5)',
     volumeDownColor: 'rgba(247, 82, 95, 0.5)',
-    backgroundColor: '#0F0F0F',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
     widgetFontColor: '#DBDBDB',
     upColor: '#22ab94',
     downColor: '#f7525f',
