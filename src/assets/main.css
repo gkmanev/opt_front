@@ -242,6 +242,38 @@ main {
   gap: 0.75rem;
 }
 
+.table-filters .select {
+  appearance: none;
+  border: 1px solid rgba(122, 108, 255, 0.35);
+  border-radius: 999px;
+  padding: 0.5rem 2.4rem 0.5rem 0.9rem;
+  background:
+    linear-gradient(135deg, rgba(122, 108, 255, 0.22), rgba(78, 225, 255, 0.12)),
+    rgba(13, 16, 35, 0.8);
+  color: #f5f6ff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow:
+    0 8px 20px rgba(15, 20, 45, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23d7d9ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 0.9rem;
+  min-width: 160px;
+  cursor: pointer;
+}
+
+.table-filters .select:focus {
+  outline: none;
+  border-color: rgba(78, 225, 255, 0.7);
+  box-shadow: 0 0 0 3px rgba(78, 225, 255, 0.18);
+}
+
+.table-filters .select option {
+  color: #10162f;
+}
+
 .table-filters .filter-header {
   display: flex;
   justify-content: space-between;
