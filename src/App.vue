@@ -67,12 +67,14 @@
           :max-rsi="maxRsi"
           :min-roi="minRoi"
           :min-delta="minDelta"
+          :screener-type="screenerType"
           @update:min-price="minPrice = $event"
           @update:max-price="maxPrice = $event"
           @update:min-rsi="minRsi = $event"
           @update:max-rsi="maxRsi = $event"
           @update:min-roi="minRoi = $event"
           @update:min-delta="minDelta = $event"
+          @update:screener-type="screenerType = $event"
         />
         <PositionsTable :positions="positions" />
         <MarketMovers :movers="movers" />
@@ -108,6 +110,7 @@ const maxRsi = ref(100);
 const minRoi = ref(null);
 const minDelta = ref(null);
 const maxDelta = ref(null);
+const screenerType = ref('Stocks by Quant');
 
 const summarySnapshot = ref({
   openPositions: 0,
@@ -227,6 +230,7 @@ const loadData = async () => {
       minRoi: minRoi.value,
       minDelta: minDelta.value,
       maxDelta: maxDelta.value,
+      screenerType: screenerType.value,
     });
     console.log('investmentsData', investmentsData);
 
@@ -257,7 +261,7 @@ const refresh = () => {
 };
 
 let priceFilterTimer;
-watch([minPrice, maxPrice, minRsi, maxRsi, minRoi, minDelta, maxDelta], () => {
+watch([minPrice, maxPrice, minRsi, maxRsi, minRoi, minDelta, maxDelta, screenerType], () => {
   clearTimeout(priceFilterTimer);
   priceFilterTimer = setTimeout(() => {
     loadData();

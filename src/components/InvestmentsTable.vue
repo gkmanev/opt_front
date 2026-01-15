@@ -1,9 +1,32 @@
 <template>
   <section class="card table-card">
+    <div class="screener-options">
+      <p class="subtle">Screen weekly ideas using one of the following screens:</p>
+      <label class="screener-option">
+        <input
+          type="radio"
+          name="weekly-screener"
+          value="Stocks by Quant"
+          :checked="localScreenerType === 'Stocks by Quant'"
+          @change="onScreenerChange"
+        />
+        <span>Choose the top stocks by quant rating</span>
+      </label>
+      <label class="screener-option">
+        <input
+          type="radio"
+          name="weekly-screener"
+          value="Custom screener filterV3"
+          :checked="localScreenerType === 'Custom screener filterV3'"
+          @change="onScreenerChange"
+        />
+        <span>Choose the top stocks by profitability</span>
+      </label>
+    </div>
     <header>
       <div>
         <h3>Weekly Options Ideas</h3>
-        <p class="subtle">Screened options from the custom filter feed.</p>
+        <p class="subtle">Screened options from the selected filter feed.</p>
       </div>
       <button class="ghost" type="button">Export</button>
     </header>
@@ -239,6 +262,10 @@ const props = defineProps({
     type: Number,
     default: null,
   },
+  screenerType: {
+    type: String,
+    default: 'Stocks by Quant',
+  },
 });
 
 const emit = defineEmits([
@@ -248,6 +275,7 @@ const emit = defineEmits([
   'update:maxRsi',
   'update:minRoi',
   'update:minDelta',
+  'update:screenerType',
 ]);
 
 const sortKey = ref('expDate');
@@ -261,6 +289,7 @@ const localMaxRsi = ref(props.maxRsi);
 const localMinRoi = ref(
   props.minRoi === null || props.minRoi === undefined ? '' : String(props.minRoi),
 );
+const localScreenerType = ref(props.screenerType);
 const localMinExpiration = ref(
   props.minDelta === null || props.minDelta === undefined
     ? ''
@@ -537,6 +566,11 @@ const applyRsiFilter = () => {
   emit('update:maxRsi', localMaxRsi.value);
 };
 
+const onScreenerChange = (event) => {
+  localScreenerType.value = event.target.value;
+  emit('update:screenerType', event.target.value);
+};
+
 const onMinRoiChange = (event) => {
   localMinRoi.value = event.target.value;
 };
@@ -635,6 +669,13 @@ watch(
   () => props.minDelta,
   (value) => {
     localMinExpiration.value = expirationThreshold(value);
+  },
+);
+
+watch(
+  () => props.screenerType,
+  (value) => {
+    localScreenerType.value = value;
   },
 );
 </script>

@@ -32,10 +32,15 @@ const buildWeeklyInvestmentsPath = ({
   minRoi,
   minDelta,
   maxDelta,
+  screenerType,
 } = {}) => {
+  const resolvedScreenerType =
+    screenerType === null || screenerType === undefined || screenerType === ''
+      ? 'Custom screener filterV3'
+      : screenerType;
   const params = new URLSearchParams({
     weekly_options: 'true',
-    screener_type: 'Custom screener filterV3',
+    screener_type: resolvedScreenerType,
   });
 
   if (minPrice !== null && minPrice !== undefined && minPrice !== '') {
@@ -71,10 +76,20 @@ export const getWeeklyInvestments = async ({
   minRoi,
   minDelta,
   maxDelta,
+  screenerType,
 } = {}) => {
   try {
     const data = await request(
-      buildWeeklyInvestmentsPath({ minPrice, maxPrice, minRsi, maxRsi, minRoi, minDelta, maxDelta }),
+      buildWeeklyInvestmentsPath({
+        minPrice,
+        maxPrice,
+        minRsi,
+        maxRsi,
+        minRoi,
+        minDelta,
+        maxDelta,
+        screenerType,
+      }),
     );
     console.log('[getWeeklyInvestments] raw response', data);
     const list = Array.isArray(data) ? data : data.results ?? data.investments ?? [];
