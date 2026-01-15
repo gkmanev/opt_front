@@ -305,7 +305,7 @@ const renderWidget = () => {
   script.text = JSON.stringify({
     colorTheme: 'dark',
     displayMode: 'single',
-    isTransparent: false,
+    isTransparent: true,
     locale: 'en',
     interval: '1m',
     disableInterval: false,
@@ -313,7 +313,6 @@ const renderWidget = () => {
     height: '100%',
     symbol: buildTradingViewSymbol(activeTicker.value),
     showIntervalTabs: true,
-    backgroundColor: '#10162b',
   });
 
   container.append(widget, copyright, script);
@@ -360,7 +359,7 @@ const renderSymbolOverviewWidget = () => {
     gridLineColor: 'rgba(242, 242, 242, 0.06)',
     volumeUpColor: 'rgba(34, 171, 148, 0.5)',
     volumeDownColor: 'rgba(247, 82, 95, 0.5)',
-    backgroundColor: '#0F0F0F',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
     widgetFontColor: '#DBDBDB',
     upColor: '#22ab94',
     downColor: '#f7525f',
