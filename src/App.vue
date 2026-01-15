@@ -97,6 +97,10 @@
                 <p class="panel-label">Technical analysis</p>
                 <div ref="widgetContainer" class="tradingview-wrapper"></div>
               </section>
+              <section class="modal-panel">
+                <p class="panel-label">Symbol overview</p>
+                <div ref="symbolOverviewContainer" class="tradingview-wrapper"></div>
+              </section>
             </div>
           </div>
         </div>
@@ -134,6 +138,7 @@ const screenerType = ref('Stocks by Quant');
 const isModalOpen = ref(false);
 const activeTicker = ref('');
 const widgetContainer = ref(null);
+const symbolOverviewContainer = ref(null);
 
 const summarySnapshot = ref({
   openPositions: 0,
@@ -258,6 +263,13 @@ const buildTradingViewSymbol = (ticker) => {
   return ticker.trim();
 };
 
+const buildTradingViewSymbolPageLink = (ticker) => {
+  if (!ticker) return '';
+  const cleaned = ticker.trim();
+  const normalized = cleaned.includes(':') ? cleaned.replace(':', '-') : cleaned;
+  return `https://www.tradingview.com/symbols/${normalized}/`;
+};
+
 const renderWidget = () => {
   if (!widgetContainer.value || !activeTicker.value) return;
   widgetContainer.value.innerHTML = '';
@@ -291,9 +303,9 @@ const renderWidget = () => {
   script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js';
   script.async = true;
   script.text = JSON.stringify({
-    colorTheme: 'light',
+    colorTheme: 'dark',
     displayMode: 'single',
-    isTransparent: false,
+    isTransparent: true,
     locale: 'en',
     interval: '1m',
     disableInterval: false,
@@ -307,8 +319,87 @@ const renderWidget = () => {
   widgetContainer.value.appendChild(container);
 };
 
+const renderSymbolOverviewWidget = () => {
+  if (!symbolOverviewContainer.value || !activeTicker.value) return;
+  symbolOverviewContainer.value.innerHTML = '';
+  const container = document.createElement('div');
+  container.className = 'tradingview-widget-container';
+
+  const widget = document.createElement('div');
+  widget.className = 'tradingview-widget-container__widget';
+
+  const copyright = document.createElement('div');
+  copyright.className = 'tradingview-widget-copyright';
+
+  const link = document.createElement('a');
+  link.href = buildTradingViewSymbolPageLink(activeTicker.value);
+  link.rel = 'noopener nofollow';
+  link.target = '_blank';
+
+  const linkText = document.createElement('span');
+  linkText.className = 'blue-text';
+  linkText.textContent = `${activeTicker.value} stock price`;
+
+  const trademark = document.createElement('span');
+  trademark.className = 'trademark';
+  trademark.textContent = ' by TradingView';
+
+  link.appendChild(linkText);
+  copyright.append(link, trademark);
+
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
+  script.async = true;
+  script.text = JSON.stringify({
+    lineWidth: 2,
+    lineType: 0,
+    chartType: 'area',
+    fontColor: 'rgb(106, 109, 120)',
+    gridLineColor: 'rgba(242, 242, 242, 0.06)',
+    volumeUpColor: 'rgba(34, 171, 148, 0.5)',
+    volumeDownColor: 'rgba(247, 82, 95, 0.5)',
+    backgroundColor: '#0F0F0F',
+    widgetFontColor: '#DBDBDB',
+    upColor: '#22ab94',
+    downColor: '#f7525f',
+    borderUpColor: '#22ab94',
+    borderDownColor: '#f7525f',
+    wickUpColor: '#22ab94',
+    wickDownColor: '#f7525f',
+    colorTheme: 'dark',
+    isTransparent: true,
+    locale: 'en',
+    chartOnly: false,
+    scalePosition: 'right',
+    scaleMode: 'Normal',
+    fontFamily: '-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif',
+    valuesTracking: '1',
+    changeMode: 'price-and-percent',
+    symbols: [[activeTicker.value, `${buildTradingViewSymbol(activeTicker.value)}|1D`]],
+    dateRanges: ['1d|1', '1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M'],
+    fontSize: '10',
+    headerFontSize: 'medium',
+    autosize: true,
+    width: '100%',
+    height: '100%',
+    noTimeScale: false,
+    hideDateRanges: false,
+    showMA: true,
+    maLength: 9,
+    maLineColor: '#2962FF',
+    maLineWidth: 1,
+    hideMarketStatus: false,
+    hideSymbolLogo: false,
+  });
+
+  container.append(widget, copyright, script);
+  symbolOverviewContainer.value.appendChild(container);
+};
+
 const renderModalCharts = () => {
   renderWidget();
+  renderSymbolOverviewWidget();
 };
 
 const openTicker = (ticker) => {
@@ -323,6 +414,9 @@ const closeModal = () => {
   activeTicker.value = '';
   if (widgetContainer.value) {
     widgetContainer.value.innerHTML = '';
+  }
+  if (symbolOverviewContainer.value) {
+    symbolOverviewContainer.value.innerHTML = '';
   }
 };
 
