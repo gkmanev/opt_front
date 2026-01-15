@@ -15,26 +15,36 @@
             ${{ formatFilterValue(localMinPrice) }} - ${{ formatFilterValue(localMaxPrice) }}
           </strong>
         </div>
-        <div class="range-slider">
-          <div class="range-track">
-            <span class="range-selection" :style="rangeSelectionStyle"></span>
+        <div class="filter-controls">
+          <div class="range-slider">
+            <div class="range-track">
+              <span class="range-selection" :style="rangeSelectionStyle"></span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="200"
+              step="1"
+              :value="localMinPrice"
+              @input="onMinPriceInput"
+            />
+            <input
+              type="range"
+              min="0"
+              max="200"
+              step="1"
+              :value="localMaxPrice"
+              @input="onMaxPriceInput"
+            />
           </div>
-          <input
-            type="range"
-            min="0"
-            max="200"
-            step="1"
-            :value="localMinPrice"
-            @input="onMinPriceInput"
-          />
-          <input
-            type="range"
-            min="0"
-            max="200"
-            step="1"
-            :value="localMaxPrice"
-            @input="onMaxPriceInput"
-          />
+          <button
+            class="ghost find-button"
+            type="button"
+            :disabled="!hasPriceChanges"
+            @click="applyPriceFilter"
+          >
+            Find
+          </button>
         </div>
       </div>
     </div>
@@ -259,6 +269,12 @@ const rangeSelectionStyle = computed(() => {
   return { left: `${left}%`, width: `${width}%` };
 });
 
+const hasPriceChanges = computed(
+  () =>
+    Number(localMinPrice.value) !== Number(props.minPrice) ||
+    Number(localMaxPrice.value) !== Number(props.maxPrice),
+);
+
 const formatFilterValue = (value) => {
   const number = Number(value);
   if (Number.isNaN(number)) return '0';
@@ -321,9 +337,7 @@ const onMinPriceInput = (event) => {
   localMinPrice.value = nextValue;
   if (nextValue > localMaxPrice.value) {
     localMaxPrice.value = nextValue;
-    emit('update:maxPrice', nextValue);
   }
-  emit('update:minPrice', nextValue);
 };
 
 const onMaxPriceInput = (event) => {
@@ -332,9 +346,12 @@ const onMaxPriceInput = (event) => {
   localMaxPrice.value = nextValue;
   if (nextValue < localMinPrice.value) {
     localMinPrice.value = nextValue;
-    emit('update:minPrice', nextValue);
   }
-  emit('update:maxPrice', nextValue);
+};
+
+const applyPriceFilter = () => {
+  emit('update:minPrice', localMinPrice.value);
+  emit('update:maxPrice', localMaxPrice.value);
 };
 
 watch(totalPages, (value) => {
