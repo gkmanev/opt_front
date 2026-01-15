@@ -193,7 +193,14 @@
       </div>
       <div v-for="idea in paginatedInvestments" :key="ideaKey(idea)" class="table-row">
         <span class="ticker">
-          <strong>{{ idea.ticker ?? '—' }}</strong>
+          <button
+            class="ticker-button"
+            type="button"
+            :disabled="!idea.ticker"
+            @click="emit('select-ticker', idea.ticker)"
+          >
+            <strong>{{ idea.ticker ?? '—' }}</strong>
+          </button>
         </span>
         <span>{{ formatDate(idea.exp_date ?? idea.expiration_date ?? idea.expDate) }}</span>
         <span>{{ formatNumber(idea.price) }}</span>
@@ -276,6 +283,7 @@ const emit = defineEmits([
   'update:minRoi',
   'update:minDelta',
   'update:screenerType',
+  'select-ticker',
 ]);
 
 const sortKey = ref('expDate');

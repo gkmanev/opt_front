@@ -17,7 +17,9 @@
       </div>
       <div v-for="position in positions" :key="position.ticker" class="table-row">
         <span class="ticker">
-          <strong>{{ position.ticker }}</strong>
+          <button class="ticker-button" type="button" @click="emit('select-ticker', position.ticker)">
+            <strong>{{ position.ticker }}</strong>
+          </button>
           <small>{{ position.name }}</small>
         </span>
         <span>{{ formatCurrency(position.value) }}</span>
@@ -38,6 +40,8 @@ defineProps({
     required: true,
   },
 });
+
+const emit = defineEmits(['select-ticker']);
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-US', {
