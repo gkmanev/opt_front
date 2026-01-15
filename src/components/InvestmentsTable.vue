@@ -145,6 +145,7 @@
           Ticker
           <span class="sort-indicator">{{ sortIndicator('ticker') }}</span>
         </button>
+        <span class="table-label">Details</span>
         <button
           class="table-sort"
           type="button"
@@ -193,13 +194,16 @@
       </div>
       <div v-for="idea in paginatedInvestments" :key="ideaKey(idea)" class="table-row">
         <span class="ticker">
+          <strong>{{ idea.ticker ?? '—' }}</strong>
+        </span>
+        <span>
           <button
-            class="ticker-button"
+            class="ghost details-button"
             type="button"
             :disabled="!idea.ticker"
             @click="emit('select-ticker', idea.ticker)"
           >
-            <strong>{{ idea.ticker ?? '—' }}</strong>
+            Details
           </button>
         </span>
         <span>{{ formatDate(idea.exp_date ?? idea.expiration_date ?? idea.expDate) }}</span>
