@@ -49,6 +49,43 @@
       </div>
       <div class="filter-group">
         <div class="filter-header">
+          <span>RSI range</span>
+          <strong>{{ formatFilterValue(localMinRsi) }} - {{ formatFilterValue(localMaxRsi) }}</strong>
+        </div>
+        <div class="filter-controls">
+          <div class="range-slider">
+            <div class="range-track">
+              <span class="range-selection" :style="rsiRangeSelectionStyle"></span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              :value="localMinRsi"
+              @input="onMinRsiInput"
+            />
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              :value="localMaxRsi"
+              @input="onMaxRsiInput"
+            />
+          </div>
+          <button
+            class="ghost find-button"
+            type="button"
+            :disabled="!hasRsiChanges"
+            @click="applyRsiFilter"
+          >
+            Find
+          </button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-header">
           <span>Min ROI</span>
           <strong>{{ roiLabel }}</strong>
         </div>
@@ -182,13 +219,27 @@ const props = defineProps({
     type: Number,
     default: 200,
   },
+  minRsi: {
+    type: Number,
+    default: 0,
+  },
+  maxRsi: {
+    type: Number,
+    default: 100,
+  },
   minRoi: {
     type: Number,
     default: null,
   },
 });
 
-const emit = defineEmits(['update:minPrice', 'update:maxPrice', 'update:minRoi']);
+const emit = defineEmits([
+  'update:minPrice',
+  'update:maxPrice',
+  'update:minRsi',
+  'update:maxRsi',
+  'update:minRoi',
+]);
 
 const sortKey = ref('expDate');
 const sortDirection = ref('asc');
@@ -196,6 +247,8 @@ const currentPage = ref(1);
 const pageSize = ref(6);
 const localMinPrice = ref(props.minPrice);
 const localMaxPrice = ref(props.maxPrice);
+const localMinRsi = ref(props.minRsi);
+const localMaxRsi = ref(props.maxRsi);
 const localMinRoi = ref(
   props.minRoi === null || props.minRoi === undefined ? '' : String(props.minRoi),
 );
@@ -298,10 +351,31 @@ const rangeSelectionStyle = computed(() => {
   return { left: `${left}%`, width: `${width}%` };
 });
 
+const rsiRangeSelectionStyle = computed(() => {
+  const min = Number(localMinRsi.value);
+  const max = Number(localMaxRsi.value);
+  if (Number.isNaN(min) || Number.isNaN(max)) {
+    return { left: '0%', width: '100%' };
+  }
+  const clampedMin = Math.min(Math.max(min, 0), 100);
+  const clampedMax = Math.min(Math.max(max, 0), 100);
+  const start = Math.min(clampedMin, clampedMax);
+  const end = Math.max(clampedMin, clampedMax);
+  const left = (start / 100) * 100;
+  const width = ((end - start) / 100) * 100;
+  return { left: `${left}%`, width: `${width}%` };
+});
+
 const hasPriceChanges = computed(
   () =>
     Number(localMinPrice.value) !== Number(props.minPrice) ||
     Number(localMaxPrice.value) !== Number(props.maxPrice),
+);
+
+const hasRsiChanges = computed(
+  () =>
+    Number(localMinRsi.value) !== Number(props.minRsi) ||
+    Number(localMaxRsi.value) !== Number(props.maxRsi),
 );
 
 const hasRoiChanges = computed(
@@ -394,6 +468,29 @@ const applyPriceFilter = () => {
   emit('update:maxPrice', localMaxPrice.value);
 };
 
+const onMinRsiInput = (event) => {
+  const nextValue = Number(event.target.value);
+  if (Number.isNaN(nextValue)) return;
+  localMinRsi.value = nextValue;
+  if (nextValue > localMaxRsi.value) {
+    localMaxRsi.value = nextValue;
+  }
+};
+
+const onMaxRsiInput = (event) => {
+  const nextValue = Number(event.target.value);
+  if (Number.isNaN(nextValue)) return;
+  localMaxRsi.value = nextValue;
+  if (nextValue < localMinRsi.value) {
+    localMinRsi.value = nextValue;
+  }
+};
+
+const applyRsiFilter = () => {
+  emit('update:minRsi', localMinRsi.value);
+  emit('update:maxRsi', localMaxRsi.value);
+};
+
 const onMinRoiChange = (event) => {
   localMinRoi.value = event.target.value;
 };
@@ -424,6 +521,20 @@ watch(
   () => props.maxPrice,
   (value) => {
     localMaxPrice.value = value;
+  },
+);
+
+watch(
+  () => props.minRsi,
+  (value) => {
+    localMinRsi.value = value;
+  },
+);
+
+watch(
+  () => props.maxRsi,
+  (value) => {
+    localMaxRsi.value = value;
   },
 );
 

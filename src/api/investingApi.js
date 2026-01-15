@@ -24,7 +24,7 @@ const normalizeWeeklyInvestment = (idea) => ({
   expiration_date: idea.expiration_date ?? idea.exp_date ?? idea.option_exp ?? idea.optionExp,
 });
 
-const buildWeeklyInvestmentsPath = ({ minPrice, maxPrice, minRoi } = {}) => {
+const buildWeeklyInvestmentsPath = ({ minPrice, maxPrice, minRsi, maxRsi, minRoi } = {}) => {
   const params = new URLSearchParams({
     weekly_options: 'true',
     screener_type: 'Custom screener filterV3',
@@ -36,6 +36,12 @@ const buildWeeklyInvestmentsPath = ({ minPrice, maxPrice, minRoi } = {}) => {
   if (maxPrice !== null && maxPrice !== undefined && maxPrice !== '') {
     params.set('max_price', String(maxPrice));
   }
+  if (minRsi !== null && minRsi !== undefined && minRsi !== '') {
+    params.set('min_rsi', String(minRsi));
+  }
+  if (maxRsi !== null && maxRsi !== undefined && maxRsi !== '') {
+    params.set('max_rsi', String(maxRsi));
+  }
   if (minRoi !== null && minRoi !== undefined && minRoi !== '') {
     params.set('min_roi', String(minRoi));
   }
@@ -43,9 +49,9 @@ const buildWeeklyInvestmentsPath = ({ minPrice, maxPrice, minRoi } = {}) => {
   return `${weeklyInvestmentsBasePath}?${params.toString()}`;
 };
 
-export const getWeeklyInvestments = async ({ minPrice, maxPrice, minRoi } = {}) => {
+export const getWeeklyInvestments = async ({ minPrice, maxPrice, minRsi, maxRsi, minRoi } = {}) => {
   try {
-    const data = await request(buildWeeklyInvestmentsPath({ minPrice, maxPrice, minRoi }));
+    const data = await request(buildWeeklyInvestmentsPath({ minPrice, maxPrice, minRsi, maxRsi, minRoi }));
     console.log('[getWeeklyInvestments] raw response', data);
     const list = Array.isArray(data) ? data : data.results ?? data.investments ?? [];
     return list.map((idea) => normalizeWeeklyInvestment(idea));
