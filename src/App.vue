@@ -274,7 +274,7 @@ const renderWidget = () => {
   if (!widgetContainer.value || !activeTicker.value) return;
   widgetContainer.value.innerHTML = '';
   const container = document.createElement('div');
-  container.className = 'tradingview-widget-container';
+  container.className = 'tradingview-widget-container tradingview-widget-container--technical';
 
   const widget = document.createElement('div');
   widget.className = 'tradingview-widget-container__widget';
@@ -305,7 +305,7 @@ const renderWidget = () => {
   script.text = JSON.stringify({
     colorTheme: 'dark',
     displayMode: 'single',
-    isTransparent: true,
+    isTransparent: false,
     locale: 'en',
     interval: '1m',
     disableInterval: false,
@@ -313,7 +313,7 @@ const renderWidget = () => {
     height: '100%',
     symbol: buildTradingViewSymbol(activeTicker.value),
     showIntervalTabs: true,
-    backgroundColor: 'rgba(0, 0, 0, 0)',
+    backgroundColor: '#10162b',
   });
 
   container.append(widget, copyright, script);
@@ -324,7 +324,7 @@ const renderSymbolOverviewWidget = () => {
   if (!symbolOverviewContainer.value || !activeTicker.value) return;
   symbolOverviewContainer.value.innerHTML = '';
   const container = document.createElement('div');
-  container.className = 'tradingview-widget-container';
+  container.className = 'tradingview-widget-container tradingview-widget-container--transparent';
 
   const widget = document.createElement('div');
   widget.className = 'tradingview-widget-container__widget';
