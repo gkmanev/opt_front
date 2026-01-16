@@ -312,7 +312,7 @@ const renderWidget = () => {
     // displayMode: 'single',
     // isTransparent: true,
     // locale: 'en',
-    // interval: '1m',
+      interval: '1M',
     // disableInterval: false,
     // width: '100%',
     // height: '100%',
