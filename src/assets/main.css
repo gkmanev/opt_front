@@ -587,11 +587,11 @@ main {
 
 .tradingview-widget-container--technical,
 .tradingview-widget-container--technical .tradingview-widget-container__widget {
-  background: #10162b;
+  background: transparent;
 }
 
 .tradingview-widget-container--technical .tradingview-widget-container__widget iframe {
-  background-color: #10162b;
+  background-color: transparent;
 }
 
 .tradingview-widget-container--symbol-overview,
