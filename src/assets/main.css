@@ -574,17 +574,33 @@ main {
 .tradingview-widget-container {
   width: 100%;
   height: 100%;
-  background: transparent;
 }
 
 .tradingview-widget-container__widget {
   width: 100%;
   height: 100%;
-  background: transparent;
 }
 
 .tradingview-widget-container__widget iframe {
+  border: 0;
+}
+
+.tradingview-widget-container--transparent,
+.tradingview-widget-container--transparent .tradingview-widget-container__widget {
   background: transparent;
+}
+
+.tradingview-widget-container--transparent .tradingview-widget-container__widget iframe {
+  background-color: transparent;
+}
+
+.tradingview-widget-container--technical,
+.tradingview-widget-container--technical .tradingview-widget-container__widget {
+  background: #10162b;
+}
+
+.tradingview-widget-container--technical .tradingview-widget-container__widget iframe {
+  background-color: #10162b;
 }
 
 .list {
