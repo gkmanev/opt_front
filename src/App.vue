@@ -101,6 +101,10 @@
                 <p class="panel-label">Symbol overview</p>
                 <div ref="symbolOverviewContainer" class="tradingview-wrapper"></div>
               </section>
+              <section class="modal-panel">
+                <p class="panel-label">Key facts</p>
+                <div ref="symbolProfileContainer" class="tradingview-wrapper"></div>
+              </section>
             </div>
           </div>
         </div>
@@ -139,6 +143,7 @@ const isModalOpen = ref(false);
 const activeTicker = ref('');
 const widgetContainer = ref(null);
 const symbolOverviewContainer = ref(null);
+const symbolProfileContainer = ref(null);
 
 const summarySnapshot = ref({
   openPositions: 0,
@@ -398,9 +403,55 @@ const renderSymbolOverviewWidget = () => {
   symbolOverviewContainer.value.appendChild(container);
 };
 
+const renderSymbolProfileWidget = () => {
+  if (!symbolProfileContainer.value || !activeTicker.value) return;
+  symbolProfileContainer.value.innerHTML = '';
+  const container = document.createElement('div');
+  container.className = 'tradingview-widget-container tradingview-widget-container--symbol-profile';
+
+  const widget = document.createElement('div');
+  widget.className = 'tradingview-widget-container__widget';
+
+  const copyright = document.createElement('div');
+  copyright.className = 'tradingview-widget-copyright';
+
+  const link = document.createElement('a');
+  link.href = buildTradingViewSymbolPageLink(activeTicker.value);
+  link.rel = 'noopener nofollow';
+  link.target = '_blank';
+
+  const linkText = document.createElement('span');
+  linkText.className = 'blue-text';
+  linkText.textContent = `${activeTicker.value} key facts`;
+
+  const trademark = document.createElement('span');
+  trademark.className = 'trademark';
+  trademark.textContent = ' by TradingView';
+
+  link.appendChild(linkText);
+  copyright.append(link, trademark);
+
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-profile.js';
+  script.async = true;
+  script.text = JSON.stringify({
+    symbol: buildTradingViewSymbol(activeTicker.value),
+    colorTheme: 'dark',
+    isTransparent: false,
+    locale: 'en',
+    width: '100%',
+    height: '100%',
+  });
+
+  container.append(widget, copyright, script);
+  symbolProfileContainer.value.appendChild(container);
+};
+
 const renderModalCharts = () => {
   renderWidget();
   renderSymbolOverviewWidget();
+  renderSymbolProfileWidget();
 };
 
 const openTicker = (ticker) => {
@@ -417,6 +468,9 @@ const closeModal = () => {
   }
   if (symbolOverviewContainer.value) {
     symbolOverviewContainer.value.innerHTML = '';
+  }
+  if (symbolProfileContainer.value) {
+    symbolProfileContainer.value.innerHTML = '';
   }
 };
 
