@@ -308,7 +308,7 @@ const renderWidget = () => {
   script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js';
   script.async = true;
   script.text = JSON.stringify({
-    colorTheme: 'dark',    
+    colorTheme: 'dark',
     // displayMode: 'single',
     // isTransparent: true,
     // locale: 'en',
@@ -316,7 +316,7 @@ const renderWidget = () => {
     // disableInterval: false,
     // width: '100%',
     // height: '100%',
-    // symbol: buildTradingViewSymbol(activeTicker.value),
+    symbol: buildTradingViewSymbol(activeTicker.value),
     // showIntervalTabs: true,
     // backgroundColor: 'rgba(0, 0, 0, 0)',
   });
