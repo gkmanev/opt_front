@@ -585,21 +585,21 @@ main {
   border: 0;
 }
 
-.tradingview-widget-container--transparent,
-.tradingview-widget-container--transparent .tradingview-widget-container__widget {
-  background: transparent;
-}
-
-.tradingview-widget-container--transparent .tradingview-widget-container__widget iframe {
-  background-color: transparent;
-}
-
 .tradingview-widget-container--technical,
 .tradingview-widget-container--technical .tradingview-widget-container__widget {
   background: #10162b;
 }
 
 .tradingview-widget-container--technical .tradingview-widget-container__widget iframe {
+  background-color: #10162b;
+}
+
+.tradingview-widget-container--symbol-overview,
+.tradingview-widget-container--symbol-overview .tradingview-widget-container__widget {
+  background: #10162b;
+}
+
+.tradingview-widget-container--symbol-overview .tradingview-widget-container__widget iframe {
   background-color: #10162b;
 }
 

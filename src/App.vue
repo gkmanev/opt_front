@@ -324,7 +324,7 @@ const renderSymbolOverviewWidget = () => {
   if (!symbolOverviewContainer.value || !activeTicker.value) return;
   symbolOverviewContainer.value.innerHTML = '';
   const container = document.createElement('div');
-  container.className = 'tradingview-widget-container tradingview-widget-container--transparent';
+  container.className = 'tradingview-widget-container tradingview-widget-container--symbol-overview';
 
   const widget = document.createElement('div');
   widget.className = 'tradingview-widget-container__widget';
@@ -360,7 +360,7 @@ const renderSymbolOverviewWidget = () => {
     gridLineColor: 'rgba(242, 242, 242, 0.06)',
     volumeUpColor: 'rgba(34, 171, 148, 0.5)',
     volumeDownColor: 'rgba(247, 82, 95, 0.5)',
-    backgroundColor: 'rgba(0, 0, 0, 0)',
+    backgroundColor: '#10162b',
     widgetFontColor: '#DBDBDB',
     upColor: '#22ab94',
     downColor: '#f7525f',
@@ -369,7 +369,7 @@ const renderSymbolOverviewWidget = () => {
     wickUpColor: '#22ab94',
     wickDownColor: '#f7525f',
     colorTheme: 'dark',
-    isTransparent: true,
+    isTransparent: false,
     locale: 'en',
     chartOnly: false,
     scalePosition: 'right',
