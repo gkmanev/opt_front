@@ -77,7 +77,7 @@
           @update:screener-type="screenerType = $event"
           @select-ticker="openTicker"
         />
-        <MarketMovers :movers="movers" @select-ticker="openTicker" />
+        <!-- <MarketMovers :movers="movers" @select-ticker="openTicker" /> -->
       </div>
     </main>
 
@@ -118,7 +118,7 @@ import { nextTick, onMounted, ref, watch } from 'vue';
 import { apiBaseUrl, getWeeklyInvestments } from './api/investingApi';
 import SummaryCards from './components/SummaryCards.vue';
 import InvestmentsTable from './components/InvestmentsTable.vue';
-import MarketMovers from './components/MarketMovers.vue';
+// import MarketMovers from './components/MarketMovers.vue';
 
 const loading = ref(true);
 const error = ref('');
@@ -230,7 +230,7 @@ const loadData = async () => {
       maxDelta: maxDelta.value,
       screenerType: screenerType.value,
     });
-    console.log('investmentsData', investmentsData);
+   
 
     applyData({
       summary: fallback.summary,
@@ -365,7 +365,7 @@ const renderSymbolOverviewWidget = () => {
     // gridLineColor: 'rgba(242, 242, 242, 0.06)',
     // volumeUpColor: 'rgba(34, 171, 148, 0.5)',
     // volumeDownColor: 'rgba(247, 82, 95, 0.5)',
-    backgroundColor: 'rgba(12, 17, 27, 1)',
+    backgroundColor: 'rgba(31, 31, 31, 1)',
     widgetFontColor: '#e2e8f0',
     // upColor: '#22ab94',
     // downColor: '#f7525f',

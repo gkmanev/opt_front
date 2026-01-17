@@ -90,7 +90,7 @@ export const getWeeklyInvestments = async ({
         screenerType,
       }),
     );
-    console.log('[getWeeklyInvestments] raw response', data);
+    
     const list = Array.isArray(data) ? data : data.results ?? data.investments ?? [];
     return list.map((idea) => normalizeWeeklyInvestment(idea));
   } catch (error) {

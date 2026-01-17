@@ -101,7 +101,7 @@
       </div>
       <div class="filter-group">
         <div class="filter-header">
-          <span>Min ROI</span>
+          <span>Min ROI/Month</span>
         </div>
         <div class="filter-controls">
           <select class="select" :value="localMinRoi" @change="onMinRoiChange">
@@ -114,7 +114,7 @@
       </div>
       <div class="filter-group">
         <div class="filter-header">
-          <span>Prob. of expiration</span>
+          <span>Prob. of worthless</span>
         </div>
         <div class="filter-controls">
           <select class="select" :value="localMinExpiration" @change="onMinExpirationChange">
