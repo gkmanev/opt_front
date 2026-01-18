@@ -111,13 +111,15 @@
           <div class="table-snippet">
             <div class="table-row table-head">
               <span>Ticker</span>
+              <span>Price</span>
               <span>ROI</span>
-              <span>Breakeven</span>
+              <span>Expiration Date</span>
             </div>
             <div class="table-row" v-for="row in topIncome" :key="row.ticker">
               <span>{{ row.ticker }}</span>
+              <span>{{ row.price }}</span>
               <span>{{ row.roi }}</span>
-              <span>{{ row.breakeven }}</span>
+              <span>{{ row.expirationDate }}</span>
             </div>
           </div>
           <div class="card-footer">
@@ -301,11 +303,7 @@ const applyData = (data) => {
 
   const topIdeas = sortedByRoi.slice(0, 3);
   putPreview.value = topIdeas.map((idea) => buildPreviewRow(idea));
-  topIncome.value = topIdeas.map((idea) => ({
-    ticker: idea.ticker ?? '—',
-    roi: formatPercent(idea.roi),
-    breakeven: formatPrice(resolveBreakeven(idea)),
-  }));
+  topIncome.value = topIdeas.map((idea) => buildPreviewRow(idea));
 
   const roiValues = list
     .map((idea) => Number(idea.roi))
