@@ -144,14 +144,12 @@
           :max-rsi="maxRsi"
           :min-roi="minRoi"
           :min-delta="minDelta"
-          :screener-type="screenerType"
           @update:min-price="minPrice = $event"
           @update:max-price="maxPrice = $event"
           @update:min-rsi="minRsi = $event"
           @update:max-rsi="maxRsi = $event"
           @update:min-roi="minRoi = $event"
           @update:min-delta="minDelta = $event"
-          @update:screener-type="screenerType = $event"
           @select-ticker="openTicker"
         />
       </div>
@@ -204,43 +202,15 @@ const maxRsi = ref(100);
 const minRoi = ref(null);
 const minDelta = ref(null);
 const maxDelta = ref(null);
-const screenerType = ref('Stocks by Quant');
 const isModalOpen = ref(false);
 const activeTicker = ref('');
 const widgetContainer = ref(null);
 const symbolOverviewContainer = ref(null);
 const symbolProfileContainer = ref(null);
 
-const putPreview = ref([
-  { ticker: 'KO', fund: 'SBuy', roi: '2.3%', breakeven: '$58.20' },
-  { ticker: 'PG', fund: 'Buy', roi: '2.1%', breakeven: '$142.50' },
-  { ticker: 'JNJ', fund: 'SBuy', roi: '2.4%', breakeven: '$145.00' },
-]);
-
-const kpiCards = ref([
-  {
-    label: 'Put Candidates',
-    value: '12 Today',
-    subtext: 'Cash-secured puts',
-    trend: '+2 new',
-    sparkline: '▲',
-    trendClass: 'positive',
-  },
-  {
-    label: 'Avg Put ROI',
-    value: '2.3% Monthly',
-    subtext: 'Targeted delta -0.35',
-    trend: '+0.2%',
-    sparkline: '↗',
-    trendClass: 'positive',
-  },
-]);
-
-const topIncome = ref([
-  { ticker: 'KO', roi: '2.3%', breakeven: '$58.20' },
-  { ticker: 'PG', roi: '2.1%', breakeven: '$142.50' },
-  { ticker: 'JNJ', roi: '2.4%', breakeven: '$145.00' },
-]);
+const putPreview = ref([]);
+const kpiCards = ref([]);
+const topIncome = ref([]);
 
 const fallback = {
   investments: [
@@ -271,8 +241,88 @@ const fallback = {
   ],
 };
 
+const formatPercent = (value) => {
+  const number = Number(value);
+  if (Number.isNaN(number)) return '—';
+  return `${number.toFixed(2)}%`;
+};
+
+const formatPrice = (value) => {
+  const number = Number(value);
+  if (Number.isNaN(number)) return '—';
+  return `$${number.toFixed(2)}`;
+};
+
+const resolveFundLabel = (idea) =>
+  idea.fund ??
+  idea.rating ??
+  idea.quant_rating ??
+  idea.quantRating ??
+  idea.fundamentals ??
+  '—';
+
+const resolveBreakeven = (idea) =>
+  idea.breakeven ??
+  idea.break_even ??
+  idea.breakeven_price ??
+  idea.breakevenPrice ??
+  idea.breakEven ??
+  null;
+
+const buildPreviewRow = (idea) => ({
+  ticker: idea.ticker ?? '—',
+  fund: resolveFundLabel(idea),
+  roi: formatPercent(idea.roi),
+  breakeven: formatPrice(resolveBreakeven(idea)),
+});
+
 const applyData = (data) => {
-  investments.value = data.investments;
+  const list = Array.isArray(data.investments) ? data.investments : [];
+  investments.value = list;
+
+  const sortedByRoi = [...list].sort((a, b) => {
+    const aRoi = Number(a.roi);
+    const bRoi = Number(b.roi);
+    if (Number.isNaN(aRoi) && Number.isNaN(bRoi)) return 0;
+    if (Number.isNaN(aRoi)) return 1;
+    if (Number.isNaN(bRoi)) return -1;
+    return bRoi - aRoi;
+  });
+
+  const topIdeas = sortedByRoi.slice(0, 3);
+  putPreview.value = topIdeas.map((idea) => buildPreviewRow(idea));
+  topIncome.value = topIdeas.map((idea) => ({
+    ticker: idea.ticker ?? '—',
+    roi: formatPercent(idea.roi),
+    breakeven: formatPrice(resolveBreakeven(idea)),
+  }));
+
+  const roiValues = list
+    .map((idea) => Number(idea.roi))
+    .filter((value) => !Number.isNaN(value));
+  const avgRoi =
+    roiValues.length > 0
+      ? roiValues.reduce((sum, value) => sum + value, 0) / roiValues.length
+      : null;
+
+  kpiCards.value = [
+    {
+      label: 'Put Candidates',
+      value: `${list.length} Today`,
+      subtext: 'Cash-secured puts',
+      trend: list.length ? 'Live' : 'Awaiting data',
+      sparkline: list.length ? '▲' : '—',
+      trendClass: list.length ? 'positive' : '',
+    },
+    {
+      label: 'Avg Put ROI',
+      value: avgRoi === null ? '—' : `${avgRoi.toFixed(2)}% Monthly`,
+      subtext: 'Targeted delta -0.35',
+      trend: avgRoi === null ? 'No ROI data' : 'Rolling weekly',
+      sparkline: avgRoi === null ? '—' : '↗',
+      trendClass: avgRoi === null ? '' : 'positive',
+    },
+  ];
 };
 
 const loadData = async () => {
@@ -288,7 +338,7 @@ const loadData = async () => {
       minRoi: minRoi.value,
       minDelta: minDelta.value,
       maxDelta: maxDelta.value,
-      screenerType: screenerType.value,
+      screenerType: 'Custom screener filterV3',
     });
 
     applyData({
@@ -489,7 +539,7 @@ const closeModal = () => {
 };
 
 let priceFilterTimer;
-watch([minPrice, maxPrice, minRsi, maxRsi, minRoi, minDelta, maxDelta, screenerType], () => {
+watch([minPrice, maxPrice, minRsi, maxRsi, minRoi, minDelta, maxDelta], () => {
   clearTimeout(priceFilterTimer);
   priceFilterTimer = setTimeout(() => {
     loadData();

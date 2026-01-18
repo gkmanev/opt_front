@@ -77,25 +77,20 @@ export const getWeeklyInvestments = async ({
   maxDelta,
   screenerType,
 } = {}) => {
-  try {
-    const data = await request(
-      buildWeeklyInvestmentsPath({
-        minPrice,
-        maxPrice,
-        minRsi,
-        maxRsi,
-        minRoi,
-        minDelta,
-        maxDelta,
-        screenerType,
-      }),
-    );
-    
-    const list = Array.isArray(data) ? data : data.results ?? data.investments ?? [];
-    return list.map((idea) => normalizeWeeklyInvestment(idea));
-  } catch (error) {
-    console.error('[getWeeklyInvestments] request failed', error);
-    return [];
-  }
+  const data = await request(
+    buildWeeklyInvestmentsPath({
+      minPrice,
+      maxPrice,
+      minRsi,
+      maxRsi,
+      minRoi,
+      minDelta,
+      maxDelta,
+      screenerType,
+    }),
+  );
+
+  const list = Array.isArray(data) ? data : data.results ?? data.investments ?? [];
+  return list.map((idea) => normalizeWeeklyInvestment(idea));
 };
 export const apiBaseUrl = baseUrl;
