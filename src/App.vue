@@ -16,11 +16,11 @@
       </nav>
       <div class="hero-body">
         <div>
-          <p class="eyebrow">Wheel + LEAP Screeners</p>
-          <h1>Generate Monthly Options Income + Long-Term Growth from Blue-Chip Quality Stocks</h1>
+          <p class="eyebrow">Cash-Secured Put Screener</p>
+          <h1>Generate Monthly Options Income by Selling Cash-Secured Puts</h1>
           <p class="lead">
-            Our screeners spot cash-secured puts (&gt;2% monthly ROI on Strong Buy fundamentals)
-            and LEAP calls (70-75 delta, 1+ year) for wheel &amp; growth.
+            Our screener focuses on put-selling setups (&gt;2% monthly ROI on Strong Buy
+            fundamentals) so you can earn income and get paid to buy great stocks at a discount.
           </p>
           <div class="hero-actions">
             <button class="primary" type="button">View Live Candidates</button>
@@ -30,21 +30,21 @@
             <span class="ticker-dot"></span>
             <span>AAPL - Put ROI 2.4%</span>
             <span class="divider">|</span>
-            <span>MSFT - LEAP Upside 32%</span>
+            <span>MSFT - Breakeven $315.80</span>
           </div>
         </div>
         <div class="hero-card">
           <div class="glow"></div>
           <p class="eyebrow">Live Strategy Pulse</p>
-          <h3>Income &amp; Growth mix is trending higher</h3>
+          <h3>Put income opportunities are trending higher</h3>
           <p class="subtle">
-            Put candidates are holding above 2.1% ROI with bullish fundamentals while LEAP
-            upside targets remain above 25%.
+            Put candidates are holding above 2.1% ROI with bullish fundamentals and stable
+            technicals.
           </p>
           <div class="pill-row">
             <span class="pill">Strong Buy Bias</span>
             <span class="pill">High Options Volume</span>
-            <span class="pill">Delta 0.70+</span>
+            <span class="pill">Delta -0.35 Target</span>
           </div>
           <button class="ghost" type="button">See Daily Brief</button>
         </div>
@@ -55,8 +55,8 @@
       <section class="screener-preview">
         <header class="section-header">
           <div>
-            <p class="eyebrow">Screener Cards Preview</p>
-            <h2>Two engines. One disciplined options workflow.</h2>
+            <p class="eyebrow">Screener Card Preview</p>
+            <h2>One focused workflow for selling puts.</h2>
           </div>
         </header>
         <div class="screener-grid">
@@ -84,31 +84,6 @@
             </div>
             <button class="primary" type="button">Explore Top Puts</button>
           </article>
-
-          <article class="card screener-card">
-            <div class="card-icon">🚀</div>
-            <h3>Growth Engine: LEAP Calls for Upside</h3>
-            <ul class="feature-list">
-              <li>Growth picks with solid due diligence</li>
-              <li>70-75 delta, ≥1yr expiry leverage</li>
-              <li>Less capital than 100 shares</li>
-            </ul>
-            <div class="table-snippet">
-              <div class="table-row table-head">
-                <span>Ticker</span>
-                <span>Delta</span>
-                <span>Upside</span>
-                <span>Expiry</span>
-              </div>
-              <div class="table-row" v-for="row in leapPreview" :key="row.ticker">
-                <span>{{ row.ticker }}</span>
-                <span>{{ row.delta }}</span>
-                <span>{{ row.upside }}</span>
-                <span>{{ row.expiry }}</span>
-              </div>
-            </div>
-            <button class="primary" type="button">Explore Top LEAPs</button>
-          </article>
         </div>
       </section>
 
@@ -128,7 +103,7 @@
         <article class="card dashboard-card">
           <header>
             <div>
-              <p class="eyebrow">Income (Puts/Wheel)</p>
+              <p class="eyebrow">Income (Cash-Secured Puts)</p>
               <h3>Top 3 Today</h3>
             </div>
             <span class="badge">Strong Buy</span>
@@ -147,32 +122,6 @@
           </div>
           <div class="card-footer">
             <span class="badge">Fundamentals: Strong Buy</span>
-            <button class="ghost" type="button">→ Full Screener</button>
-          </div>
-        </article>
-
-        <article class="card dashboard-card">
-          <header>
-            <div>
-              <p class="eyebrow">Growth (LEAP Calls)</p>
-              <h3>Top 3 Today</h3>
-            </div>
-            <span class="badge">Jan'27+</span>
-          </header>
-          <div class="table-snippet">
-            <div class="table-row table-head">
-              <span>Ticker</span>
-              <span>Delta</span>
-              <span>Upside</span>
-            </div>
-            <div class="table-row" v-for="row in topGrowth" :key="row.ticker">
-              <span>{{ row.ticker }}</span>
-              <span>{{ row.delta }}</span>
-              <span>{{ row.upside }}</span>
-            </div>
-          </div>
-          <div class="card-footer">
-            <span class="badge">Expiry: Jan'27+</span>
             <button class="ghost" type="button">→ Full Screener</button>
           </div>
         </article>
@@ -268,12 +217,6 @@ const putPreview = ref([
   { ticker: 'JNJ', fund: 'SBuy', roi: '2.4%', breakeven: '$145.00' },
 ]);
 
-const leapPreview = ref([
-  { ticker: 'AAPL', delta: '0.72', upside: '28%', expiry: "Jan'27" },
-  { ticker: 'MSFT', delta: '0.71', upside: '32%', expiry: "Dec'27" },
-  { ticker: 'NVDA', delta: '0.73', upside: '25%', expiry: "Jan'27" },
-]);
-
 const kpiCards = ref([
   {
     label: 'Put Candidates',
@@ -291,34 +234,12 @@ const kpiCards = ref([
     sparkline: '↗',
     trendClass: 'positive',
   },
-  {
-    label: 'LEAP Candidates',
-    value: '8 Today',
-    subtext: '70-75 delta calls',
-    trend: '+1 new',
-    sparkline: '▲',
-    trendClass: 'positive',
-  },
-  {
-    label: 'Avg LEAP Upside',
-    value: '28%',
-    subtext: '1+ year horizon',
-    trend: '+3%',
-    sparkline: '↗',
-    trendClass: 'positive',
-  },
 ]);
 
 const topIncome = ref([
   { ticker: 'KO', roi: '2.3%', breakeven: '$58.20' },
   { ticker: 'PG', roi: '2.1%', breakeven: '$142.50' },
   { ticker: 'JNJ', roi: '2.4%', breakeven: '$145.00' },
-]);
-
-const topGrowth = ref([
-  { ticker: 'AAPL', delta: '0.72', upside: '28%' },
-  { ticker: 'MSFT', delta: '0.71', upside: '32%' },
-  { ticker: 'NVDA', delta: '0.73', upside: '25%' },
 ]);
 
 const fallback = {
