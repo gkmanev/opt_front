@@ -782,6 +782,28 @@ main {
   background-color: #10162b;
 }
 
+.tradingview-widget-copyright {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.tradingview-widget-copyright a,
+.tradingview-widget-copyright a:visited,
+.blue-text {
+  color: #c4b5ff;
+  text-decoration: none;
+}
+
+.tradingview-widget-copyright a:hover,
+.tradingview-widget-copyright a:focus-visible {
+  color: #e2e0ff;
+  text-decoration: underline;
+}
+
+.trademark {
+  color: rgba(255, 255, 255, 0.75);
+}
+
 .list {
   list-style: none;
   margin: 0;
