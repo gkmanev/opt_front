@@ -71,15 +71,15 @@
             <div class="table-snippet">
               <div class="table-row table-head">
                 <span>Ticker</span>
-                <span>Fund.</span>
-                <span>Put ROI</span>
-                <span>Breakeven</span>
+                <span>Price</span>
+                <span>ROI</span>
+                <span>Expiration Date</span>
               </div>
               <div class="table-row" v-for="row in putPreview" :key="row.ticker">
                 <span>{{ row.ticker }}</span>
-                <span>{{ row.fund }}</span>
+                <span>{{ row.price }}</span>
                 <span>{{ row.roi }}</span>
-                <span>{{ row.breakeven }}</span>
+                <span>{{ row.expirationDate }}</span>
               </div>
             </div>
             <button class="primary" type="button">Explore Top Puts</button>
@@ -253,13 +253,16 @@ const formatPrice = (value) => {
   return `$${number.toFixed(2)}`;
 };
 
-const resolveFundLabel = (idea) =>
-  idea.fund ??
-  idea.rating ??
-  idea.quant_rating ??
-  idea.quantRating ??
-  idea.fundamentals ??
-  '—';
+const formatDate = (value) => {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  });
+};
 
 const resolveBreakeven = (idea) =>
   idea.breakeven ??
@@ -269,11 +272,18 @@ const resolveBreakeven = (idea) =>
   idea.breakEven ??
   null;
 
+const resolveExpirationDate = (idea) =>
+  idea.exp_date ??
+  idea.expiration_date ??
+  idea.expirationDate ??
+  idea.exp ??
+  null;
+
 const buildPreviewRow = (idea) => ({
   ticker: idea.ticker ?? '—',
-  fund: resolveFundLabel(idea),
+  price: formatPrice(idea.price),
   roi: formatPercent(idea.roi),
-  breakeven: formatPrice(resolveBreakeven(idea)),
+  expirationDate: formatDate(resolveExpirationDate(idea)),
 });
 
 const applyData = (data) => {
