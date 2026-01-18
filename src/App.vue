@@ -1,56 +1,185 @@
 <template>
   <div class="app">
-    <header class="hero">
+    <header class="hero hero--options">
       <nav class="nav">
         <div class="logo">
           <span class="pulse"></span>
           <div>
-            <p>Investing Pulse</p>
+            <p>OptionsFlow</p>
             <small>Connected to {{ apiBaseUrl }}</small>
           </div>
         </div>
         <div class="actions">
-          <button class="ghost" type="button">Alerts</button>
-          <button class="primary" type="button" @click="refresh">Refresh</button>
+          <button class="ghost" type="button">Strategy Library</button>
+          <button class="primary" type="button" @click="refresh">View Live Candidates</button>
         </div>
       </nav>
       <div class="hero-body">
         <div>
-          <p class="eyebrow">Portfolio Overview</p>
-          <h1>Make confident moves with real-time portfolio intelligence.</h1>
+          <p class="eyebrow">Wheel + LEAP Screeners</p>
+          <h1>Generate Monthly Options Income + Long-Term Growth from Blue-Chip Quality Stocks</h1>
           <p class="lead">
-            A modern, data-rich dashboard that tracks your holdings, risk exposure, and market momentum.
+            Our screeners spot cash-secured puts (&gt;2% monthly ROI on Strong Buy fundamentals)
+            and LEAP calls (70-75 delta, 1+ year) for wheel &amp; growth.
           </p>
-          <div class="hero-metrics">
-            <div>
-              <strong>{{ summarySnapshot.openPositions }}</strong>
-              <span>Open positions</span>
-            </div>
-            <div>
-              <strong>{{ summarySnapshot.watchlist }}</strong>
-              <span>Watchlist alerts</span>
-            </div>
-            <div>
-              <strong>{{ summarySnapshot.cashRunway }}</strong>
-              <span>Cash runway</span>
-            </div>
+          <div class="hero-actions">
+            <button class="primary" type="button">View Live Candidates</button>
+            <button class="ghost" type="button">See How It Works</button>
+          </div>
+          <div class="ticker-preview">
+            <span class="ticker-dot"></span>
+            <span>AAPL - Put ROI 2.4%</span>
+            <span class="divider">|</span>
+            <span>MSFT - LEAP Upside 32%</span>
           </div>
         </div>
         <div class="hero-card">
           <div class="glow"></div>
-          <h3>Risk posture</h3>
-          <p class="subtle">{{ summarySnapshot.riskSummary }}</p>
+          <p class="eyebrow">Live Strategy Pulse</p>
+          <h3>Income &amp; Growth mix is trending higher</h3>
+          <p class="subtle">
+            Put candidates are holding above 2.1% ROI with bullish fundamentals while LEAP
+            upside targets remain above 25%.
+          </p>
           <div class="pill-row">
-            <span v-for="tag in summarySnapshot.tags" :key="tag" class="pill">{{ tag }}</span>
+            <span class="pill">Strong Buy Bias</span>
+            <span class="pill">High Options Volume</span>
+            <span class="pill">Delta 0.70+</span>
           </div>
-          <button class="ghost" type="button">Review hedges</button>
+          <button class="ghost" type="button">See Daily Brief</button>
         </div>
       </div>
     </header>
 
     <main>
+      <section class="screener-preview">
+        <header class="section-header">
+          <div>
+            <p class="eyebrow">Screener Cards Preview</p>
+            <h2>Two engines. One disciplined options workflow.</h2>
+          </div>
+        </header>
+        <div class="screener-grid">
+          <article class="card screener-card">
+            <div class="card-icon">💰</div>
+            <h3>Income Engine: Sell Puts → Wheel If Assigned</h3>
+            <ul class="feature-list">
+              <li>Strong Buy fundamentals + high options volume</li>
+              <li>&gt;2% monthly ROI at -0.35 delta puts</li>
+              <li>Assignment OK: Own great stocks at discount</li>
+            </ul>
+            <div class="table-snippet">
+              <div class="table-row table-head">
+                <span>Ticker</span>
+                <span>Fund.</span>
+                <span>Put ROI</span>
+                <span>Breakeven</span>
+              </div>
+              <div class="table-row" v-for="row in putPreview" :key="row.ticker">
+                <span>{{ row.ticker }}</span>
+                <span>{{ row.fund }}</span>
+                <span>{{ row.roi }}</span>
+                <span>{{ row.breakeven }}</span>
+              </div>
+            </div>
+            <button class="primary" type="button">Explore Top Puts</button>
+          </article>
+
+          <article class="card screener-card">
+            <div class="card-icon">🚀</div>
+            <h3>Growth Engine: LEAP Calls for Upside</h3>
+            <ul class="feature-list">
+              <li>Growth picks with solid due diligence</li>
+              <li>70-75 delta, ≥1yr expiry leverage</li>
+              <li>Less capital than 100 shares</li>
+            </ul>
+            <div class="table-snippet">
+              <div class="table-row table-head">
+                <span>Ticker</span>
+                <span>Delta</span>
+                <span>Upside</span>
+                <span>Expiry</span>
+              </div>
+              <div class="table-row" v-for="row in leapPreview" :key="row.ticker">
+                <span>{{ row.ticker }}</span>
+                <span>{{ row.delta }}</span>
+                <span>{{ row.upside }}</span>
+                <span>{{ row.expiry }}</span>
+              </div>
+            </div>
+            <button class="primary" type="button">Explore Top LEAPs</button>
+          </article>
+        </div>
+      </section>
+
+      <section class="kpi-strip" aria-label="Key performance indicators">
+        <article v-for="kpi in kpiCards" :key="kpi.label" class="card kpi-card">
+          <p class="eyebrow">{{ kpi.label }}</p>
+          <h3>{{ kpi.value }}</h3>
+          <p class="subtle">{{ kpi.subtext }}</p>
+          <div class="kpi-meta" :class="kpi.trendClass">
+            <span>{{ kpi.trend }}</span>
+            <span class="sparkline">{{ kpi.sparkline }}</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="dashboard-cards">
+        <article class="card dashboard-card">
+          <header>
+            <div>
+              <p class="eyebrow">Income (Puts/Wheel)</p>
+              <h3>Top 3 Today</h3>
+            </div>
+            <span class="badge">Strong Buy</span>
+          </header>
+          <div class="table-snippet">
+            <div class="table-row table-head">
+              <span>Ticker</span>
+              <span>ROI</span>
+              <span>Breakeven</span>
+            </div>
+            <div class="table-row" v-for="row in topIncome" :key="row.ticker">
+              <span>{{ row.ticker }}</span>
+              <span>{{ row.roi }}</span>
+              <span>{{ row.breakeven }}</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="badge">Fundamentals: Strong Buy</span>
+            <button class="ghost" type="button">→ Full Screener</button>
+          </div>
+        </article>
+
+        <article class="card dashboard-card">
+          <header>
+            <div>
+              <p class="eyebrow">Growth (LEAP Calls)</p>
+              <h3>Top 3 Today</h3>
+            </div>
+            <span class="badge">Jan'27+</span>
+          </header>
+          <div class="table-snippet">
+            <div class="table-row table-head">
+              <span>Ticker</span>
+              <span>Delta</span>
+              <span>Upside</span>
+            </div>
+            <div class="table-row" v-for="row in topGrowth" :key="row.ticker">
+              <span>{{ row.ticker }}</span>
+              <span>{{ row.delta }}</span>
+              <span>{{ row.upside }}</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="badge">Expiry: Jan'27+</span>
+            <button class="ghost" type="button">→ Full Screener</button>
+          </div>
+        </article>
+      </section>
+
       <div v-if="loading" class="card loading">
-        <p>Syncing with your investing API…</p>
+        <p>Syncing with your options API…</p>
       </div>
       <div v-else>
         <div v-if="error" class="card warning">
@@ -58,7 +187,6 @@
           <p class="subtle">Showing latest cached insights so the dashboard remains usable.</p>
         </div>
 
-        <SummaryCards :summary="summary" />
         <InvestmentsTable
           :investments="investments"
           :min-price="minPrice"
@@ -77,7 +205,6 @@
           @update:screener-type="screenerType = $event"
           @select-ticker="openTicker"
         />
-        <!-- <MarketMovers :movers="movers" @select-ticker="openTicker" /> -->
       </div>
     </main>
 
@@ -116,20 +243,10 @@
 <script setup>
 import { nextTick, onMounted, ref, watch } from 'vue';
 import { apiBaseUrl, getWeeklyInvestments } from './api/investingApi';
-import SummaryCards from './components/SummaryCards.vue';
 import InvestmentsTable from './components/InvestmentsTable.vue';
-// import MarketMovers from './components/MarketMovers.vue';
 
 const loading = ref(true);
 const error = ref('');
-const summary = ref({
-  totalValue: 0,
-  dayChange: 0,
-  dayChangePct: 0,
-  cash: 0,
-  riskScore: 0,
-});
-const movers = ref({ gainers: [], losers: [] });
 const investments = ref([]);
 const minPrice = ref(0);
 const maxPrice = ref(200);
@@ -145,34 +262,66 @@ const widgetContainer = ref(null);
 const symbolOverviewContainer = ref(null);
 const symbolProfileContainer = ref(null);
 
-const summarySnapshot = ref({
-  openPositions: 0,
-  watchlist: 0,
-  cashRunway: '0 days',
-  riskSummary: 'Portfolio risk data will load once the API responds.',
-  tags: ['Diversified', 'Long-term', 'US equities'],
-});
+const putPreview = ref([
+  { ticker: 'KO', fund: 'SBuy', roi: '2.3%', breakeven: '$58.20' },
+  { ticker: 'PG', fund: 'Buy', roi: '2.1%', breakeven: '$142.50' },
+  { ticker: 'JNJ', fund: 'SBuy', roi: '2.4%', breakeven: '$145.00' },
+]);
+
+const leapPreview = ref([
+  { ticker: 'AAPL', delta: '0.72', upside: '28%', expiry: "Jan'27" },
+  { ticker: 'MSFT', delta: '0.71', upside: '32%', expiry: "Dec'27" },
+  { ticker: 'NVDA', delta: '0.73', upside: '25%', expiry: "Jan'27" },
+]);
+
+const kpiCards = ref([
+  {
+    label: 'Put Candidates',
+    value: '12 Today',
+    subtext: 'Cash-secured puts',
+    trend: '+2 new',
+    sparkline: '▲',
+    trendClass: 'positive',
+  },
+  {
+    label: 'Avg Put ROI',
+    value: '2.3% Monthly',
+    subtext: 'Targeted delta -0.35',
+    trend: '+0.2%',
+    sparkline: '↗',
+    trendClass: 'positive',
+  },
+  {
+    label: 'LEAP Candidates',
+    value: '8 Today',
+    subtext: '70-75 delta calls',
+    trend: '+1 new',
+    sparkline: '▲',
+    trendClass: 'positive',
+  },
+  {
+    label: 'Avg LEAP Upside',
+    value: '28%',
+    subtext: '1+ year horizon',
+    trend: '+3%',
+    sparkline: '↗',
+    trendClass: 'positive',
+  },
+]);
+
+const topIncome = ref([
+  { ticker: 'KO', roi: '2.3%', breakeven: '$58.20' },
+  { ticker: 'PG', roi: '2.1%', breakeven: '$142.50' },
+  { ticker: 'JNJ', roi: '2.4%', breakeven: '$145.00' },
+]);
+
+const topGrowth = ref([
+  { ticker: 'AAPL', delta: '0.72', upside: '28%' },
+  { ticker: 'MSFT', delta: '0.71', upside: '32%' },
+  { ticker: 'NVDA', delta: '0.73', upside: '25%' },
+]);
 
 const fallback = {
-  summary: {
-    totalValue: 248930,
-    dayChange: 1250,
-    dayChangePct: 0.8,
-    cash: 31200,
-    riskScore: 62,
-  },
-  movers: {
-    gainers: [
-      { ticker: 'PLTR', name: 'Palantir', change: 6.1 },
-      { ticker: 'META', name: 'Meta', change: 4.3 },
-      { ticker: 'AMD', name: 'AMD', change: 3.9 },
-    ],
-    losers: [
-      { ticker: 'SHOP', name: 'Shopify', change: -3.2 },
-      { ticker: 'PYPL', name: 'PayPal', change: -2.7 },
-      { ticker: 'DIS', name: 'Disney', change: -2.1 },
-    ],
-  },
   investments: [
     {
       ticker: 'SPY',
@@ -199,19 +348,9 @@ const fallback = {
       roi: -4.6,
     },
   ],
-  snapshot: {
-    openPositions: 14,
-    watchlist: 6,
-    cashRunway: '48 days',
-    riskSummary: 'Moderate risk profile with tech-heavy tilt.',
-    tags: ['Tech tilt', 'Growth', 'Options enabled'],
-  },
 };
 
 const applyData = (data) => {
-  summary.value = data.summary;
-  movers.value = data.movers;
-  summarySnapshot.value = data.snapshot;
   investments.value = data.investments;
 };
 
@@ -230,20 +369,13 @@ const loadData = async () => {
       maxDelta: maxDelta.value,
       screenerType: screenerType.value,
     });
-   
 
     applyData({
-      summary: fallback.summary,
-      movers: fallback.movers,
       investments: investmentsData,
-      snapshot: fallback.snapshot,
     });
   } catch (err) {
     applyData({
-      summary: fallback.summary,
-      movers: fallback.movers,
-      investments: [],
-      snapshot: fallback.snapshot,
+      investments: fallback.investments,
     });
     error.value =
       'We could not reach the weekly investments API. Set VITE_API_BASE_URL to your backend address to see live data.';
@@ -309,16 +441,8 @@ const renderWidget = () => {
   script.async = true;
   script.text = JSON.stringify({
     colorTheme: 'dark',
-    // displayMode: 'single',
-    // isTransparent: true,
-    // locale: 'en',
-      interval: '1M',
-    // disableInterval: false,
-    // width: '100%',
-    // height: '100%',
+    interval: '1M',
     symbol: buildTradingViewSymbol(activeTicker.value),
-    // showIntervalTabs: true,
-    // backgroundColor: 'rgba(0, 0, 0, 0)',
   });
 
   container.append(widget, copyright, script);
@@ -358,44 +482,14 @@ const renderSymbolOverviewWidget = () => {
   script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
   script.async = true;
   script.text = JSON.stringify({
-    // lineWidth: 2,
-    // lineType: 0,
-    // chartType: 'area',
-    // fontColor: 'rgb(106, 109, 120)',
-    // gridLineColor: 'rgba(242, 242, 242, 0.06)',
-    // volumeUpColor: 'rgba(34, 171, 148, 0.5)',
-    // volumeDownColor: 'rgba(247, 82, 95, 0.5)',
     backgroundColor: 'rgba(31, 31, 31, 1)',
     widgetFontColor: '#e2e8f0',
-    // upColor: '#22ab94',
-    // downColor: '#f7525f',
-    // borderUpColor: '#22ab94',
-    // borderDownColor: '#f7525f',
-    // wickUpColor: '#22ab94',
-    // wickDownColor: '#f7525f',
     colorTheme: 'dark',
     isTransparent: false,
     locale: 'en',
-    // chartOnly: false,
-    // scalePosition: 'right',
-    // scaleMode: 'Normal',
-    // fontFamily: '-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif',
-    // valuesTracking: '1',
-    // changeMode: 'price-and-percent',
     symbols: [[activeTicker.value, `${buildTradingViewSymbol(activeTicker.value)}|1D`]],
-    // dateRanges: ['1d|1', '1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M'],
-    // fontSize: '10',
-    // headerFontSize: 'medium',
     width: '100%',
     height: '100%',
-    // noTimeScale: false,
-    // hideDateRanges: false,
-    // showMA: true,
-    // maLength: 9,
-    // maLineColor: '#2962FF',
-    // maLineWidth: 1,
-    // hideMarketStatus: false,
-    // hideSymbolLogo: false,
   });
 
   container.append(widget, copyright, script);
@@ -495,5 +589,4 @@ watch(
 );
 
 onMounted(loadData);
-
 </script>
