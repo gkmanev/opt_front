@@ -17,10 +17,13 @@
       <div class="hero-body">
         <div>
           <p class="eyebrow">Cash-Secured Put Screener</p>
-          <h1>Generate Monthly Options Income by Selling Cash-Secured Puts</h1>
+          <h1 class="hero-title">
+            Earn Monthly Income
+            <span>Selling Secured Puts</span>
+          </h1>
           <p class="lead">
-            Our screener focuses on put-selling setups (&gt;2% monthly ROI on Strong Buy
-            fundamentals) so you can earn income and get paid to buy great stocks at a discount.
+            Our screener identifies premium put-selling opportunities with over 6% monthly ROI on
+            strong buy fundamentals, so you earn income and buy great stocks at a discount.
           </p>
           <div class="hero-actions">
             <button class="primary" type="button">View Live Candidates</button>

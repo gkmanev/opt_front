@@ -116,6 +116,20 @@ button.ghost {
   margin-top: 2rem;
 }
 
+.hero-title {
+  margin: 0 0 1rem;
+  font-size: clamp(2.5rem, 5vw, 3.8rem);
+  line-height: 1.05;
+  font-weight: 700;
+}
+
+.hero-title span {
+  display: block;
+  background: linear-gradient(90deg, #4ee1ff, #7a6cff);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.2em;
