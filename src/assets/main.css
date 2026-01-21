@@ -595,12 +595,12 @@ tbody tr:hover {
 }
 
 .modal-card {
-  width: min(1100px, 100%);
+  width: min(1200px, 100%);
   background: #0f172a;
   border-radius: 1.25rem;
   border: 1px solid rgba(148, 163, 184, 0.3);
   box-shadow: 0 30px 60px rgba(15, 23, 42, 0.6);
-  max-height: 90vh;
+  max-height: 88vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -623,7 +623,7 @@ tbody tr:hover {
 .modal-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
 .modal-panel {
@@ -631,7 +631,10 @@ tbody tr:hover {
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 0.75rem;
   padding: 1rem;
-  min-height: 260px;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .panel-label {
@@ -643,7 +646,18 @@ tbody tr:hover {
 }
 
 .tradingview-wrapper {
-  min-height: 220px;
+  flex: 1;
+  min-height: 260px;
+  border-radius: 0.65rem;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.85);
+  display: flex;
+  align-items: stretch;
+}
+.tradingview-wrapper iframe {
+  flex: 1;
+  border: 0;
+  width: 100%;
 }
 
 .blue-text {
