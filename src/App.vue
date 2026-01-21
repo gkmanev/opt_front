@@ -533,24 +533,6 @@
                 <option value="3">&gt; 3%</option>
               </select>
             </div>
-            <div>
-              <label class="filter-label">Max Risk/Reward</label>
-              <select class="select">
-                <option>Any R/R</option>
-                <option>Conservative (1:2)</option>
-                <option>Moderate (1:3)</option>
-                <option>Aggressive (1:4+)</option>
-              </select>
-            </div>
-            <div>
-              <label class="filter-label">Peak of weakness</label>
-              <select class="select">
-                <option>Any</option>
-                <option>Last 7 days</option>
-                <option>Last 30 days</option>
-                <option>Last 90 days</option>
-              </select>
-            </div>
           </div>
 
           <div class="filter-actions">

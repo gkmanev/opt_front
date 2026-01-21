@@ -438,6 +438,7 @@ tbody tr:hover {
   width: 100%;
   background: transparent;
   pointer-events: none;
+  z-index: 1;
 }
 
 .range-sliders .slider::-webkit-slider-thumb {
@@ -453,7 +454,7 @@ tbody tr:hover {
 }
 
 .slider-max {
-  z-index: 3;
+  z-index: 2;
 }
 
 .range-inputs {
