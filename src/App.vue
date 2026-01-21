@@ -729,7 +729,7 @@ const renderWidget = () => {
   script.type = 'text/javascript';
   script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js';
   script.async = true;
-  script.text = JSON.stringify({
+  script.textContent = JSON.stringify({
     colorTheme: 'dark',
     interval: '1M',
     symbol: buildTradingViewSymbol(activeTicker.value),
@@ -771,7 +771,7 @@ const renderSymbolOverviewWidget = () => {
   script.type = 'text/javascript';
   script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
   script.async = true;
-  script.text = JSON.stringify({
+  script.textContent = JSON.stringify({
     backgroundColor: 'rgba(15, 23, 42, 1)',
     widgetFontColor: '#e2e8f0',
     colorTheme: 'dark',
@@ -818,7 +818,7 @@ const renderSymbolProfileWidget = () => {
   script.type = 'text/javascript';
   script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-profile.js';
   script.async = true;
-  script.text = JSON.stringify({
+  script.textContent = JSON.stringify({
     colorTheme: 'dark',
     isTransparent: false,
     symbol: buildTradingViewSymbol(activeTicker.value),
