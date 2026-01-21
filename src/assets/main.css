@@ -589,7 +589,7 @@ tbody tr:hover {
   background: rgba(2, 6, 23, 0.85);
   display: flex;
   align-items: stretch;
-  justify-content: flex-end;
+  justify-content: flex-start;
   z-index: 50;
   backdrop-filter: blur(10px);
 }
@@ -598,8 +598,8 @@ tbody tr:hover {
   width: min(560px, 100%);
   height: 100%;
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.95));
-  border-left: 1px solid rgba(148, 163, 184, 0.3);
-  box-shadow: -30px 0 60px rgba(15, 23, 42, 0.6);
+  border-right: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 30px 0 60px rgba(15, 23, 42, 0.6);
   display: flex;
   flex-direction: column;
   transform: translateX(0);
@@ -672,7 +672,7 @@ tbody tr:hover {
 
 .ticker-panel-enter-from .ticker-panel,
 .ticker-panel-leave-to .ticker-panel {
-  transform: translateX(100%);
+  transform: translateX(-100%);
 }
 
 .panel-label {
