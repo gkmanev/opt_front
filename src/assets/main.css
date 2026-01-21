@@ -583,32 +583,29 @@ tbody tr:hover {
   flex-wrap: wrap;
 }
 
-.modal-backdrop {
+.ticker-panel-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(2, 6, 23, 0.85);
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 2rem;
+  align-items: stretch;
+  justify-content: flex-end;
   z-index: 50;
   backdrop-filter: blur(10px);
 }
 
-.modal-card {
-  width: min(1240px, 100%);
+.ticker-panel {
+  width: min(560px, 100%);
+  height: 100%;
   background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.95));
-  border-radius: 1.25rem;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.6);
-  height: min(860px, calc(100vh - 4rem));
-  max-height: calc(100vh - 4rem);
-  overflow: hidden;
+  border-left: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: -30px 0 60px rgba(15, 23, 42, 0.6);
   display: flex;
   flex-direction: column;
+  transform: translateX(0);
 }
 
-.modal-header {
+.ticker-panel-header {
   padding: 1.5rem 2rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.2);
   display: flex;
@@ -618,36 +615,64 @@ tbody tr:hover {
   background: rgba(15, 23, 42, 0.9);
 }
 
-.modal-subtitle {
+.ticker-panel-subtitle {
   color: #94a3b8;
   margin-top: 0.35rem;
   max-width: 520px;
   font-size: 0.95rem;
 }
 
-.modal-body {
-  padding: 1.5rem 2rem 2.5rem;
+.ticker-panel-body {
+  padding: 1.5rem 2rem;
   overflow-y: auto;
   flex: 1;
 }
 
-.modal-grid {
+.ticker-panel-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: 1fr;
   align-items: stretch;
 }
 
-.modal-panel {
+.ticker-panel-card {
   background: rgba(2, 6, 23, 0.7);
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 0.75rem;
   padding: 1.35rem;
-  min-height: 360px;
+  min-height: 320px;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.4);
+}
+
+.ticker-panel-footer {
+  padding: 1rem 2rem 1.5rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ticker-panel-enter-active,
+.ticker-panel-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.ticker-panel-enter-from,
+.ticker-panel-leave-to {
+  opacity: 0;
+}
+
+.ticker-panel-enter-active .ticker-panel,
+.ticker-panel-leave-active .ticker-panel {
+  transition: transform 0.3s ease;
+}
+
+.ticker-panel-enter-from .ticker-panel,
+.ticker-panel-leave-to .ticker-panel {
+  transform: translateX(100%);
 }
 
 .panel-label {
