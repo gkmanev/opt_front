@@ -442,19 +442,28 @@
               </div>
             </div>
             <div>
-              <label class="filter-label">ROI range: {{ roiRange[0] }}% - {{ roiRange[1] }}%</label>
+              <label class="filter-label">RSI range: {{ rsiRange[0] }} - {{ rsiRange[1] }}</label>
               <input
                 type="range"
                 min="0"
                 max="100"
-                :value="roiRange[1]"
+                :value="rsiRange[1]"
                 class="slider"
-                @input="onRoiRange"
+                @input="onRsiRange"
               />
               <div class="filter-scale">
-                <span>0%</span>
-                <span>100%</span>
+                <span>0</span>
+                <span>100</span>
               </div>
+            </div>
+            <div>
+              <label class="filter-label">ROI</label>
+              <select class="select" :value="minRoi" @change="onMinRoiChange">
+                <option value="">Any ROI</option>
+                <option value="2">&gt; 2%</option>
+                <option value="2.5">&gt; 2.5%</option>
+                <option value="3">&gt; 3%</option>
+              </select>
             </div>
             <div>
               <label class="filter-label">Max Risk/Reward</label>
@@ -477,8 +486,10 @@
           </div>
 
           <div class="filter-actions">
-            <button class="btn btn-primary btn-block" type="button">Apply Filters</button>
-            <button class="btn btn-muted" type="button">Reset</button>
+            <button class="btn btn-primary btn-block" type="button" @click="applyFilters">
+              Apply Filters
+            </button>
+            <button class="btn btn-muted" type="button" @click="resetFilters">Reset</button>
           </div>
         </div>
 
@@ -630,7 +641,8 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { getWeeklyInvestments } from './api/investingApi';
 
 const priceRange = ref([0, 500]);
-const roiRange = ref([0, 100]);
+const rsiRange = ref([0, 100]);
+const minRoi = ref('');
 const expandedStrategy = ref(false);
 const isModalOpen = ref(false);
 const activeTicker = ref('');
@@ -722,11 +734,11 @@ const goToWeeklyPage = (page) => {
   weeklyCurrentPage.value = next;
 };
 
-const fetchWeeklyIdeas = async () => {
+const fetchWeeklyIdeas = async (filters = {}) => {
   weeklyIdeasLoading.value = true;
   weeklyIdeasError.value = false;
   try {
-    weeklyIdeas.value = await getWeeklyInvestments();
+    weeklyIdeas.value = await getWeeklyInvestments(filters);
   } catch (error) {
     console.error('Failed to fetch weekly ideas', error);
     weeklyIdeas.value = [];
@@ -750,8 +762,30 @@ const onPriceRange = (event) => {
   priceRange.value = [0, Number(event.target.value)];
 };
 
-const onRoiRange = (event) => {
-  roiRange.value = [0, Number(event.target.value)];
+const onRsiRange = (event) => {
+  rsiRange.value = [0, Number(event.target.value)];
+};
+
+const onMinRoiChange = (event) => {
+  minRoi.value = event.target.value;
+};
+
+const applyFilters = () => {
+  const minRoiValue = minRoi.value === '' ? null : Number(minRoi.value);
+  fetchWeeklyIdeas({
+    minPrice: priceRange.value[0],
+    maxPrice: priceRange.value[1],
+    minRsi: rsiRange.value[0],
+    maxRsi: rsiRange.value[1],
+    minRoi: Number.isNaN(minRoiValue) ? null : minRoiValue,
+  });
+};
+
+const resetFilters = () => {
+  priceRange.value = [0, 500];
+  rsiRange.value = [0, 100];
+  minRoi.value = '';
+  fetchWeeklyIdeas();
 };
 
 const buildTradingViewSymbol = (ticker) => {
