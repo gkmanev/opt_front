@@ -1,174 +1,561 @@
 <template>
-  <div class="app">
-    <header class="hero hero--options">
-      <nav class="nav">
-        <div class="logo">
-          <span class="pulse"></span>
+  <div class="page">
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <span class="status-dot"></span>
           <div>
-            <p>OptionsFlow</p>
-            <small>Connected to {{ apiBaseUrl }}</small>
+            <span class="brand-name">OptionFlow</span>
+            <span class="brand-meta">Updated in real-time • Last sync 10s ago</span>
           </div>
         </div>
-        <div class="actions">
-          <button class="ghost" type="button">Strategy Library</button>
-          <button class="primary" type="button" @click="refresh">View Live Candidates</button>
-        </div>
-      </nav>
-      <div class="hero-body">
-        <div>
-          <p class="eyebrow">Cash-Secured Put Screener</p>
-          <h1 class="hero-title">
-            Earn Monthly Income
-            <span>Selling Secured Puts</span>
-          </h1>
-          <p class="lead">
-            Our screener identifies premium put-selling opportunities with over 6% monthly ROI on
-            strong buy fundamentals, so you earn income and buy great stocks at a discount.
-          </p>
-          <div class="hero-actions">
-            <button class="primary" type="button">View Live Candidates</button>
-            <button class="ghost" type="button">See How It Works</button>
-          </div>
-          <div class="ticker-preview">
-            <span class="ticker-dot"></span>
-            <span>AAPL - Put ROI 2.4%</span>
-            <span class="divider">|</span>
-            <span>MSFT - Breakeven $315.80</span>
-          </div>
-        </div>
-        <div class="hero-card">
-          <div class="glow"></div>
-          <p class="eyebrow">Live Strategy Pulse</p>
-          <h3>Put income opportunities are trending higher</h3>
-          <p class="subtle">
-            Put candidates are holding above 2.1% ROI with bullish fundamentals and stable
-            technicals.
-          </p>
-          <div class="pill-row">
-            <span class="pill">Strong Buy Bias</span>
-            <span class="pill">High Options Volume</span>
-            <span class="pill">Delta -0.35 Target</span>
-          </div>
-          <button class="ghost" type="button">See Daily Brief</button>
+        <div class="header-actions">
+          <button class="btn btn-ghost" type="button">Strategy Library</button>
+          <button class="btn btn-primary" type="button">View Live Candidates</button>
         </div>
       </div>
     </header>
 
-    <main>
-      <section class="screener-preview">
-        <header class="section-header">
+    <section class="container hero">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <span class="pill">CASH FLOW SYSTEM • PUT STRATEGIES</span>
+          <h1>Get paid to buy great companies</h1>
+          <p class="hero-highlight">
+            Data-driven put-selling ideas on stocks you'd be comfortable owning
+          </p>
+          <p class="hero-subtitle">
+            Find high-quality stocks with liquid options, strong fundamentals, and attractive
+            premium—all assignment is a feature, not a bug.
+          </p>
+          <div class="hero-stats">
+            <div class="stat-card">
+              <span class="icon icon-green">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M3 17l6-6 4 4 7-7"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M14 7h6v6"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              <span><strong>+34%</strong> Avg. Put ROI 12m</span>
+            </div>
+            <div class="stat-card">
+              <span class="icon icon-blue">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M3 3v18h18"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M7 15v3"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M12 11v7"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M17 7v11"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              <span><strong>NFT</strong> Premium <strong>$373.60</strong></span>
+            </div>
+          </div>
+          <div class="hero-actions">
+            <button class="btn btn-primary" type="button">
+              <span class="icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              View Live Candidates
+            </button>
+            <button class="btn btn-outline" type="button">See How It Works</button>
+          </div>
+        </div>
+
+        <div class="strategy-card">
+          <div class="strategy-header">
+            <span class="strategy-eyebrow">THE STRATEGY POST</span>
+            <button class="icon-button" type="button" @click="expandedStrategy = !expandedStrategy">
+              <svg
+                class="chevron"
+                :class="{ expanded: expandedStrategy }"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M6 9l6 6 6-6"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+          <h3>Who it's for:</h3>
+          <div class="audience-list">
+            <div class="audience-item">
+              <span class="icon icon-green">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <circle
+                    cx="9"
+                    cy="7"
+                    r="4"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M22 21v-2a4 4 0 0 0-3-3.87"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M16 3.13a4 4 0 0 1 0 7.75"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              <div>
+                <div class="audience-title">Investors seeking income</div>
+                <div class="audience-text">Generate monthly income from selling puts</div>
+              </div>
+            </div>
+            <div class="audience-item">
+              <span class="icon icon-blue">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  />
+                  <path
+                    d="M12 6v6l4 2"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              <div>
+                <div class="audience-title">Happy to own the underlying</div>
+                <div class="audience-text">If assigned at strike price</div>
+              </div>
+            </div>
+            <div class="audience-item">
+              <span class="icon icon-purple">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              <div>
+                <div class="audience-title">Disciplined workflow seekers</div>
+                <div class="audience-text">Get assigned, sell covered calls</div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="expandedStrategy" class="strategy-footer">
+            <button class="btn btn-muted" type="button">See Daily Brief</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container">
+      <div class="card">
+        <div class="card-header">
+          <span class="section-eyebrow">SCREENER CASHFLOW</span>
+          <h2>Income Engine: Sell Puts — Wheel If Assigned</h2>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="info-label">Strategy Focus</div>
+            <div class="info-value">Strong Buy fundamentals + high options volume</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Monthly Target</div>
+            <div class="info-value">+2% monthly ROI at ~0.3% delta puts</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Assignment Strategy</div>
+            <div class="info-value">Assignment OK: 20%+ long stocks of pleasure</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th class="align-right">Price</th>
+                <th class="align-right">ROI</th>
+                <th class="align-right">Expiration Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in incomeRows" :key="row.ticker">
+                <td class="ticker">{{ row.ticker }}</td>
+                <td class="align-right">{{ row.price }}</td>
+                <td class="align-right">
+                  <span class="roi-positive">{{ row.roi }}</span>
+                </td>
+                <td class="align-right muted">{{ row.date }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <button class="btn btn-outline btn-block" type="button">Explore Top Puts</button>
+      </div>
+    </section>
+
+    <section class="container kpi-grid">
+      <div class="card kpi-card">
+        <div class="kpi-header">
+          <span class="icon icon-green">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M3 17l6-6 4 4 7-7"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M14 7h6v6"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
           <div>
-            <p class="eyebrow">Screener Card Preview</p>
-            <h2>One focused workflow for selling puts.</h2>
+            <span class="section-eyebrow">PUT COMPONENTS</span>
+            <h3>58 Today</h3>
           </div>
-        </header>
-        <div class="screener-grid">
-          <article class="card screener-card">
-            <div class="card-icon">💰</div>
-            <h3>Income Engine: Sell Puts → Wheel If Assigned</h3>
-            <ul class="feature-list">
-              <li>Strong Buy fundamentals + high options volume</li>
-              <li>&gt;2% monthly ROI at -0.35 delta puts</li>
-              <li>Assignment OK: Own great stocks at discount</li>
-            </ul>
-            <div class="table-snippet">
-              <div class="table-row table-head">
-                <span>Ticker</span>
-                <span>Price</span>
-                <span>ROI</span>
-                <span>Expiration Date</span>
-              </div>
-              <div class="table-row" v-for="row in putPreview" :key="row.ticker">
-                <span>{{ row.ticker }}</span>
-                <span>{{ row.price }}</span>
-                <span>{{ row.roi }}</span>
-                <span>{{ row.expirationDate }}</span>
-              </div>
-            </div>
-            <button class="primary" type="button">Explore Top Puts</button>
-          </article>
         </div>
-      </section>
+        <div class="kpi-row">
+          <span class="muted">Earning rated puts</span>
+          <span class="highlight">Live</span>
+        </div>
+      </div>
 
-      <section class="kpi-strip" aria-label="Key performance indicators">
-        <article v-for="kpi in kpiCards" :key="kpi.label" class="card kpi-card">
-          <p class="eyebrow">{{ kpi.label }}</p>
-          <h3>{{ kpi.value }}</h3>
-          <p class="subtle">{{ kpi.subtext }}</p>
-          <div class="kpi-meta" :class="kpi.trendClass">
-            <span>{{ kpi.trend }}</span>
-            <span class="sparkline">{{ kpi.sparkline }}</span>
+      <div class="card kpi-card">
+        <div class="kpi-header">
+          <span class="icon icon-blue">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M3 3v18h18"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M7 15v3"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 11v7"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M17 7v11"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <div>
+            <span class="section-eyebrow">PAY-OUT RATE</span>
+            <h3>2.87% Monthly</h3>
           </div>
-        </article>
-      </section>
+        </div>
+        <div class="kpi-row">
+          <span class="muted">Weighted ideal 30-day</span>
+          <span class="highlight roi-positive">Rolling weekly</span>
+        </div>
+      </div>
+    </section>
 
-      <section class="dashboard-cards">
-        <article class="card dashboard-card">
-          <header>
+    <section class="container">
+      <div class="card">
+        <div class="card-header split">
+          <div>
+            <span class="section-eyebrow">PREMIUM SCREENED PUT</span>
+            <h2>Top 3 Today</h2>
+          </div>
+          <span class="badge">Strong Buy</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Expiration Date</th>
+                <th class="align-right">Price</th>
+                <th class="align-right">ROI</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in topThreeRows" :key="row.ticker">
+                <td class="ticker">{{ row.ticker }}</td>
+                <td class="muted">{{ row.date }}</td>
+                <td class="align-right">{{ row.price }}</td>
+                <td class="align-right roi-positive">{{ row.roi }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card-footer">
+          <button class="btn btn-muted" type="button">Fundamentals: Strong Buy</button>
+          <button class="btn btn-outline" type="button">Full Screener →</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="container">
+      <div class="card">
+        <div class="card-header">
+          <h2>Weekly Options Ideas</h2>
+          <p class="muted">Screened options from our selected filter feed</p>
+        </div>
+
+        <div class="filter-panel">
+          <div class="filter-title">
+            <span class="icon icon-cyan">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <polygon
+                  points="22 3 2 3 10 12 10 19 14 21 14 12 22 3"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+            <span>Filter Options</span>
+          </div>
+
+          <div class="filter-grid">
             <div>
-              <p class="eyebrow">Income (Cash-Secured Puts)</p>
-              <h3>Top 3 Today</h3>
+              <label class="filter-label">Price range: ${{ priceRange[0] }} - ${{ priceRange[1] }}</label>
+              <input
+                type="range"
+                min="0"
+                max="500"
+                :value="priceRange[1]"
+                class="slider"
+                @input="onPriceRange"
+              />
+              <div class="filter-scale">
+                <span>$0</span>
+                <span>$500</span>
+              </div>
             </div>
-            <span class="badge">Strong Buy</span>
-          </header>
-          <div class="table-snippet">
-            <div class="table-row table-head">
-              <span>Ticker</span>
-              <span>Price</span>
-              <span>ROI</span>
-              <span>Expiration Date</span>
+            <div>
+              <label class="filter-label">ROI range: {{ roiRange[0] }}% - {{ roiRange[1] }}%</label>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                :value="roiRange[1]"
+                class="slider"
+                @input="onRoiRange"
+              />
+              <div class="filter-scale">
+                <span>0%</span>
+                <span>100%</span>
+              </div>
             </div>
-            <div class="table-row" v-for="row in topIncome" :key="row.ticker">
-              <span>{{ row.ticker }}</span>
-              <span>{{ row.price }}</span>
-              <span>{{ row.roi }}</span>
-              <span>{{ row.expirationDate }}</span>
+            <div>
+              <label class="filter-label">Max Risk/Reward</label>
+              <select class="select">
+                <option>Any R/R</option>
+                <option>Conservative (1:2)</option>
+                <option>Moderate (1:3)</option>
+                <option>Aggressive (1:4+)</option>
+              </select>
+            </div>
+            <div>
+              <label class="filter-label">Peak of weakness</label>
+              <select class="select">
+                <option>Any</option>
+                <option>Last 7 days</option>
+                <option>Last 30 days</option>
+                <option>Last 90 days</option>
+              </select>
             </div>
           </div>
-          <div class="card-footer">
-            <span class="badge">Fundamentals: Strong Buy</span>
-            <button class="ghost" type="button">→ Full Screener</button>
-          </div>
-        </article>
-      </section>
 
-      <div v-if="loading" class="card loading">
-        <p>Syncing with your options API…</p>
-      </div>
-      <div v-else>
-        <div v-if="error" class="card warning">
-          <p>{{ error }}</p>
-          <p class="subtle">Showing latest cached insights so the dashboard remains usable.</p>
+          <div class="filter-actions">
+            <button class="btn btn-primary btn-block" type="button">Apply Filters</button>
+            <button class="btn btn-muted" type="button">Reset</button>
+          </div>
         </div>
 
-        <InvestmentsTable
-          :investments="investments"
-          :min-price="minPrice"
-          :max-price="maxPrice"
-          :min-rsi="minRsi"
-          :max-rsi="maxRsi"
-          :min-roi="minRoi"
-          :min-delta="minDelta"
-          @update:min-price="minPrice = $event"
-          @update:max-price="maxPrice = $event"
-          @update:min-rsi="minRsi = $event"
-          @update:max-rsi="maxRsi = $event"
-          @update:min-roi="minRoi = $event"
-          @update:min-delta="minDelta = $event"
-          @select-ticker="openTicker"
-        />
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Market</th>
+                <th>Details</th>
+                <th class="align-right">Exp Date</th>
+                <th class="align-right">Price</th>
+                <th class="align-right">Delta</th>
+                <th class="align-right">ROI</th>
+                <th class="align-right">ROI 1</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in weeklyIdeas" :key="row.ticker">
+                <td class="ticker">{{ row.ticker }}</td>
+                <td>
+                  <button class="link-button" type="button" @click="openTicker(row.ticker)">
+                    {{ row.details }}
+                  </button>
+                </td>
+                <td class="align-right muted">{{ row.date }}</td>
+                <td class="align-right">{{ row.price }}</td>
+                <td class="align-right" :class="row.delta === '—' ? 'muted' : row.positive ? 'roi-positive' : 'roi-negative'">
+                  {{ row.delta }}
+                </td>
+                <td class="align-right roi-primary">{{ row.roi }}</td>
+                <td
+                  class="align-right"
+                  :class="row.roi1 === '—' ? 'muted' : row.positive ? 'roi-positive' : 'roi-negative'"
+                >
+                  {{ row.roi1 }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <span class="muted">Showing 1-6 of 38</span>
+          <div class="pagination">
+            <button class="btn btn-muted" type="button">Previous</button>
+            <button class="btn btn-muted" type="button">1 / 8</button>
+            <button class="btn btn-primary" type="button">Next</button>
+          </div>
+        </div>
+
+        <button class="btn btn-muted btn-block" type="button">Export Results</button>
       </div>
-    </main>
+    </section>
+
+    <section class="container cta">
+      <div class="cta-card">
+        <h2>Ready to start generating income?</h2>
+        <p>
+          Join thousands of investors using data-driven strategies to sell puts on quality
+          companies
+        </p>
+        <div class="cta-actions">
+          <button class="btn btn-primary" type="button">Get Started Today</button>
+          <button class="btn btn-outline" type="button">Learn More</button>
+        </div>
+      </div>
+    </section>
 
     <teleport to="body">
       <div v-if="isModalOpen" class="modal-backdrop" @click.self="closeModal">
         <div class="modal-card">
           <header class="modal-header">
             <div>
-              <p class="eyebrow">Ticker overview</p>
+              <p class="section-eyebrow">Ticker overview</p>
               <h3>{{ activeTicker }}</h3>
             </div>
-            <button class="ghost" type="button" @click="closeModal">Close</button>
+            <button class="btn btn-muted" type="button" @click="closeModal">Close</button>
           </header>
           <div class="modal-body">
             <div class="modal-grid">
@@ -193,181 +580,98 @@
 </template>
 
 <script setup>
-import { nextTick, onMounted, ref, watch } from 'vue';
-import { apiBaseUrl, getWeeklyInvestments } from './api/investingApi';
-import InvestmentsTable from './components/InvestmentsTable.vue';
+import { nextTick, ref, watch } from 'vue';
 
-const loading = ref(true);
-const error = ref('');
-const investments = ref([]);
-const minPrice = ref(0);
-const maxPrice = ref(200);
-const minRsi = ref(0);
-const maxRsi = ref(100);
-const minRoi = ref(null);
-const minDelta = ref(null);
-const maxDelta = ref(null);
+const priceRange = ref([0, 500]);
+const roiRange = ref([0, 100]);
+const expandedStrategy = ref(false);
 const isModalOpen = ref(false);
 const activeTicker = ref('');
 const widgetContainer = ref(null);
 const symbolOverviewContainer = ref(null);
 const symbolProfileContainer = ref(null);
 
-const putPreview = ref([]);
-const kpiCards = ref([]);
-const topIncome = ref([]);
+const incomeRows = [
+  { ticker: 'SMG', price: '$67.45', roi: '6.85%', date: 'Feb 16, 2026' },
+  { ticker: 'RCI', price: '$21.10', roi: '5.61%', date: 'Feb 28, 2026' },
+  { ticker: 'ALAB', price: '$160.09', roi: '6.22%', date: 'Feb 28, 2026' },
+];
 
-const fallback = {
-  investments: [
-    {
-      ticker: 'SPY',
-      exp_date: '2024-08-02',
-      price: 2.15,
-      delta: 0.32,
-      rsi: 58,
-      roi: 12.4,
-    },
-    {
-      ticker: 'QQQ',
-      exp_date: '2024-08-02',
-      price: 1.88,
-      delta: 0.28,
-      rsi: 61,
-      roi: 10.1,
-    },
-    {
-      ticker: 'TSLA',
-      exp_date: '2024-08-02',
-      price: 3.42,
-      delta: -0.21,
-      rsi: 44,
-      roi: -4.6,
-    },
-  ],
+const topThreeRows = [
+  { ticker: 'SMG', date: 'Feb 16, 2026', price: '$67.45', roi: '6.85%' },
+  { ticker: 'RCI', date: 'Feb 28, 2026', price: '$21.10', roi: '5.61%' },
+  { ticker: 'ALAB', date: 'Feb 28, 2026', price: '$160.09', roi: '6.22%' },
+];
+
+const weeklyIdeas = [
+  {
+    ticker: 'AA',
+    details: 'Details',
+    date: 'Feb 28, 2026',
+    price: '60.07',
+    delta: '-0.21%',
+    roi: '$7.01',
+    roi1: '3.83%',
+    positive: true,
+  },
+  {
+    ticker: 'AAL',
+    details: 'Details',
+    date: 'Feb 28, 2026',
+    price: '15.71',
+    delta: '—',
+    roi: '$1.01',
+    roi1: '—',
+    positive: false,
+  },
+  {
+    ticker: 'AEM',
+    details: 'Details',
+    date: 'Feb 28, 2026',
+    price: '107.48',
+    delta: '-0.21%',
+    roi: '$8.51',
+    roi1: '2.62%',
+    positive: true,
+  },
+  {
+    ticker: 'AG',
+    details: 'Details',
+    date: 'Feb 28, 2026',
+    price: '21.5',
+    delta: '-0.28%',
+    roi: '$2.21',
+    roi1: '-0.61%',
+    positive: false,
+  },
+  {
+    ticker: 'ALAB',
+    details: 'Details',
+    date: 'Feb 28, 2026',
+    price: '182',
+    delta: '-0.21%',
+    roi: '$8.47',
+    roi1: '6.22%',
+    positive: true,
+  },
+  {
+    ticker: 'AMRT',
+    details: 'Details',
+    date: 'Feb 28, 2026',
+    price: '129.83',
+    delta: '-0.28%',
+    roi: '$2.42',
+    roi1: '3.98%',
+    positive: true,
+  },
+];
+
+const onPriceRange = (event) => {
+  priceRange.value = [0, Number(event.target.value)];
 };
 
-const formatPercent = (value) => {
-  const number = Number(value);
-  if (Number.isNaN(number)) return '—';
-  return `${number.toFixed(2)}%`;
-};
-
-const formatPrice = (value) => {
-  const number = Number(value);
-  if (Number.isNaN(number)) return '—';
-  return `$${number.toFixed(2)}`;
-};
-
-const formatDate = (value) => {
-  if (!value) return '—';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric',
-  });
-};
-
-const resolveBreakeven = (idea) =>
-  idea.breakeven ??
-  idea.break_even ??
-  idea.breakeven_price ??
-  idea.breakevenPrice ??
-  idea.breakEven ??
-  null;
-
-const resolveExpirationDate = (idea) =>
-  idea.exp_date ??
-  idea.expiration_date ??
-  idea.expirationDate ??
-  idea.exp ??
-  null;
-
-const buildPreviewRow = (idea) => ({
-  ticker: idea.ticker ?? '—',
-  price: formatPrice(idea.price),
-  roi: formatPercent(idea.roi),
-  expirationDate: formatDate(resolveExpirationDate(idea)),
-});
-
-const applyData = (data) => {
-  const list = Array.isArray(data.investments) ? data.investments : [];
-  investments.value = list;
-
-  const sortedByRoi = [...list].sort((a, b) => {
-    const aRoi = Number(a.roi);
-    const bRoi = Number(b.roi);
-    if (Number.isNaN(aRoi) && Number.isNaN(bRoi)) return 0;
-    if (Number.isNaN(aRoi)) return 1;
-    if (Number.isNaN(bRoi)) return -1;
-    return bRoi - aRoi;
-  });
-
-  const topIdeas = sortedByRoi.slice(0, 3);
-  putPreview.value = topIdeas.map((idea) => buildPreviewRow(idea));
-  topIncome.value = topIdeas.map((idea) => buildPreviewRow(idea));
-
-  const roiValues = list
-    .map((idea) => Number(idea.roi))
-    .filter((value) => !Number.isNaN(value));
-  const avgRoi =
-    roiValues.length > 0
-      ? roiValues.reduce((sum, value) => sum + value, 0) / roiValues.length
-      : null;
-
-  kpiCards.value = [
-    {
-      label: 'Put Candidates',
-      value: `${list.length} Today`,
-      subtext: 'Cash-secured puts',
-      trend: list.length ? 'Live' : 'Awaiting data',
-      sparkline: list.length ? '▲' : '—',
-      trendClass: list.length ? 'positive' : '',
-    },
-    {
-      label: 'Avg Put ROI',
-      value: avgRoi === null ? '—' : `${avgRoi.toFixed(2)}% Monthly`,
-      subtext: 'Targeted delta -0.35',
-      trend: avgRoi === null ? 'No ROI data' : 'Rolling weekly',
-      sparkline: avgRoi === null ? '—' : '↗',
-      trendClass: avgRoi === null ? '' : 'positive',
-    },
-  ];
-};
-
-const loadData = async () => {
-  loading.value = true;
-  error.value = '';
-
-  try {
-    const investmentsData = await getWeeklyInvestments({
-      minPrice: minPrice.value,
-      maxPrice: maxPrice.value,
-      minRsi: minRsi.value,
-      maxRsi: maxRsi.value,
-      minRoi: minRoi.value,
-      minDelta: minDelta.value,
-      maxDelta: maxDelta.value,
-      screenerType: 'Custom screener filterV3',
-    });
-
-    applyData({
-      investments: investmentsData,
-    });
-  } catch (err) {
-    applyData({
-      investments: fallback.investments,
-    });
-    error.value =
-      'We could not reach the weekly investments API. Set VITE_API_BASE_URL to your backend address to see live data.';
-  } finally {
-    loading.value = false;
-  }
-};
-
-const refresh = () => {
-  loadData();
+const onRoiRange = (event) => {
+  roiRange.value = [0, Number(event.target.value)];
 };
 
 const buildTradingViewSymbol = (ticker) => {
@@ -464,7 +768,7 @@ const renderSymbolOverviewWidget = () => {
   script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
   script.async = true;
   script.text = JSON.stringify({
-    backgroundColor: 'rgba(31, 31, 31, 1)',
+    backgroundColor: 'rgba(15, 23, 42, 1)',
     widgetFontColor: '#e2e8f0',
     colorTheme: 'dark',
     isTransparent: false,
@@ -549,14 +853,6 @@ const closeModal = () => {
   }
 };
 
-let priceFilterTimer;
-watch([minPrice, maxPrice, minRsi, maxRsi, minRoi, minDelta, maxDelta], () => {
-  clearTimeout(priceFilterTimer);
-  priceFilterTimer = setTimeout(() => {
-    loadData();
-  }, 300);
-});
-
 watch(
   [isModalOpen, activeTicker],
   ([isOpen, ticker], [wasOpen, previousTicker]) => {
@@ -569,6 +865,4 @@ watch(
   },
   { flush: 'post' },
 );
-
-onMounted(loadData);
 </script>
