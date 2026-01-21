@@ -591,6 +591,7 @@
             <div>
               <p class="section-eyebrow">Ticker overview</p>
               <h3>{{ activeTicker }}</h3>
+              <p class="modal-subtitle">TradingView charts, sentiment, and key metrics at a glance.</p>
             </div>
             <button class="btn btn-muted" type="button" @click="closeModal">Close</button>
           </header>

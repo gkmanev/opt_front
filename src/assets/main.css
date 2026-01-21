@@ -588,19 +588,21 @@ tbody tr:hover {
   inset: 0;
   background: rgba(2, 6, 23, 0.85);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 2rem;
   z-index: 50;
+  backdrop-filter: blur(10px);
 }
 
 .modal-card {
   width: min(1240px, 100%);
-  background: #0f172a;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.95));
   border-radius: 1.25rem;
   border: 1px solid rgba(148, 163, 184, 0.3);
   box-shadow: 0 30px 60px rgba(15, 23, 42, 0.6);
-  max-height: 88vh;
+  height: min(860px, calc(100vh - 4rem));
+  max-height: calc(100vh - 4rem);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -613,28 +615,39 @@ tbody tr:hover {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.modal-subtitle {
+  color: #94a3b8;
+  margin-top: 0.35rem;
+  max-width: 520px;
+  font-size: 0.95rem;
 }
 
 .modal-body {
   padding: 1.5rem 2rem 2.5rem;
   overflow-y: auto;
+  flex: 1;
 }
 
 .modal-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  align-items: stretch;
 }
 
 .modal-panel {
   background: rgba(2, 6, 23, 0.7);
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 0.75rem;
-  padding: 1.25rem;
-  min-height: 380px;
+  padding: 1.35rem;
+  min-height: 360px;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.4);
 }
 
 .panel-label {
@@ -642,18 +655,19 @@ tbody tr:hover {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #94a3b8;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .tradingview-wrapper {
   flex: 1;
-  min-height: 300px;
+  min-height: 320px;
   border-radius: 0.75rem;
   overflow: hidden;
   background: rgba(15, 23, 42, 0.85);
   display: flex;
   align-items: stretch;
   padding: 0;
+  border: 1px solid rgba(30, 41, 59, 0.9);
 }
 .tradingview-wrapper > div {
   flex: 1;
