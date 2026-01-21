@@ -428,14 +428,48 @@
           <div class="filter-grid">
             <div>
               <label class="filter-label">Price range: ${{ priceRange[0] }} - ${{ priceRange[1] }}</label>
-              <input
-                type="range"
-                min="0"
-                max="500"
-                :value="priceRange[1]"
-                class="slider"
-                @input="onPriceRange"
-              />
+              <div class="range-inputs">
+                <label class="range-field">
+                  <span>Min</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="500"
+                    :value="priceRange[0]"
+                    class="range-input"
+                    @input="onPriceMinChange"
+                  />
+                </label>
+                <label class="range-field">
+                  <span>Max</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="500"
+                    :value="priceRange[1]"
+                    class="range-input"
+                    @input="onPriceMaxChange"
+                  />
+                </label>
+              </div>
+              <div class="range-sliders">
+                <input
+                  type="range"
+                  min="0"
+                  max="500"
+                  :value="priceRange[0]"
+                  class="slider slider-min"
+                  @input="onPriceMinChange"
+                />
+                <input
+                  type="range"
+                  min="0"
+                  max="500"
+                  :value="priceRange[1]"
+                  class="slider slider-max"
+                  @input="onPriceMaxChange"
+                />
+              </div>
               <div class="filter-scale">
                 <span>$0</span>
                 <span>$500</span>
@@ -443,14 +477,48 @@
             </div>
             <div>
               <label class="filter-label">RSI range: {{ rsiRange[0] }} - {{ rsiRange[1] }}</label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                :value="rsiRange[1]"
-                class="slider"
-                @input="onRsiRange"
-              />
+              <div class="range-inputs">
+                <label class="range-field">
+                  <span>Min</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    :value="rsiRange[0]"
+                    class="range-input"
+                    @input="onRsiMinChange"
+                  />
+                </label>
+                <label class="range-field">
+                  <span>Max</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    :value="rsiRange[1]"
+                    class="range-input"
+                    @input="onRsiMaxChange"
+                  />
+                </label>
+              </div>
+              <div class="range-sliders">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  :value="rsiRange[0]"
+                  class="slider slider-min"
+                  @input="onRsiMinChange"
+                />
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  :value="rsiRange[1]"
+                  class="slider slider-max"
+                  @input="onRsiMaxChange"
+                />
+              </div>
               <div class="filter-scale">
                 <span>0</span>
                 <span>100</span>
@@ -758,12 +826,34 @@ onMounted(() => {
   fetchWeeklyIdeas();
 });
 
-const onPriceRange = (event) => {
-  priceRange.value = [0, Number(event.target.value)];
+const clampValue = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const onPriceMinChange = (event) => {
+  const rawValue = Number(event.target.value);
+  const nextMin = clampValue(Number.isNaN(rawValue) ? 0 : rawValue, 0, 500);
+  const nextMax = Math.max(nextMin, priceRange.value[1]);
+  priceRange.value = [nextMin, nextMax];
 };
 
-const onRsiRange = (event) => {
-  rsiRange.value = [0, Number(event.target.value)];
+const onPriceMaxChange = (event) => {
+  const rawValue = Number(event.target.value);
+  const nextMax = clampValue(Number.isNaN(rawValue) ? 500 : rawValue, 0, 500);
+  const nextMin = Math.min(priceRange.value[0], nextMax);
+  priceRange.value = [nextMin, nextMax];
+};
+
+const onRsiMinChange = (event) => {
+  const rawValue = Number(event.target.value);
+  const nextMin = clampValue(Number.isNaN(rawValue) ? 0 : rawValue, 0, 100);
+  const nextMax = Math.max(nextMin, rsiRange.value[1]);
+  rsiRange.value = [nextMin, nextMax];
+};
+
+const onRsiMaxChange = (event) => {
+  const rawValue = Number(event.target.value);
+  const nextMax = clampValue(Number.isNaN(rawValue) ? 100 : rawValue, 0, 100);
+  const nextMin = Math.min(rsiRange.value[0], nextMax);
+  rsiRange.value = [nextMin, nextMax];
 };
 
 const onMinRoiChange = (event) => {
