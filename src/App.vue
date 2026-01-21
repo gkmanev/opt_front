@@ -585,38 +585,42 @@
     </section>
 
     <teleport to="body">
-      <div v-if="isModalOpen" class="modal-backdrop" @click.self="closeModal">
-        <div class="modal-card">
-          <header class="modal-header">
-            <div>
-              <p class="section-eyebrow">Ticker overview</p>
-              <h3>{{ activeTicker }}</h3>
-              <p class="modal-subtitle">TradingView charts, sentiment, and key metrics at a glance.</p>
+      <transition name="ticker-panel">
+        <div v-if="isModalOpen" class="ticker-panel-backdrop" @click.self="closeModal">
+          <aside class="ticker-panel" aria-label="Ticker details">
+            <header class="ticker-panel-header">
+              <div>
+                <p class="section-eyebrow">Ticker overview</p>
+                <h3>{{ activeTicker }}</h3>
+                <p class="ticker-panel-subtitle">
+                  TradingView charts, sentiment, and key metrics at a glance.
+                </p>
+              </div>
+              <button class="btn btn-muted" type="button" @click="closeModal">Close</button>
+            </header>
+            <div class="ticker-panel-body">
+              <div class="ticker-panel-grid">
+                <section class="ticker-panel-card">
+                  <p class="panel-label">Technical analysis</p>
+                  <div ref="widgetContainer" class="tradingview-wrapper"></div>
+                </section>
+                <section class="ticker-panel-card">
+                  <p class="panel-label">Symbol overview</p>
+                  <div ref="symbolOverviewContainer" class="tradingview-wrapper"></div>
+                </section>
+                <section class="ticker-panel-card">
+                  <p class="panel-label">Key facts</p>
+                  <div ref="symbolProfileContainer" class="tradingview-wrapper"></div>
+                </section>
+              </div>
             </div>
-            <button class="btn btn-muted" type="button" @click="closeModal">Close</button>
-          </header>
-          <div class="modal-body">
-            <div class="modal-grid">
-              <section class="modal-panel">
-                <p class="panel-label">Technical analysis</p>
-                <div ref="widgetContainer" class="tradingview-wrapper"></div>
-              </section>
-              <section class="modal-panel">
-                <p class="panel-label">Symbol overview</p>
-                <div ref="symbolOverviewContainer" class="tradingview-wrapper"></div>
-              </section>
-              <section class="modal-panel">
-                <p class="panel-label">Key facts</p>
-                <div ref="symbolProfileContainer" class="tradingview-wrapper"></div>
-              </section>
+            <div class="ticker-panel-footer">
+              <span class="muted">Earning rated puts</span>
+              <span class="highlight">Live</span>
             </div>
-          </div>
+          </aside>
         </div>
-        <div class="kpi-row">
-          <span class="muted">Earning rated puts</span>
-          <span class="highlight">Live</span>
-        </div>
-      </div>
+      </transition>
     </teleport>
   </div>
 </template>
