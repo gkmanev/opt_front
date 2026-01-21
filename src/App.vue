@@ -846,14 +846,6 @@ const closeModal = () => {
   activeTicker.value = '';
 };
 
-const onPriceRange = (event) => {
-  priceRange.value = [0, Number(event.target.value)];
-};
-
-const onRoiRange = (event) => {
-  roiRange.value = [0, Number(event.target.value)];
-};
-
 watch(
   [isModalOpen, activeTicker],
   ([isOpen, ticker], [wasOpen, previousTicker]) => {
