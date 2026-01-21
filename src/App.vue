@@ -496,36 +496,73 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in weeklyIdeas" :key="row.ticker">
-                <td class="ticker">{{ row.ticker }}</td>
-                <td>
-                  <button class="link-button" type="button" @click="openTicker(row.ticker)">
-                    {{ row.details }}
-                  </button>
-                </td>
-                <td class="align-right muted">{{ row.date }}</td>
-                <td class="align-right">{{ row.price }}</td>
-                <td class="align-right" :class="row.delta === '—' ? 'muted' : row.positive ? 'roi-positive' : 'roi-negative'">
-                  {{ row.delta }}
-                </td>
-                <td class="align-right roi-primary">{{ row.roi }}</td>
-                <td
-                  class="align-right"
-                  :class="row.roi1 === '—' ? 'muted' : row.positive ? 'roi-positive' : 'roi-negative'"
-                >
-                  {{ row.roi1 }}
-                </td>
+              <tr v-if="weeklyIdeasLoading">
+                <td class="muted" colspan="7">Loading weekly ideas...</td>
               </tr>
+              <tr v-else-if="weeklyIdeasError">
+                <td class="muted" colspan="7">Unable to load weekly ideas. Please try again.</td>
+              </tr>
+              <tr v-else-if="!weeklyIdeaRows.length">
+                <td class="muted" colspan="7">No weekly ideas available.</td>
+              </tr>
+              <template v-else>
+                <tr v-for="row in paginatedWeeklyIdeas" :key="row.id">
+                  <td class="ticker">{{ row.ticker }}</td>
+                  <td>
+                    <button
+                      class="link-button"
+                      type="button"
+                      :disabled="!row.ticker"
+                      @click="openTicker(row.ticker)"
+                    >
+                      {{ row.details }}
+                    </button>
+                  </td>
+                  <td class="align-right muted">{{ row.date }}</td>
+                  <td class="align-right">{{ row.price }}</td>
+                  <td
+                    class="align-right"
+                    :class="row.delta === '—' ? 'muted' : row.positive ? 'roi-positive' : 'roi-negative'"
+                  >
+                    {{ row.delta }}
+                  </td>
+                  <td class="align-right roi-primary">{{ row.roi }}</td>
+                  <td
+                    class="align-right"
+                    :class="row.roi1 === '—' ? 'muted' : row.positive ? 'roi-positive' : 'roi-negative'"
+                  >
+                    {{ row.roi1 }}
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
 
         <div class="table-footer">
-          <span class="muted">Showing 1-6 of 38</span>
+          <span class="muted"
+            >Showing {{ weeklyPageStart }}-{{ weeklyPageEnd }} of {{ weeklyIdeaRows.length }}</span
+          >
           <div class="pagination">
-            <button class="btn btn-muted" type="button">Previous</button>
-            <button class="btn btn-muted" type="button">1 / 8</button>
-            <button class="btn btn-primary" type="button">Next</button>
+            <button
+              class="btn btn-muted"
+              type="button"
+              :disabled="weeklyCurrentPage === 1 || !weeklyIdeaRows.length"
+              @click="goToWeeklyPage(weeklyCurrentPage - 1)"
+            >
+              Previous
+            </button>
+            <button class="btn btn-muted" type="button">
+              {{ weeklyCurrentPage }} / {{ weeklyTotalPages }}
+            </button>
+            <button
+              class="btn btn-primary"
+              type="button"
+              :disabled="weeklyCurrentPage === weeklyTotalPages || !weeklyIdeaRows.length"
+              @click="goToWeeklyPage(weeklyCurrentPage + 1)"
+            >
+              Next
+            </button>
           </div>
         </div>
 
@@ -584,7 +621,8 @@
 </template>
 
 <script setup>
-import { nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { getWeeklyInvestments } from './api/investingApi';
 
 const priceRange = ref([0, 500]);
 const roiRange = ref([0, 100]);
@@ -607,68 +645,101 @@ const topThreeRows = [
   { ticker: 'ALAB', date: 'Feb 28, 2026', price: '$160.09', roi: '6.22%' },
 ];
 
-const weeklyIdeas = [
-  {
-    ticker: 'AA',
-    details: 'Details',
-    date: 'Feb 28, 2026',
-    price: '60.07',
-    delta: '-0.21%',
-    roi: '$7.01',
-    roi1: '3.83%',
-    positive: true,
-  },
-  {
-    ticker: 'AAL',
-    details: 'Details',
-    date: 'Feb 28, 2026',
-    price: '15.71',
-    delta: '—',
-    roi: '$1.01',
-    roi1: '—',
-    positive: false,
-  },
-  {
-    ticker: 'AEM',
-    details: 'Details',
-    date: 'Feb 28, 2026',
-    price: '107.48',
-    delta: '-0.21%',
-    roi: '$8.51',
-    roi1: '2.62%',
-    positive: true,
-  },
-  {
-    ticker: 'AG',
-    details: 'Details',
-    date: 'Feb 28, 2026',
-    price: '21.5',
-    delta: '-0.28%',
-    roi: '$2.21',
-    roi1: '-0.61%',
-    positive: false,
-  },
-  {
-    ticker: 'ALAB',
-    details: 'Details',
-    date: 'Feb 28, 2026',
-    price: '182',
-    delta: '-0.21%',
-    roi: '$8.47',
-    roi1: '6.22%',
-    positive: true,
-  },
-  {
-    ticker: 'AMRT',
-    details: 'Details',
-    date: 'Feb 28, 2026',
-    price: '129.83',
-    delta: '-0.28%',
-    roi: '$2.42',
-    roi1: '3.98%',
-    positive: true,
-  },
-];
+const weeklyIdeas = ref([]);
+const weeklyIdeasLoading = ref(false);
+const weeklyIdeasError = ref(false);
+
+const weeklyPageSize = 6;
+const weeklyCurrentPage = ref(1);
+
+const weeklyTotalPages = computed(() =>
+  Math.max(1, Math.ceil(weeklyIdeaRows.value.length / weeklyPageSize)),
+);
+
+const formatDate = (value) => {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+const formatNumber = (value) => {
+  if (value === null || value === undefined || value === '') return '—';
+  const number = Number(value);
+  if (Number.isNaN(number)) return value;
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(number);
+};
+
+const formatPercent = (value) => {
+  if (value === null || value === undefined || value === '') return '—';
+  const number = Number(value);
+  if (Number.isNaN(number)) return value;
+  return `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(number)}%`;
+};
+
+const weeklyIdeaRows = computed(() =>
+  weeklyIdeas.value.map((idea) => {
+    const deltaValue = Number(idea.delta);
+    const roiValue = Number(idea.roi);
+    return {
+      id: `${idea.ticker ?? 'unknown'}-${idea.exp_date ?? idea.expiration_date ?? idea.expDate ?? ''}-${idea.strike ?? ''}`,
+      ticker: idea.ticker ?? '—',
+      details: idea.ticker ? 'Details' : '—',
+      date: formatDate(idea.exp_date ?? idea.expiration_date ?? idea.expDate),
+      price: formatNumber(idea.price),
+      delta: formatPercent(idea.delta),
+      roi: formatPercent(idea.roi),
+      roi1: formatNumber(idea.rsi),
+      positive: (!Number.isNaN(deltaValue) && deltaValue >= 0) || (!Number.isNaN(roiValue) && roiValue >= 0),
+    };
+  }),
+);
+
+const paginatedWeeklyIdeas = computed(() => {
+  const start = (weeklyCurrentPage.value - 1) * weeklyPageSize;
+  return weeklyIdeaRows.value.slice(start, start + weeklyPageSize);
+});
+
+const weeklyPageStart = computed(() =>
+  weeklyIdeaRows.value.length ? (weeklyCurrentPage.value - 1) * weeklyPageSize + 1 : 0,
+);
+
+const weeklyPageEnd = computed(() =>
+  Math.min(weeklyCurrentPage.value * weeklyPageSize, weeklyIdeaRows.value.length),
+);
+
+const goToWeeklyPage = (page) => {
+  const next = Math.min(Math.max(page, 1), weeklyTotalPages.value);
+  weeklyCurrentPage.value = next;
+};
+
+const fetchWeeklyIdeas = async () => {
+  weeklyIdeasLoading.value = true;
+  weeklyIdeasError.value = false;
+  try {
+    weeklyIdeas.value = await getWeeklyInvestments();
+  } catch (error) {
+    console.error('Failed to fetch weekly ideas', error);
+    weeklyIdeas.value = [];
+    weeklyIdeasError.value = true;
+  } finally {
+    weeklyIdeasLoading.value = false;
+  }
+};
+
+watch(weeklyTotalPages, (value) => {
+  if (weeklyCurrentPage.value > value) {
+    weeklyCurrentPage.value = value;
+  }
+});
+
+onMounted(() => {
+  fetchWeeklyIdeas();
+});
 
 const onPriceRange = (event) => {
   priceRange.value = [0, Number(event.target.value)];
