@@ -782,271 +782,69 @@ const renderSymbolOverviewWidget = () => {
     height: '100%',
   });
 
-    <section class="container">
-      <div class="card">
-        <div class="card-header split">
-          <div>
-            <span class="section-eyebrow">PREMIUM SCREENED PUT</span>
-            <h2>Top 3 Today</h2>
-          </div>
-          <span class="badge">Strong Buy</span>
-        </div>
+  container.append(widget, copyright, script);
+  symbolOverviewContainer.value.appendChild(container);
+};
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Ticker</th>
-                <th>Expiration Date</th>
-                <th class="align-right">Price</th>
-                <th class="align-right">ROI</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in topThreeRows" :key="row.ticker">
-                <td class="ticker">{{ row.ticker }}</td>
-                <td class="muted">{{ row.date }}</td>
-                <td class="align-right">{{ row.price }}</td>
-                <td class="align-right roi-positive">{{ row.roi }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+const renderSymbolProfileWidget = () => {
+  if (!symbolProfileContainer.value || !activeTicker.value) return;
+  symbolProfileContainer.value.innerHTML = '';
+  const container = document.createElement('div');
+  container.className = 'tradingview-widget-container tradingview-widget-container--symbol-profile';
 
-        <div class="card-footer">
-          <button class="btn btn-muted" type="button">Fundamentals: Strong Buy</button>
-          <button class="btn btn-outline" type="button">Full Screener →</button>
-        </div>
-      </div>
-    </section>
+  const widget = document.createElement('div');
+  widget.className = 'tradingview-widget-container__widget';
 
-    <section class="container">
-      <div class="card">
-        <div class="card-header">
-          <h2>Weekly Options Ideas</h2>
-          <p class="muted">Screened options from our selected filter feed</p>
-        </div>
+  const copyright = document.createElement('div');
+  copyright.className = 'tradingview-widget-copyright';
 
-        <div class="filter-panel">
-          <div class="filter-title">
-            <span class="icon icon-cyan">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <polygon
-                  points="22 3 2 3 10 12 10 19 14 21 14 12 22 3"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </span>
-            <span>Filter Options</span>
-          </div>
+  const link = document.createElement('a');
+  link.href = buildTradingViewSymbolPageLink(activeTicker.value);
+  link.rel = 'noopener nofollow';
+  link.target = '_blank';
 
-          <div class="filter-grid">
-            <div>
-              <label class="filter-label">Price range: ${{ priceRange[0] }} - ${{ priceRange[1] }}</label>
-              <input
-                type="range"
-                min="0"
-                max="500"
-                :value="priceRange[1]"
-                class="slider"
-                @input="onPriceRange"
-              />
-              <div class="filter-scale">
-                <span>$0</span>
-                <span>$500</span>
-              </div>
-            </div>
-            <div>
-              <label class="filter-label">ROI range: {{ roiRange[0] }}% - {{ roiRange[1] }}%</label>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                :value="roiRange[1]"
-                class="slider"
-                @input="onRoiRange"
-              />
-              <div class="filter-scale">
-                <span>0%</span>
-                <span>100%</span>
-              </div>
-            </div>
-            <div>
-              <label class="filter-label">Max Risk/Reward</label>
-              <select class="select">
-                <option>Any R/R</option>
-                <option>Conservative (1:2)</option>
-                <option>Moderate (1:3)</option>
-                <option>Aggressive (1:4+)</option>
-              </select>
-            </div>
-            <div>
-              <label class="filter-label">Peak of weakness</label>
-              <select class="select">
-                <option>Any</option>
-                <option>Last 7 days</option>
-                <option>Last 30 days</option>
-                <option>Last 90 days</option>
-              </select>
-            </div>
-          </div>
+  const linkText = document.createElement('span');
+  linkText.className = 'blue-text';
+  linkText.textContent = `${activeTicker.value} profile`;
 
-          <div class="filter-actions">
-            <button class="btn btn-primary btn-block" type="button">Apply Filters</button>
-            <button class="btn btn-muted" type="button">Reset</button>
-          </div>
-        </div>
+  const trademark = document.createElement('span');
+  trademark.className = 'trademark';
+  trademark.textContent = ' by TradingView';
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Market</th>
-                <th>Details</th>
-                <th class="align-right">Exp Date</th>
-                <th class="align-right">Price</th>
-                <th class="align-right">Delta</th>
-                <th class="align-right">ROI</th>
-                <th class="align-right">ROI 1</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in weeklyIdeas" :key="row.ticker">
-                <td class="ticker">{{ row.ticker }}</td>
-                <td>
-                  <button class="link-button" type="button">{{ row.details }}</button>
-                </td>
-                <td class="align-right muted">{{ row.date }}</td>
-                <td class="align-right">{{ row.price }}</td>
-                <td class="align-right" :class="row.delta === '—' ? 'muted' : row.positive ? 'roi-positive' : 'roi-negative'">
-                  {{ row.delta }}
-                </td>
-                <td class="align-right roi-primary">{{ row.roi }}</td>
-                <td
-                  class="align-right"
-                  :class="row.roi1 === '—' ? 'muted' : row.positive ? 'roi-positive' : 'roi-negative'"
-                >
-                  {{ row.roi1 }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  link.appendChild(linkText);
+  copyright.append(link, trademark);
 
-        <div class="table-footer">
-          <span class="muted">Showing 1-6 of 38</span>
-          <div class="pagination">
-            <button class="btn btn-muted" type="button">Previous</button>
-            <button class="btn btn-muted" type="button">1 / 8</button>
-            <button class="btn btn-primary" type="button">Next</button>
-          </div>
-        </div>
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-profile.js';
+  script.async = true;
+  script.text = JSON.stringify({
+    colorTheme: 'dark',
+    isTransparent: false,
+    symbol: buildTradingViewSymbol(activeTicker.value),
+    width: '100%',
+    height: '100%',
+  });
 
-        <button class="btn btn-muted btn-block" type="button">Export Results</button>
-      </div>
-    </section>
+  container.append(widget, copyright, script);
+  symbolProfileContainer.value.appendChild(container);
+};
 
-    <section class="container cta">
-      <div class="cta-card">
-        <h2>Ready to start generating income?</h2>
-        <p>
-          Join thousands of investors using data-driven strategies to sell puts on quality
-          companies
-        </p>
-        <div class="cta-actions">
-          <button class="btn btn-primary" type="button">Get Started Today</button>
-          <button class="btn btn-outline" type="button">Learn More</button>
-        </div>
-      </div>
-    </section>
-  </div>
-</template>
+const renderModalCharts = () => {
+  renderWidget();
+  renderSymbolOverviewWidget();
+  renderSymbolProfileWidget();
+};
 
-<script setup>
-import { ref } from 'vue';
+const openTicker = (ticker) => {
+  activeTicker.value = ticker;
+  isModalOpen.value = true;
+};
 
-const priceRange = ref([0, 500]);
-const roiRange = ref([0, 100]);
-const expandedStrategy = ref(false);
-
-const incomeRows = [
-  { ticker: 'SMG', price: '$67.45', roi: '6.85%', date: 'Feb 16, 2026' },
-  { ticker: 'RCI', price: '$21.10', roi: '5.61%', date: 'Feb 28, 2026' },
-  { ticker: 'ALAB', price: '$160.09', roi: '6.22%', date: 'Feb 28, 2026' },
-];
-
-const topThreeRows = [
-  { ticker: 'SMG', date: 'Feb 16, 2026', price: '$67.45', roi: '6.85%' },
-  { ticker: 'RCI', date: 'Feb 28, 2026', price: '$21.10', roi: '5.61%' },
-  { ticker: 'ALAB', date: 'Feb 28, 2026', price: '$160.09', roi: '6.22%' },
-];
-
-const weeklyIdeas = [
-  {
-    ticker: 'AA',
-    details: 'Details',
-    date: 'Feb 28, 2026',
-    price: '60.07',
-    delta: '-0.21%',
-    roi: '$7.01',
-    roi1: '3.83%',
-    positive: true,
-  },
-  {
-    ticker: 'AAL',
-    details: 'Details',
-    date: 'Feb 28, 2026',
-    price: '15.71',
-    delta: '—',
-    roi: '$1.01',
-    roi1: '—',
-    positive: false,
-  },
-  {
-    ticker: 'AEM',
-    details: 'Details',
-    date: 'Feb 28, 2026',
-    price: '107.48',
-    delta: '-0.21%',
-    roi: '$8.51',
-    roi1: '2.62%',
-    positive: true,
-  },
-  {
-    ticker: 'AG',
-    details: 'Details',
-    date: 'Feb 28, 2026',
-    price: '21.5',
-    delta: '-0.28%',
-    roi: '$2.21',
-    roi1: '-0.61%',
-    positive: false,
-  },
-  {
-    ticker: 'ALAB',
-    details: 'Details',
-    date: 'Feb 28, 2026',
-    price: '182',
-    delta: '-0.21%',
-    roi: '$8.47',
-    roi1: '6.22%',
-    positive: true,
-  },
-  {
-    ticker: 'AMRT',
-    details: 'Details',
-    date: 'Feb 28, 2026',
-    price: '129.83',
-    delta: '-0.28%',
-    roi: '$2.42',
-    roi1: '3.98%',
-    positive: true,
-  },
-];
+const closeModal = () => {
+  isModalOpen.value = false;
+  activeTicker.value = '';
+};
 
 const onPriceRange = (event) => {
   priceRange.value = [0, Number(event.target.value)];
