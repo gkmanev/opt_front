@@ -553,18 +553,17 @@
                 <th class="align-right">Price</th>
                 <th class="align-right">Delta</th>
                 <th class="align-right">ROI</th>
-                <th class="align-right">ROI 1</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="weeklyIdeasLoading">
-                <td class="muted" colspan="7">Loading weekly ideas...</td>
+                <td class="muted" colspan="6">Loading weekly ideas...</td>
               </tr>
               <tr v-else-if="weeklyIdeasError">
-                <td class="muted" colspan="7">Unable to load weekly ideas. Please try again.</td>
+                <td class="muted" colspan="6">Unable to load weekly ideas. Please try again.</td>
               </tr>
               <tr v-else-if="!weeklyIdeaRows.length">
-                <td class="muted" colspan="7">No weekly ideas available.</td>
+                <td class="muted" colspan="6">No weekly ideas available.</td>
               </tr>
               <template v-else>
                 <tr v-for="row in paginatedWeeklyIdeas" :key="row.id">
@@ -588,12 +587,6 @@
                     {{ row.delta }}
                   </td>
                   <td class="align-right roi-primary">{{ row.roi }}</td>
-                  <td
-                    class="align-right"
-                    :class="row.roi1 === '—' ? 'muted' : row.positive ? 'roi-positive' : 'roi-negative'"
-                  >
-                    {{ row.roi1 }}
-                  </td>
                 </tr>
               </template>
             </tbody>
@@ -760,7 +753,6 @@ const weeklyIdeaRows = computed(() =>
       price: formatNumber(idea.price),
       delta: formatPercent(idea.delta),
       roi: formatPercent(idea.roi),
-      roi1: formatNumber(idea.rsi),
       positive: (!Number.isNaN(deltaValue) && deltaValue >= 0) || (!Number.isNaN(roiValue) && roiValue >= 0),
     };
   }),
