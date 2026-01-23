@@ -681,7 +681,7 @@
 
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
-import { getWeeklyInvestments } from './api/investingApi';
+import { getInvestments } from './api/investingApi';
 
 const priceRange = ref([0, 500]);
 const rsiRange = ref([0, 100]);
@@ -780,7 +780,7 @@ const fetchWeeklyIdeas = async (filters = {}) => {
   weeklyIdeasLoading.value = true;
   weeklyIdeasError.value = false;
   try {
-    weeklyIdeas.value = await getWeeklyInvestments(filters);
+    weeklyIdeas.value = await getInvestments(filters);
   } catch (error) {
     console.error('Failed to fetch weekly ideas', error);
     weeklyIdeas.value = [];
