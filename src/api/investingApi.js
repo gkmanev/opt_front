@@ -1,5 +1,5 @@
 const baseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://209.38.208.230:8080';
-const weeklyInvestmentsBasePath = '/api/investments/';
+const optInvestBasePath = '/api/investments/';
 
 const request = async (path) => {
   const response = await fetch(`${baseUrl}${path}`, {
@@ -17,13 +17,13 @@ const request = async (path) => {
 
 export const getSummary = () => request('/api/summary');
 export const getMarketMovers = () => request('/api/market-movers');
-const normalizeWeeklyInvestment = (idea) => ({
+const normalizeInvestment = (idea) => ({
   ...idea,
   exp_date: idea.exp_date ?? idea.option_exp ?? idea.optionExp,
   expiration_date: idea.expiration_date ?? idea.exp_date ?? idea.option_exp ?? idea.optionExp,
 });
 
-const buildWeeklyInvestmentsPath = ({
+const buildInvestmentsPath = ({
   minPrice,
   maxPrice,
   minRsi,
@@ -38,7 +38,6 @@ const buildWeeklyInvestmentsPath = ({
       ? 'Custom screener filterV3'
       : screenerType;
   const params = new URLSearchParams({
-    weekly_options: 'true',
     screener_type: resolvedScreenerType,
   });
 
@@ -64,10 +63,10 @@ const buildWeeklyInvestmentsPath = ({
     params.set('max_delta', String(maxDelta));
   }
 
-  return `${weeklyInvestmentsBasePath}?${params.toString()}`;
+  return `${optInvestBasePath}?${params.toString()}`;
 };
 
-export const getWeeklyInvestments = async ({
+export const getInvestments = async ({
   minPrice,
   maxPrice,
   minRsi,
@@ -78,7 +77,7 @@ export const getWeeklyInvestments = async ({
   screenerType,
 } = {}) => {
   const data = await request(
-    buildWeeklyInvestmentsPath({
+    buildInvestmentsPath({
       minPrice,
       maxPrice,
       minRsi,
@@ -91,6 +90,6 @@ export const getWeeklyInvestments = async ({
   );
 
   const list = Array.isArray(data) ? data : data.results ?? data.investments ?? [];
-  return list.map((idea) => normalizeWeeklyInvestment(idea));
+  return list.map((idea) => normalizeInvestment(idea));
 };
 export const apiBaseUrl = baseUrl;
