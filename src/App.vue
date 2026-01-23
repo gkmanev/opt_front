@@ -551,19 +551,20 @@
                 <th>Details</th>
                 <th class="align-right">Exp Date</th>
                 <th class="align-right">Price</th>
+                <th class="align-right">Bid/Ask</th>
                 <th class="align-right">Delta</th>
                 <th class="align-right">ROI</th>
               </tr>
             </thead>
             <tbody>
               <tr v-if="weeklyIdeasLoading">
-                <td class="muted" colspan="6">Loading weekly ideas...</td>
+                <td class="muted" colspan="7">Loading weekly ideas...</td>
               </tr>
               <tr v-else-if="weeklyIdeasError">
-                <td class="muted" colspan="6">Unable to load weekly ideas. Please try again.</td>
+                <td class="muted" colspan="7">Unable to load weekly ideas. Please try again.</td>
               </tr>
               <tr v-else-if="!weeklyIdeaRows.length">
-                <td class="muted" colspan="6">No weekly ideas available.</td>
+                <td class="muted" colspan="7">No weekly ideas available.</td>
               </tr>
               <template v-else>
                 <tr v-for="row in paginatedWeeklyIdeas" :key="row.id">
@@ -580,6 +581,7 @@
                   </td>
                   <td class="align-right muted">{{ row.date }}</td>
                   <td class="align-right">{{ row.price }}</td>
+                  <td class="align-right">{{ row.bidAsk }}</td>
                   <td
                     class="align-right"
                     :class="row.delta === '—' ? 'muted' : row.positive ? 'roi-positive' : 'roi-negative'"
@@ -751,6 +753,7 @@ const weeklyIdeaRows = computed(() =>
       details: idea.ticker ? 'Details' : '—',
       date: formatDate(idea.exp_date ?? idea.expiration_date ?? idea.expDate),
       price: formatNumber(idea.price),
+      bidAsk: formatNumber(idea.bid_ask_spread),
       delta: formatPercent(idea.delta),
       roi: formatPercent(idea.roi),
       positive: (!Number.isNaN(deltaValue) && deltaValue >= 0) || (!Number.isNaN(roiValue) && roiValue >= 0),
