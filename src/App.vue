@@ -533,6 +533,15 @@
                 <option value="3">&gt; 3%</option>
               </select>
             </div>
+            <div>
+              <label class="filter-label">Bid/Ask spread</label>
+              <select class="select" :value="bidAskMax" @change="onBidAskMaxChange">
+                <option value="">Any spread</option>
+                <option value="1.5">&lt; 1.5</option>
+                <option value="1">&lt; 1</option>
+                <option value="0.75">&lt; 0.75</option>
+              </select>
+            </div>
           </div>
 
           <div class="filter-actions">
@@ -563,7 +572,7 @@
               <tr v-else-if="weeklyIdeasError">
                 <td class="muted" colspan="7">Unable to load weekly ideas. Please try again.</td>
               </tr>
-              <tr v-else-if="!weeklyIdeaRows.length">
+              <tr v-else-if="!filteredWeeklyIdeaRows.length">
                 <td class="muted" colspan="7">No weekly ideas available.</td>
               </tr>
               <template v-else>
@@ -597,13 +606,13 @@
 
         <div class="table-footer">
           <span class="muted"
-            >Showing {{ weeklyPageStart }}-{{ weeklyPageEnd }} of {{ weeklyIdeaRows.length }}</span
+            >Showing {{ weeklyPageStart }}-{{ weeklyPageEnd }} of {{ filteredWeeklyIdeaRows.length }}</span
           >
           <div class="pagination">
             <button
               class="btn btn-muted"
               type="button"
-              :disabled="weeklyCurrentPage === 1 || !weeklyIdeaRows.length"
+              :disabled="weeklyCurrentPage === 1 || !filteredWeeklyIdeaRows.length"
               @click="goToWeeklyPage(weeklyCurrentPage - 1)"
             >
               Previous
@@ -614,7 +623,7 @@
             <button
               class="btn btn-primary"
               type="button"
-              :disabled="weeklyCurrentPage === weeklyTotalPages || !weeklyIdeaRows.length"
+              :disabled="weeklyCurrentPage === weeklyTotalPages || !filteredWeeklyIdeaRows.length"
               @click="goToWeeklyPage(weeklyCurrentPage + 1)"
             >
               Next
@@ -688,6 +697,8 @@ import { getInvestments } from './api/investingApi';
 const priceRange = ref([0, 500]);
 const rsiRange = ref([0, 100]);
 const minRoi = ref('');
+const bidAskMax = ref('');
+const appliedBidAskMax = ref('');
 const expandedStrategy = ref(false);
 const isModalOpen = ref(false);
 const activeTicker = ref('');
@@ -715,7 +726,7 @@ const weeklyPageSize = 6;
 const weeklyCurrentPage = ref(1);
 
 const weeklyTotalPages = computed(() =>
-  Math.max(1, Math.ceil(weeklyIdeaRows.value.length / weeklyPageSize)),
+  Math.max(1, Math.ceil(filteredWeeklyIdeaRows.value.length / weeklyPageSize)),
 );
 
 const formatDate = (value) => {
@@ -747,6 +758,7 @@ const weeklyIdeaRows = computed(() =>
   weeklyIdeas.value.map((idea) => {
     const deltaValue = Number(idea.delta);
     const roiValue = Number(idea.roi);
+    const bidAskValue = Number(idea.bid_ask_spread);
     return {
       id: `${idea.ticker ?? 'unknown'}-${idea.exp_date ?? idea.expiration_date ?? idea.expDate ?? ''}-${idea.strike ?? ''}`,
       ticker: idea.ticker ?? '—',
@@ -754,6 +766,7 @@ const weeklyIdeaRows = computed(() =>
       date: formatDate(idea.exp_date ?? idea.expiration_date ?? idea.expDate),
       price: formatNumber(idea.price),
       bidAsk: formatNumber(idea.bid_ask_spread),
+      bidAskValue,
       delta: formatPercent(idea.delta),
       roi: formatPercent(idea.roi),
       positive: (!Number.isNaN(deltaValue) && deltaValue >= 0) || (!Number.isNaN(roiValue) && roiValue >= 0),
@@ -761,17 +774,27 @@ const weeklyIdeaRows = computed(() =>
   }),
 );
 
+const filteredWeeklyIdeaRows = computed(() => {
+  const threshold = appliedBidAskMax.value === '' ? null : Number(appliedBidAskMax.value);
+  if (threshold === null || Number.isNaN(threshold)) {
+    return weeklyIdeaRows.value;
+  }
+  return weeklyIdeaRows.value.filter(
+    (row) => !Number.isNaN(row.bidAskValue) && row.bidAskValue < threshold,
+  );
+});
+
 const paginatedWeeklyIdeas = computed(() => {
   const start = (weeklyCurrentPage.value - 1) * weeklyPageSize;
-  return weeklyIdeaRows.value.slice(start, start + weeklyPageSize);
+  return filteredWeeklyIdeaRows.value.slice(start, start + weeklyPageSize);
 });
 
 const weeklyPageStart = computed(() =>
-  weeklyIdeaRows.value.length ? (weeklyCurrentPage.value - 1) * weeklyPageSize + 1 : 0,
+  filteredWeeklyIdeaRows.value.length ? (weeklyCurrentPage.value - 1) * weeklyPageSize + 1 : 0,
 );
 
 const weeklyPageEnd = computed(() =>
-  Math.min(weeklyCurrentPage.value * weeklyPageSize, weeklyIdeaRows.value.length),
+  Math.min(weeklyCurrentPage.value * weeklyPageSize, filteredWeeklyIdeaRows.value.length),
 );
 
 const goToWeeklyPage = (page) => {
@@ -837,8 +860,14 @@ const onMinRoiChange = (event) => {
   minRoi.value = event.target.value;
 };
 
+const onBidAskMaxChange = (event) => {
+  bidAskMax.value = event.target.value;
+};
+
 const applyFilters = () => {
   const minRoiValue = minRoi.value === '' ? null : Number(minRoi.value);
+  weeklyCurrentPage.value = 1;
+  appliedBidAskMax.value = bidAskMax.value;
   fetchWeeklyIdeas({
     minPrice: priceRange.value[0],
     maxPrice: priceRange.value[1],
@@ -852,6 +881,9 @@ const resetFilters = () => {
   priceRange.value = [0, 500];
   rsiRange.value = [0, 100];
   minRoi.value = '';
+  bidAskMax.value = '';
+  appliedBidAskMax.value = '';
+  weeklyCurrentPage.value = 1;
   fetchWeeklyIdeas();
 };
 
