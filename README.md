@@ -9,6 +9,32 @@ npm install
 npm run dev
 ```
 
+### Preview the `front_dev` component
+
+The new put-opportunities demo lives at `src/components/front_dev.vue`.
+To preview it in the app, temporarily swap the root component:
+
+1. Run the dev server (if it is not already running):
+
+```bash
+npm run dev
+```
+
+2. Open `src/App.vue`.
+3. Replace the current template with `<FrontDev />`.
+4. Add the import at the top of the script:
+
+```vue
+<script setup>
+import FrontDev from './components/front_dev.vue';
+</script>
+```
+
+5. Save the file and refresh the browser (Vite hot reload will also pick it up).
+
+You can revert the change when you want the original dashboard back by restoring the
+previous `App.vue` template and removing the import.
+
 ### API configuration
 
 Set the API base URL with an environment variable:
