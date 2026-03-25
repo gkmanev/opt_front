@@ -1,8 +1,27 @@
-const baseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://209.38.208.230:8080';
-const optInvestBasePath = '/api/investments/';
+let apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://209.38.208.230:8080';
+const optSymbolsBasePath = '/api/symbols/';
+
+const normalizeBaseUrl = (value) => {
+  if (!value) return '';
+  return value.endsWith('/') ? value.slice(0, -1) : value;
+};
+
+const normalizePath = (path) => {
+  if (!path) return '';
+  return path.startsWith('/') ? path : `/${path}`;
+};
+
+const resolveUrl = (path) => {
+  const base = normalizeBaseUrl(apiBaseUrl);
+  const normalizedPath = normalizePath(path);
+  if (base.endsWith('/api') && normalizedPath.startsWith('/api/')) {
+    return `${base}${normalizedPath.slice(4)}`;
+  }
+  return `${base}${normalizedPath}`;
+};
 
 const request = async (path) => {
-  const response = await fetch(`${baseUrl}${path}`, {
+  const response = await fetch(resolveUrl(path), {
     headers: {
       'Content-Type': 'application/json',
     },
@@ -17,29 +36,15 @@ const request = async (path) => {
 
 export const getSummary = () => request('/api/summary');
 export const getMarketMovers = () => request('/api/market-movers');
-const normalizeInvestment = (idea) => ({
-  ...idea,
-  exp_date: idea.exp_date ?? idea.option_exp ?? idea.optionExp,
-  expiration_date: idea.expiration_date ?? idea.exp_date ?? idea.option_exp ?? idea.optionExp,
-});
 
-const buildInvestmentsPath = ({
+const buildSymbolsPath = ({
   minPrice,
   maxPrice,
   minRsi,
   maxRsi,
   minRoi,
-  minDelta,
-  maxDelta,
-  screenerType,
 } = {}) => {
-  const resolvedScreenerType =
-    screenerType === null || screenerType === undefined || screenerType === ''
-      ? 'Custom screener filterV3'
-      : screenerType;
-  const params = new URLSearchParams({
-    screener_type: resolvedScreenerType,
-  });
+  const params = new URLSearchParams();
 
   if (minPrice !== null && minPrice !== undefined && minPrice !== '') {
     params.set('min_price', String(minPrice));
@@ -56,40 +61,57 @@ const buildInvestmentsPath = ({
   if (minRoi !== null && minRoi !== undefined && minRoi !== '') {
     params.set('min_roi', String(minRoi));
   }
-  if (minDelta !== null && minDelta !== undefined && minDelta !== '') {
-    params.set('min_delta', String(minDelta));
-  }
-  if (maxDelta !== null && maxDelta !== undefined && maxDelta !== '') {
-    params.set('max_delta', String(maxDelta));
-  }
 
-  return `${optInvestBasePath}?${params.toString()}`;
+  const query = params.toString();
+  return query ? `${optSymbolsBasePath}?${query}` : optSymbolsBasePath;
 };
 
-export const getInvestments = async ({
+export const getSymbols = async ({
   minPrice,
   maxPrice,
   minRsi,
   maxRsi,
   minRoi,
-  minDelta,
-  maxDelta,
-  screenerType,
 } = {}) => {
   const data = await request(
-    buildInvestmentsPath({
-      minPrice,
-      maxPrice,
-      minRsi,
-      maxRsi,
-      minRoi,
-      minDelta,
-      maxDelta,
-      screenerType,
-    }),
+    buildSymbolsPath({ minPrice, maxPrice, minRsi, maxRsi, minRoi }),
   );
 
-  const list = Array.isArray(data) ? data : data.results ?? data.investments ?? [];
-  return list.map((idea) => normalizeInvestment(idea));
+  return Array.isArray(data) ? data : data.results ?? [];
 };
-export const apiBaseUrl = baseUrl;
+
+export const setApiBaseUrl = (nextBaseUrl) => {
+  if (!nextBaseUrl) return;
+  apiBaseUrl = nextBaseUrl;
+};
+
+export const getApiBaseUrl = () => apiBaseUrl;
+
+const TV_SCANNER_URL = 'https://scanner.tradingview.com/america/scan';
+
+export const fetchTechnicalScores = async (tickers) => {
+  if (!tickers?.length) return {};
+  try {
+    const response = await fetch(TV_SCANNER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        filter: [{ left: 'name', operation: 'in_range', right: tickers }],
+        columns: ['name', 'Recommend.All|1M'],
+        range: [0, tickers.length * 4],
+      }),
+    });
+    if (!response.ok) return {};
+    const json = await response.json();
+    const map = {};
+    for (const item of json.data ?? []) {
+      const [name, score] = item.d;
+      if (name && score != null && !(name in map)) {
+        map[name] = score;
+      }
+    }
+    return map;
+  } catch {
+    return {};
+  }
+};
