@@ -1052,7 +1052,7 @@ const symbolOverviewContainer = ref(null);
 const symbolProfileContainer = ref(null);
 
 const apiTargets = {
-  local: 'http://127.0.0.1:8000/api',
+  local: 'http://127.0.0.1:8000',
   claud: getApiBaseUrl(),
 };
 

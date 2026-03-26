@@ -1,27 +1,51 @@
-let apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://209.38.208.230:8080';
-const optSymbolsBasePath = '/api/symbols/';
+const DEFAULT_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://api.putpulse.com';
+
+const API_ENDPOINT_PATHS = Object.freeze({
+  investments: '/api/investments/',
+  symbols: '/api/symbols/',
+  'screener-types': '/api/screener-types/',
+  'screener-filters': '/api/screener-filters/',
+  'financial-statements': '/api/financial-statements/',
+  'due-diligence-reports': '/api/due-diligence-reports/',
+});
+
+let apiBaseUrl = DEFAULT_API_BASE_URL;
 
 const normalizeBaseUrl = (value) => {
-  if (!value) return '';
-  return value.endsWith('/') ? value.slice(0, -1) : value;
+  const fallback = value || DEFAULT_API_BASE_URL;
+  return fallback.endsWith('/') ? fallback : `${fallback}/`;
 };
 
-const normalizePath = (path) => {
-  if (!path) return '';
-  return path.startsWith('/') ? path : `/${path}`;
+const appendSearchParams = (url, params = {}) => {
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === '') return;
+
+    if (Array.isArray(value)) {
+      value.forEach((item) => {
+        if (item === null || item === undefined || item === '') return;
+        url.searchParams.append(key, String(item));
+      });
+      return;
+    }
+
+    url.searchParams.set(key, String(value));
+  });
 };
 
-const resolveUrl = (path) => {
-  const base = normalizeBaseUrl(apiBaseUrl);
-  const normalizedPath = normalizePath(path);
-  if (base.endsWith('/api') && normalizedPath.startsWith('/api/')) {
-    return `${base}${normalizedPath.slice(4)}`;
+const resolveEndpointUrl = (endpointKey, params) => {
+  const endpointPath = API_ENDPOINT_PATHS[endpointKey];
+
+  if (!endpointPath) {
+    throw new Error(`Unknown API endpoint: ${endpointKey}`);
   }
-  return `${base}${normalizedPath}`;
+
+  const url = new URL(endpointPath, normalizeBaseUrl(apiBaseUrl));
+  appendSearchParams(url, params);
+  return url.toString();
 };
 
-const request = async (path) => {
-  const response = await fetch(resolveUrl(path), {
+const request = async (endpointKey, { params } = {}) => {
+  const response = await fetch(resolveEndpointUrl(endpointKey, params), {
     headers: {
       'Content-Type': 'application/json',
     },
@@ -34,36 +58,38 @@ const request = async (path) => {
   return response.json();
 };
 
-export const getSummary = () => request('/api/summary');
-export const getMarketMovers = () => request('/api/market-movers');
+export const getInvestments = (params = {}) => request('investments', { params });
+export const getScreenerTypes = (params = {}) => request('screener-types', { params });
+export const getScreenerFilters = (params = {}) => request('screener-filters', { params });
+export const getFinancialStatements = (params = {}) => request('financial-statements', { params });
+export const getDueDiligenceReports = (params = {}) => request('due-diligence-reports', { params });
 
-const buildSymbolsPath = ({
+const buildSymbolsParams = ({
   minPrice,
   maxPrice,
   minRsi,
   maxRsi,
   minRoi,
 } = {}) => {
-  const params = new URLSearchParams();
+  const params = {};
 
   if (minPrice !== null && minPrice !== undefined && minPrice !== '') {
-    params.set('min_price', String(minPrice));
+    params.min_price = minPrice;
   }
   if (maxPrice !== null && maxPrice !== undefined && maxPrice !== '') {
-    params.set('max_price', String(maxPrice));
+    params.max_price = maxPrice;
   }
   if (minRsi !== null && minRsi !== undefined && minRsi !== '') {
-    params.set('min_rsi', String(minRsi));
+    params.min_rsi = minRsi;
   }
   if (maxRsi !== null && maxRsi !== undefined && maxRsi !== '') {
-    params.set('max_rsi', String(maxRsi));
+    params.max_rsi = maxRsi;
   }
   if (minRoi !== null && minRoi !== undefined && minRoi !== '') {
-    params.set('min_roi', String(minRoi));
+    params.min_roi = minRoi;
   }
 
-  const query = params.toString();
-  return query ? `${optSymbolsBasePath}?${query}` : optSymbolsBasePath;
+  return params;
 };
 
 export const getSymbols = async ({
@@ -73,9 +99,9 @@ export const getSymbols = async ({
   maxRsi,
   minRoi,
 } = {}) => {
-  const data = await request(
-    buildSymbolsPath({ minPrice, maxPrice, minRsi, maxRsi, minRoi }),
-  );
+  const data = await request('symbols', {
+    params: buildSymbolsParams({ minPrice, maxPrice, minRsi, maxRsi, minRoi }),
+  });
 
   return Array.isArray(data) ? data : data.results ?? [];
 };
