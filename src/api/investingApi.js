@@ -1,4 +1,6 @@
-const DEFAULT_API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://api.putpulse.com';
+import { getApiBaseUrl, requestJson, setApiBaseUrl } from './client';
+
+export { getApiBaseUrl, setApiBaseUrl };
 
 const API_ENDPOINT_PATHS = Object.freeze({
   investments: '/api/investments/',
@@ -9,53 +11,18 @@ const API_ENDPOINT_PATHS = Object.freeze({
   'due-diligence-reports': '/api/due-diligence-reports/',
 });
 
-let apiBaseUrl = DEFAULT_API_BASE_URL;
-
-const normalizeBaseUrl = (value) => {
-  const fallback = value || DEFAULT_API_BASE_URL;
-  return fallback.endsWith('/') ? fallback : `${fallback}/`;
-};
-
-const appendSearchParams = (url, params = {}) => {
-  Object.entries(params).forEach(([key, value]) => {
-    if (value === null || value === undefined || value === '') return;
-
-    if (Array.isArray(value)) {
-      value.forEach((item) => {
-        if (item === null || item === undefined || item === '') return;
-        url.searchParams.append(key, String(item));
-      });
-      return;
-    }
-
-    url.searchParams.set(key, String(value));
-  });
-};
-
-const resolveEndpointUrl = (endpointKey, params) => {
+const resolveEndpointPath = (endpointKey) => {
   const endpointPath = API_ENDPOINT_PATHS[endpointKey];
 
   if (!endpointPath) {
     throw new Error(`Unknown API endpoint: ${endpointKey}`);
   }
 
-  const url = new URL(endpointPath, normalizeBaseUrl(apiBaseUrl));
-  appendSearchParams(url, params);
-  return url.toString();
+  return endpointPath;
 };
 
 const request = async (endpointKey, { params } = {}) => {
-  const response = await fetch(resolveEndpointUrl(endpointKey, params), {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Request failed: ${response.status}`);
-  }
-
-  return response.json();
+  return requestJson(resolveEndpointPath(endpointKey), { params });
 };
 
 export const getInvestments = (params = {}) => request('investments', { params });
@@ -105,13 +72,6 @@ export const getSymbols = async ({
 
   return Array.isArray(data) ? data : data.results ?? [];
 };
-
-export const setApiBaseUrl = (nextBaseUrl) => {
-  if (!nextBaseUrl) return;
-  apiBaseUrl = nextBaseUrl;
-};
-
-export const getApiBaseUrl = () => apiBaseUrl;
 
 const TV_SCANNER_URL = 'https://scanner.tradingview.com/america/scan';
 

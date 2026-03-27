@@ -1,5 +1,22 @@
 <template>
-  <div class="page">
+  <SignUpView
+    v-if="currentRoute === '/sign-up'"
+    @back-home="goHome"
+    @navigate-login="goToLogin"
+  />
+  <VerifyEmailView
+    v-else-if="currentRoute === '/verify-email'"
+    @back-home="goHome"
+    @navigate-login="goToLogin"
+    @verified="handleAuthenticated"
+  />
+  <LoginView
+    v-else-if="currentRoute === '/login'"
+    @authenticated="handleAuthenticated"
+    @back-home="goHome"
+    @navigate-signup="goToSignUp"
+  />
+  <div v-else class="page">
     <header class="site-header">
       <div class="container header-inner">
         <div class="brand">
@@ -33,8 +50,14 @@
           </label>
         </div>
         <div class="header-actions">
-          <button class="btn btn-ghost" type="button">Login</button>
-          <button class="btn btn-primary" type="button">Get Started </button>
+          <template v-if="isAuthenticated">
+            <span class="user-chip">{{ authDisplayName }}</span>
+            <button class="btn btn-ghost" type="button" @click="handleLogout">Logout</button>
+          </template>
+          <template v-else>
+            <button class="btn btn-ghost" type="button" @click="goToLogin">Login</button>
+            <button class="btn btn-primary" type="button" @click="goToSignUp">Start For Free</button>
+          </template>
         </div>
       </div>
     </header>
@@ -117,21 +140,7 @@
             </div>
           </div>
           <div class="hero-actions">
-            <button class="btn btn-primary" type="button">
-              <span class="icon">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              </span>
-              View Live Candidates
-            </button>
+            <button class="btn btn-primary" type="button" @click="goToSignUp">Start For Free</button>
             <button class="btn btn-outline" type="button">See How It Works</button>
           </div>
         </div>
@@ -1007,9 +1016,46 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { fetchTechnicalScores, getApiBaseUrl, getSymbols, setApiBaseUrl } from './api/investingApi';
 import DailyBrief from './components/DailyBrief.vue';
+import { useAuthStore } from './stores/auth';
+import LoginView from './views/LoginView.vue';
+import SignUpView from './views/SignUpView.vue';
+import VerifyEmailView from './views/VerifyEmailView.vue';
+
+const auth = useAuthStore();
+const routePath = ref(window.location.pathname || '/');
+const knownRoutes = new Set(['/', '/dashboard', '/login', '/sign-up', '/verify-email']);
+const authRoutes = new Set(['/login', '/sign-up', '/verify-email']);
+
+const syncRoute = () => {
+  routePath.value = window.location.pathname || '/';
+};
+
+const navigateTo = (path, { replace = false } = {}) => {
+  const nextPath = path || '/';
+  const targetPath = knownRoutes.has(nextPath) ? nextPath : '/';
+  const currentPath = window.location.pathname || '/';
+
+  if (currentPath === targetPath) {
+    syncRoute();
+    return;
+  }
+
+  window.history[replace ? 'replaceState' : 'pushState']({}, '', targetPath);
+  syncRoute();
+  window.scrollTo({ top: 0, behavior: 'auto' });
+};
+
+const currentRoute = computed(() => (knownRoutes.has(routePath.value) ? routePath.value : '/'));
+const isAuthenticated = auth.isAuthenticated;
+const authDisplayName = auth.displayName;
+
+const goHome = () => navigateTo('/', { replace: currentRoute.value !== '/' });
+const goToDashboard = () => navigateTo('/dashboard', { replace: currentRoute.value !== '/dashboard' });
+const goToLogin = () => navigateTo('/login');
+const goToSignUp = () => navigateTo('/sign-up');
 
 const priceRange = ref([0, 500]);
 const rsiRange = ref([0, 100]);
@@ -1721,8 +1767,32 @@ watch(filteredWeeklyIdeaGroups, (groups) => {
   );
 });
 
+const handleAuthenticated = () => {
+  currentPage.value = 'home';
+  goToDashboard();
+};
+
+const handleLogout = async () => {
+  await auth.logout();
+  currentPage.value = 'home';
+  navigateTo('/', { replace: true });
+};
+
 onMounted(() => {
+  window.addEventListener('popstate', syncRoute);
+  syncRoute();
+  auth.initialize();
   fetchWeeklyIdeas();
+});
+
+onUnmounted(() => {
+  window.removeEventListener('popstate', syncRoute);
+});
+
+watch([currentRoute, isAuthenticated], ([route, signedIn]) => {
+  if (signedIn && authRoutes.has(route) && route !== '/verify-email') {
+    handleAuthenticated();
+  }
 });
 
 const clampValue = (value, min, max) => Math.min(Math.max(value, min), max);
