@@ -2387,6 +2387,7 @@ tbody tr:hover {
   }
 
   .kpi-grid {
+    grid-template-columns: 1fr;
     gap: 1rem;
     margin: 2rem auto;
   }
@@ -2404,7 +2405,19 @@ tbody tr:hover {
   }
 
   .kpi-footer {
+    flex-direction: column;
     align-items: flex-start;
+  }
+
+  .kpi-tags {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .kpi-tag {
+    max-width: 100%;
+    white-space: normal;
   }
 
   .badge-live {
@@ -2430,24 +2443,16 @@ tbody tr:hover {
     padding: 1.35rem;
   }
 
-  .kpi-grid {
-    grid-template-columns: 1fr;
-  }
-
   .kpi-header {
-    flex-direction: column;
+    gap: 0.75rem;
   }
 
   .kpi-header .icon {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.35rem;
+    height: 2.35rem;
   }
 
-  .kpi-tags {
-    width: 100%;
-  }
-
-  .kpi-tag {
-    white-space: normal;
+  .kpi-stat {
+    font-size: clamp(1.8rem, 9vw, 2.15rem);
   }
 }
