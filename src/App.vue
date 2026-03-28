@@ -19,13 +19,13 @@
   <div v-else class="page">
     <header class="site-header">
       <div class="container header-inner">
-        <div class="brand">
+        <button class="brand brand-button" type="button" @click="goHome">
           <span class="status-dot"></span>
           <div>
             <span class="brand-name">PutPulse</span>
             <!-- <span class="brand-meta">Updated in real-time • Last sync 10s ago</span> -->
           </div>
-        </div>
+        </button>
         <div class="header-actions">
           <template v-if="isAuthenticated">
             <button
