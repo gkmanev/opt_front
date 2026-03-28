@@ -1,9 +1,92 @@
 import { computed, reactive } from 'vue';
 import { configureApiClient, extractApiErrorMessage, requestJson } from '../api/client';
 
+const USER_STORAGE_KEY = 'putpulse.auth.user';
+
+const canUseStorage = () => typeof window !== 'undefined' && typeof window.sessionStorage !== 'undefined';
+
+const readStoredUser = () => {
+  if (!canUseStorage()) return null;
+
+  try {
+    const rawValue = window.sessionStorage.getItem(USER_STORAGE_KEY);
+    if (!rawValue) return null;
+    const parsed = JSON.parse(rawValue);
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeStoredUser = (user) => {
+  if (!canUseStorage()) return;
+
+  if (!user) {
+    window.sessionStorage.removeItem(USER_STORAGE_KEY);
+    return;
+  }
+
+  try {
+    window.sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  } catch {
+    // Ignore storage quota / availability errors and keep in-memory auth working.
+  }
+};
+
+const normalizeUserValue = (value) => {
+  if (!value || typeof value !== 'object') return null;
+  return Object.fromEntries(
+    Object.entries(value).filter(([, entryValue]) => entryValue !== null && entryValue !== undefined && entryValue !== ''),
+  );
+};
+
+const decodeJwtPayload = (token) => {
+  if (!token || typeof token !== 'string') return null;
+
+  const [, payload] = token.split('.');
+  if (!payload) return null;
+
+  try {
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const decoded = atob(padded);
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+};
+
+const deriveUserFromAccessToken = (accessToken) => {
+  const payload = decodeJwtPayload(accessToken);
+  if (!payload || typeof payload !== 'object') return null;
+
+  const firstName = payload.first_name ?? payload.given_name ?? null;
+  const lastName = payload.last_name ?? payload.family_name ?? null;
+  const displayName = payload.name ?? null;
+  const inferredUser = normalizeUserValue({
+    id: payload.user_id ?? payload.sub ?? null,
+    username: payload.username ?? payload.preferred_username ?? null,
+    email: payload.email ?? null,
+    first_name: firstName ?? (displayName ? displayName.split(/\s+/)[0] : null),
+    last_name: lastName ?? (displayName ? displayName.split(/\s+/).slice(1).join(' ') || null : null),
+  });
+
+  return inferredUser && Object.keys(inferredUser).length ? inferredUser : null;
+};
+
+const mergeUsers = (...candidates) => {
+  const merged = candidates.reduce((result, candidate) => {
+    const normalized = normalizeUserValue(candidate);
+    if (!normalized) return result;
+    return { ...result, ...normalized };
+  }, {});
+
+  return Object.keys(merged).length ? merged : null;
+};
+
 const state = reactive({
   accessToken: null,
-  user: null,
+  user: readStoredUser(),
   initializing: false,
   initialized: false,
 });
@@ -13,20 +96,27 @@ let initializePromise = null;
 
 const applyAuthResponse = (data) => {
   state.accessToken = data?.access ?? null;
-  state.user = data?.user ?? state.user ?? null;
+  state.user = mergeUsers(state.user, deriveUserFromAccessToken(data?.access), data?.user);
+  writeStoredUser(state.user);
 };
 
 const setAccessToken = (accessToken) => {
   state.accessToken = accessToken ?? null;
+  if (!state.user && state.accessToken) {
+    state.user = mergeUsers(deriveUserFromAccessToken(state.accessToken), readStoredUser());
+    writeStoredUser(state.user);
+  }
 };
 
 const setUser = (user) => {
-  state.user = user ?? null;
+  state.user = normalizeUserValue(user);
+  writeStoredUser(state.user);
 };
 
 const clearSession = () => {
   state.accessToken = null;
   state.user = null;
+  writeStoredUser(null);
 };
 
 export const isEmailNotVerifiedError = (error) => {
@@ -74,6 +164,7 @@ const initialize = async () => {
   if (initializePromise) return initializePromise;
 
   state.initializing = true;
+  state.user = mergeUsers(state.user, readStoredUser());
 
   initializePromise = (async () => {
     try {

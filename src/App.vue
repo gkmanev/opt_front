@@ -22,7 +22,7 @@
         <div class="brand">
           <span class="status-dot"></span>
           <div>
-            <span class="brand-name">OptionFlow</span>
+            <span class="brand-name">PutPulse</span>
             <!-- <span class="brand-meta">Updated in real-time • Last sync 10s ago</span> -->
           </div>
         </div>

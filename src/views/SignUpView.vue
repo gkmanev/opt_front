@@ -5,7 +5,7 @@
       <aside class="auth-panel auth-panel--accent">
         <button class="auth-home-link" type="button" @click="emit('back-home')">Back to app</button>
         <p class="auth-eyebrow">Register</p>
-        <h1>Create your OptionFlow account</h1>
+        <h1>Create your PutPulse account</h1>
         <p class="auth-copy">
           Start with registration, verify your email, then the backend will establish the authenticated session.
         </p>
