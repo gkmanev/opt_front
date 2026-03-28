@@ -38,11 +38,29 @@ const appendSearchParams = (url, params = {}) => {
   });
 };
 
-const resolveUrl = (path, params) => {
+const resolveUrl = (path, params, baseUrl = apiBaseUrl) => {
   const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
-  const url = new URL(normalizedPath, normalizeBaseUrl(apiBaseUrl));
+  const url = new URL(normalizedPath, normalizeBaseUrl(baseUrl));
   appendSearchParams(url, params);
   return url.toString();
+};
+
+const isLocalHostname = (hostname) => ['127.0.0.1', 'localhost', '0.0.0.0', '::1'].includes(hostname);
+
+const shouldFallbackToDefaultBase = (baseUrl, error) => {
+  if (!(error instanceof TypeError)) return false;
+
+  try {
+    const normalizedCurrentBase = normalizeBaseUrl(baseUrl);
+    const normalizedDefaultBase = normalizeBaseUrl(DEFAULT_API_BASE_URL);
+
+    if (normalizedCurrentBase === normalizedDefaultBase) return false;
+
+    const currentUrl = new URL(normalizedCurrentBase);
+    return isLocalHostname(currentUrl.hostname);
+  } catch {
+    return false;
+  }
 };
 
 const flattenErrorParts = (value) => {
@@ -140,15 +158,38 @@ export const requestJson = async (
     auth = true,
     skipRefresh = false,
     retryOnAuthFailure = true,
+    baseUrlOverride = null,
+    allowBaseUrlFallback = true,
   } = {},
 ) => {
   const accessToken = auth ? await authRuntime.getAccessToken?.() : null;
-  const response = await fetch(resolveUrl(path, params), {
-    method,
-    headers: buildHeaders(headers, body, accessToken),
-    body: buildBody(body),
-    credentials: 'include',
-  });
+  const requestBaseUrl = baseUrlOverride ?? apiBaseUrl;
+  let response;
+
+  try {
+    response = await fetch(resolveUrl(path, params, requestBaseUrl), {
+      method,
+      headers: buildHeaders(headers, body, accessToken),
+      body: buildBody(body),
+      credentials: 'include',
+    });
+  } catch (error) {
+    if (allowBaseUrlFallback && shouldFallbackToDefaultBase(requestBaseUrl, error)) {
+      return requestJson(path, {
+        method,
+        params,
+        body,
+        headers,
+        auth,
+        skipRefresh,
+        retryOnAuthFailure,
+        baseUrlOverride: DEFAULT_API_BASE_URL,
+        allowBaseUrlFallback: false,
+      });
+    }
+
+    throw error;
+  }
 
   const data = await parseResponse(response);
 
@@ -164,6 +205,8 @@ export const requestJson = async (
         auth,
         skipRefresh,
         retryOnAuthFailure: false,
+        baseUrlOverride: requestBaseUrl,
+        allowBaseUrlFallback,
       });
     }
 

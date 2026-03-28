@@ -21,15 +21,21 @@ const resolveEndpointPath = (endpointKey) => {
   return endpointPath;
 };
 
-const request = async (endpointKey, { params } = {}) => {
-  return requestJson(resolveEndpointPath(endpointKey), { params });
+const request = async (endpointKey, options = {}) => {
+  return requestJson(resolveEndpointPath(endpointKey), options);
 };
 
-export const getInvestments = (params = {}) => request('investments', { params });
-export const getScreenerTypes = (params = {}) => request('screener-types', { params });
-export const getScreenerFilters = (params = {}) => request('screener-filters', { params });
-export const getFinancialStatements = (params = {}) => request('financial-statements', { params });
-export const getDueDiligenceReports = (params = {}) => request('due-diligence-reports', { params });
+const publicRequestOptions = (params = {}) => ({
+  params,
+  auth: false,
+  skipRefresh: true,
+});
+
+export const getInvestments = (params = {}) => request('investments', publicRequestOptions(params));
+export const getScreenerTypes = (params = {}) => request('screener-types', publicRequestOptions(params));
+export const getScreenerFilters = (params = {}) => request('screener-filters', publicRequestOptions(params));
+export const getFinancialStatements = (params = {}) => request('financial-statements', publicRequestOptions(params));
+export const getDueDiligenceReports = (params = {}) => request('due-diligence-reports', publicRequestOptions(params));
 
 const buildSymbolsParams = ({
   minPrice,
@@ -68,6 +74,8 @@ export const getSymbols = async ({
 } = {}) => {
   const data = await request('symbols', {
     params: buildSymbolsParams({ minPrice, maxPrice, minRsi, maxRsi, minRoi }),
+    auth: false,
+    skipRefresh: true,
   });
 
   return Array.isArray(data) ? data : data.results ?? [];

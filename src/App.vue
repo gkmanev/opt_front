@@ -1516,6 +1516,16 @@ const formatFixedNumber = (value, digits = 2) => {
 
 const formatTechnicalScore = (score) => {
   if (score === null || score === undefined) return null;
+  if (typeof score === 'string') {
+    const normalized = score.trim().toLowerCase().replace(/[_-]+/g, ' ');
+    if (!normalized) return null;
+    if (normalized === 'strong buy') return 'Strong Buy';
+    if (normalized === 'buy') return 'Buy';
+    if (normalized === 'neutral') return 'Neutral';
+    if (normalized === 'sell') return 'Sell';
+    if (normalized === 'strong sell') return 'Strong Sell';
+    return score;
+  }
   if (score >= 0.5) return 'Strong Buy';
   if (score >= 0.1) return 'Buy';
   if (score > -0.1) return 'Neutral';
