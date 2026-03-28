@@ -28,7 +28,14 @@
         </div>
         <div class="header-actions">
           <template v-if="isAuthenticated">
-            <span class="user-chip">{{ authDisplayName }}</span>
+            <button
+              class="user-chip user-chip--button"
+              :class="{ 'is-active': currentRoute === '/profile' }"
+              type="button"
+              @click="goToProfile"
+            >
+              {{ authDisplayName }}
+            </button>
             <button class="btn btn-ghost" type="button" @click="handleLogout">Logout</button>
           </template>
           <template v-else>
@@ -39,7 +46,15 @@
       </div>
     </header>
 
-    <template v-if="currentPage === 'home'">
+    <ProfileView
+      v-if="currentRoute === '/profile'"
+      :user="auth.state.user"
+      :display-name="authDisplayName"
+      @back-dashboard="goToDashboard"
+      @logout="handleLogout"
+    />
+
+    <template v-else-if="currentPage === 'home'">
     <section class="container hero">
       <div class="hero-grid">
         <div class="hero-copy">
@@ -902,7 +917,7 @@
     </template>
 
     <DailyBrief
-      v-if="currentPage === 'dailyBrief'"
+      v-else-if="currentPage === 'dailyBrief'"
       :open-ticker="openTicker"
       :rows="dailyBriefRows"
       :loading="weeklyIdeasLoading"
@@ -998,12 +1013,13 @@ import { fetchTechnicalScores, getApiBaseUrl, getSymbols, setApiBaseUrl } from '
 import DailyBrief from './components/DailyBrief.vue';
 import { useAuthStore } from './stores/auth';
 import LoginView from './views/LoginView.vue';
+import ProfileView from './views/ProfileView.vue';
 import SignUpView from './views/SignUpView.vue';
 import VerifyEmailView from './views/VerifyEmailView.vue';
 
 const auth = useAuthStore();
 const routePath = ref(window.location.pathname || '/');
-const knownRoutes = new Set(['/', '/dashboard', '/login', '/sign-up', '/verify-email']);
+const knownRoutes = new Set(['/', '/dashboard', '/login', '/profile', '/sign-up', '/verify-email']);
 const authRoutes = new Set(['/login', '/sign-up', '/verify-email']);
 
 const syncRoute = () => {
@@ -1032,7 +1048,9 @@ const authDisplayName = auth.displayName;
 const goHome = () => navigateTo('/', { replace: currentRoute.value !== '/' });
 const goToDashboard = () => navigateTo('/dashboard', { replace: currentRoute.value !== '/dashboard' });
 const goToLogin = () => navigateTo('/login');
+const goToProfile = () => navigateTo('/profile');
 const goToSignUp = () => navigateTo('/sign-up');
+const isAuthResolved = computed(() => auth.state.initialized && !auth.state.initializing);
 
 const priceRange = ref([0, 500]);
 const rsiRange = ref([0, 100]);
@@ -1766,11 +1784,18 @@ onUnmounted(() => {
   window.removeEventListener('popstate', syncRoute);
 });
 
-watch([currentRoute, isAuthenticated], ([route, signedIn]) => {
+watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authResolved]) => {
+  if (!authResolved) return;
+
   if (signedIn && authRoutes.has(route) && route !== '/verify-email') {
     handleAuthenticated();
+    return;
   }
-});
+
+  if (!signedIn && route === '/profile') {
+    navigateTo('/login', { replace: true });
+  }
+}, { immediate: true });
 
 const clampValue = (value, min, max) => Math.min(Math.max(value, min), max);
 const clampSteppedValue = (value, min, max, step) => {

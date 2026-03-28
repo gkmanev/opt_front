@@ -1,0 +1,241 @@
+<template>
+  <section class="profile-shell">
+    <div class="container profile-layout">
+      <section class="profile-hero">
+        <div class="profile-avatar">{{ initials }}</div>
+        <div class="profile-hero-copy">
+          <p class="profile-eyebrow">Profile</p>
+          <h1>{{ displayName }}</h1>
+          <p class="profile-subtitle">
+            Review your account details and return to the dashboard when you're ready to keep scanning ideas.
+          </p>
+        </div>
+      </section>
+
+      <div class="profile-grid">
+        <article class="profile-card">
+          <div class="profile-card-header">
+            <p class="profile-card-eyebrow">Account details</p>
+            <h2>Identity</h2>
+          </div>
+
+          <dl class="profile-details">
+            <div class="profile-detail-row">
+              <dt>Display name</dt>
+              <dd>{{ displayName }}</dd>
+            </div>
+            <div class="profile-detail-row">
+              <dt>Email</dt>
+              <dd>{{ emailValue }}</dd>
+            </div>
+            <div class="profile-detail-row">
+              <dt>Username</dt>
+              <dd>{{ usernameValue }}</dd>
+            </div>
+            <div class="profile-detail-row">
+              <dt>Full name</dt>
+              <dd>{{ fullNameValue }}</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="profile-card profile-card--accent">
+          <div class="profile-card-header">
+            <p class="profile-card-eyebrow">Quick actions</p>
+            <h2>Session</h2>
+          </div>
+
+          <p class="profile-session-copy">
+            This session is active. You can jump back to the dashboard or sign out from here.
+          </p>
+
+          <div class="profile-actions">
+            <button class="btn btn-primary" type="button" @click="emit('back-dashboard')">
+              Back to dashboard
+            </button>
+            <button class="btn btn-outline" type="button" @click="emit('logout')">
+              Logout
+            </button>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</template>
+
+<script setup>
+import { computed } from 'vue';
+
+const props = defineProps({
+  user: {
+    type: Object,
+    default: null,
+  },
+  displayName: {
+    type: String,
+    default: 'Signed in',
+  },
+});
+
+const emit = defineEmits(['back-dashboard', 'logout']);
+
+const fallbackValue = 'Not provided';
+
+const fullNameValue = computed(() => {
+  const fullName = [props.user?.first_name, props.user?.last_name].filter(Boolean).join(' ').trim();
+  return fullName || fallbackValue;
+});
+
+const emailValue = computed(() => props.user?.email || fallbackValue);
+const usernameValue = computed(() => props.user?.username || fallbackValue);
+
+const initials = computed(() => {
+  const seed = fullNameValue.value !== fallbackValue ? fullNameValue.value : props.displayName;
+  return seed
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('') || 'OF';
+});
+</script>
+
+<style scoped>
+.profile-shell {
+  padding: 3rem 0 0;
+}
+
+.profile-layout {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.18), transparent 30%),
+    linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.96));
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.35);
+}
+
+.profile-avatar {
+  width: 4.75rem;
+  height: 4.75rem;
+  border-radius: 1.4rem;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #22d3ee, #60a5fa);
+  color: #082f49;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+.profile-eyebrow,
+.profile-card-eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #67e8f9;
+  font-weight: 700;
+}
+
+.profile-hero-copy h1,
+.profile-card-header h2 {
+  margin: 0;
+}
+
+.profile-subtitle,
+.profile-session-copy {
+  margin: 0.85rem 0 0;
+  color: #94a3b8;
+  line-height: 1.7;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.profile-card {
+  padding: 1.5rem;
+  border-radius: 1.35rem;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.82);
+  box-shadow: 0 20px 50px rgba(2, 6, 23, 0.24);
+}
+
+.profile-card--accent {
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.16), transparent 28%),
+    rgba(15, 23, 42, 0.82);
+}
+
+.profile-card-header {
+  margin-bottom: 1.25rem;
+}
+
+.profile-details {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0;
+}
+
+.profile-detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.9);
+}
+
+.profile-detail-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.profile-detail-row dt {
+  color: #94a3b8;
+}
+
+.profile-detail-row dd {
+  margin: 0;
+  text-align: right;
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .profile-shell {
+    padding-top: 2rem;
+  }
+
+  .profile-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profile-detail-row {
+    flex-direction: column;
+  }
+
+  .profile-detail-row dd {
+    text-align: left;
+  }
+}
+</style>
