@@ -28,11 +28,22 @@ You can revert the change when you want the original dashboard back.
 
 ### API configuration
 
-Set the API base URL with an environment variable:
+Create a `.env.local` file for machine-specific values. Client-visible variables must use the `VITE_` prefix.
+
+Example:
 
 ```bash
-VITE_API_BASE_URL=http://localhost:3000
+VITE_API_BASE_URL=https://api.putpulse.com
+VITE_LOCAL_API_BASE_URL=http://127.0.0.1:8000
+VITE_USE_LOCAL_API=false
 ```
+
+Notes:
+
+- `VITE_API_BASE_URL` is the cloud/default API.
+- `VITE_LOCAL_API_BASE_URL` is the optional local API base URL.
+- `VITE_USE_LOCAL_API=true` makes the app start against the local API instead of cloud.
+- `.env.example` documents the expected variables. Keep real values in `.env.local` or your deployment provider's env settings.
 
 The UI expects these endpoints:
 

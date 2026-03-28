@@ -26,29 +26,6 @@
             <!-- <span class="brand-meta">Updated in real-time • Last sync 10s ago</span> -->
           </div>
         </div>
-        <div class="api-toggle" role="group" aria-label="API target">
-          <span class="api-toggle-label">API</span>
-          <label class="api-option">
-            <input
-              type="radio"
-              name="apiTarget"
-              value="local"
-              :checked="apiTarget === 'local'"
-              @change="onApiTargetChange"
-            />
-            <span>Local</span>
-          </label>
-          <label class="api-option">
-            <input
-              type="radio"
-              name="apiTarget"
-              value="claud"
-              :checked="apiTarget === 'claud'"
-              @change="onApiTargetChange"
-            />
-            <span>Claud</span>
-          </label>
-        </div>
         <div class="header-actions">
           <template v-if="isAuthenticated">
             <span class="user-chip">{{ authDisplayName }}</span>
@@ -1097,13 +1074,13 @@ const overviewTimeframe = ref('1Y');
 const symbolOverviewContainer = ref(null);
 const symbolProfileContainer = ref(null);
 
-const apiTargets = {
-  local: 'http://127.0.0.1:8000',
-  claud: getApiBaseUrl(),
-};
-
-const apiTarget = ref('local');
-setApiBaseUrl(apiTargets[apiTarget.value]);
+const cloudApiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? getApiBaseUrl();
+const localApiBaseUrl = import.meta.env.VITE_LOCAL_API_BASE_URL ?? '';
+const useLocalApiByDefault = Boolean(localApiBaseUrl) && ['1', 'true', 'yes'].includes(
+  String(import.meta.env.VITE_USE_LOCAL_API ?? '').toLowerCase(),
+);
+const resolvedApiBaseUrl = useLocalApiByDefault ? localApiBaseUrl : cloudApiBaseUrl;
+setApiBaseUrl(resolvedApiBaseUrl);
 
 const expandedWheelGroups = ref({});
 
@@ -1868,14 +1845,6 @@ const onTvFilterChange = (event) => {
 
 const onMinScoreChange = (event) => {
   minScore.value = event.target.value;
-};
-
-const onApiTargetChange = (event) => {
-  const nextTarget = event.target.value;
-  apiTarget.value = nextTarget;
-  setApiBaseUrl(apiTargets[nextTarget]);
-  weeklyCurrentPage.value = 1;
-  fetchWeeklyIdeas(buildCurrentFilters());
 };
 
 const applyFilters = () => {
