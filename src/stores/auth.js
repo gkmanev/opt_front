@@ -325,10 +325,18 @@ const fetchDailyBriefSubscription = async ({ force = false } = {}) => {
 };
 
 const subscribeToDailyBrief = async (payload = {}) => {
-  const data = await requestJson('/api/daily-brief-subscription/subscribe/', {
-    method: 'POST',
-    body: payload,
-  });
+  let data;
+  try {
+    data = await requestJson('/api/daily-brief-subscription/subscribe/', {
+      method: 'POST',
+      body: payload,
+    });
+  } catch (error) {
+    if (error?.status === 404) {
+      throw new Error('Daily Top 3 subscribe endpoint not found. Expected POST /api/daily-brief-subscription/subscribe/.');
+    }
+    throw error;
+  }
 
   const subscription = extractDailyBriefSubscription(data) ?? {
     status: 'active',
@@ -340,9 +348,17 @@ const subscribeToDailyBrief = async (payload = {}) => {
 };
 
 const unsubscribeFromDailyBrief = async () => {
-  const data = await requestJson('/api/daily-brief-subscription/unsubscribe/', {
-    method: 'POST',
-  });
+  let data;
+  try {
+    data = await requestJson('/api/daily-brief-subscription/unsubscribe/', {
+      method: 'POST',
+    });
+  } catch (error) {
+    if (error?.status === 404) {
+      throw new Error('Daily Top 3 unsubscribe endpoint not found. Expected POST /api/daily-brief-subscription/unsubscribe/.');
+    }
+    throw error;
+  }
 
   const subscription = extractDailyBriefSubscription(data) ?? {
     status: 'unsubscribed',

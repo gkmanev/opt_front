@@ -53,8 +53,18 @@ const flattenErrorParts = (value) => {
   return [String(value)];
 };
 
+const looksLikeHtmlDocument = (value) => /<!doctype html|<html\b|<body\b/i.test(value);
+
+const stripHtmlTags = (value) => value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
 export const extractApiErrorMessage = (data, fallback = 'Request failed.') => {
-  if (typeof data === 'string' && data.trim()) return data.trim();
+  if (typeof data === 'string' && data.trim()) {
+    const trimmed = data.trim();
+    if (looksLikeHtmlDocument(trimmed)) {
+      return stripHtmlTags(trimmed) || fallback;
+    }
+    return trimmed;
+  }
   if (!data || typeof data !== 'object') return fallback;
 
   const directMessage = [data.detail, data.message, data.error].find(
