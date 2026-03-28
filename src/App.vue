@@ -922,6 +922,7 @@
       :rows="dailyBriefRows"
       :loading="weeklyIdeasLoading"
       @back="currentPage = 'home'"
+      @subscribe="handleDailyBriefSubscribe"
     />
 
     <teleport to="body">
@@ -1050,6 +1051,15 @@ const goToDashboard = () => navigateTo('/dashboard', { replace: currentRoute.val
 const goToLogin = () => navigateTo('/login');
 const goToProfile = () => navigateTo('/profile');
 const goToSignUp = () => navigateTo('/sign-up');
+const handleDailyBriefSubscribe = () => {
+  if (isAuthenticated.value) {
+    currentPage.value = 'home';
+    goToDashboard();
+    return;
+  }
+
+  goToSignUp();
+};
 const isAuthResolved = computed(() => auth.state.initialized && !auth.state.initializing);
 
 const priceRange = ref([0, 500]);

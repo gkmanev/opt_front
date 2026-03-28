@@ -1,48 +1,44 @@
 <template>
   <section class="container screener-section">
     <div class="card screener-card">
-
-      <!-- ── Back button ─────────────────────────────────────── -->
       <button v-if="showBack" class="btn btn-muted back-btn" type="button" @click="emit('back')">
-        ← Back
+        Back
       </button>
 
-      <!-- ── Header ─────────────────────────────────────────── -->
       <div class="screener-header">
         <div class="screener-header-left">
           <span class="section-eyebrow">CASHFLOW SCREENER</span>
-          <h2>Today's Top <span class="pick-count">{{ enrichedIncomeRows.length }}</span>picks</h2>
+          <h2>Today's Top <span class="pick-count">{{ enrichedIncomeRows.length }}</span> picks</h2>
         </div>
         <div class="screener-strategy-strip">
           <span class="strategy-pill">
             <svg class="pill-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M2 11l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 11l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
             Strong fundamentals only
           </span>
           <span class="strategy-pill">
             <svg class="pill-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M8 5v3.5l2 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" />
+              <path d="M8 5v3.5l2 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
             </svg>
-            Target > 2%/mo
+            Target &gt; 2%/mo
           </span>
           <span class="strategy-pill">
             <svg class="pill-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M8 2l1.5 3.5H13l-3 2.5 1 3.5L8 9.5 5 11.5l1-3.5L3 5.5h3.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+              <path d="M8 2l1.5 3.5H13l-3 2.5 1 3.5L8 9.5 5 11.5l1-3.5L3 5.5h3.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" />
             </svg>
-            If assigned → sell covered calls
+            If assigned -> sell covered calls
           </span>
           <span class="strategy-pill">
             <svg class="pill-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M2 10l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M2 10l4-4 3 3 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
             Buy &amp; Strong Buy technicals
           </span>
         </div>
       </div>
 
-      <!-- ── Table ───────────────────────────────────────────── -->
       <div class="table-wrap screener-table-wrap">
         <table class="screener-table">
           <thead>
@@ -52,7 +48,7 @@
               <th class="col-price">Stock Price</th>
               <th class="col-strike">Strike</th>
               <th class="col-delta">Delta</th>
-              <th class="col-premium">Est. Premium · Collateral</th>
+              <th class="col-premium">Est. Premium / Collateral</th>
               <th class="col-roi">Monthly ROI</th>
               <th class="col-expires">Expires</th>
               <th class="col-action"></th>
@@ -71,8 +67,8 @@
               :key="row.ticker"
               class="screener-row"
               :class="{ 'screener-row--expired': row.isExpired, 'screener-row--top': index === 0 }"
-              @click="openTicker(row.ticker)"
               tabindex="0"
+              @click="openTicker(row.ticker)"
               @keydown.enter="openTicker(row.ticker)"
             >
               <td class="col-rank">
@@ -86,7 +82,7 @@
               <td class="col-delta">{{ row.delta }}</td>
               <td class="col-premium">
                 <span class="premium-value">{{ row.estPremium }}</span>
-                <span class="premium-sep">·</span>
+                <span class="premium-sep">/</span>
                 <span class="collateral-value muted">{{ row.estCollateral }} collateral</span>
               </td>
               <td class="col-roi">
@@ -99,19 +95,20 @@
                 <span :class="row.isExpired ? 'expired-date' : 'muted'">{{ row.date }}</span>
               </td>
               <td class="col-action">
-                <span class="row-cta">Ticker details →</span>
+                <span class="row-cta">Ticker details -></span>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- ── Footer CTA ──────────────────────────────────────── -->
       <div class="screener-footer">
-        <span class="screener-footer-meta muted">Showing top 3 · <a href="#" class="link">See full screener</a></span>
-        <!-- <button class="btn btn-primary" type="button">Open Trade Setup →</button> -->
+        <div class="screener-footer-copy">
+          <span class="screener-footer-meta muted">Showing top 3 curated picks today</span>
+          <span class="screener-footer-text">Want the shortlist in your inbox before the open?</span>
+        </div>
+        <button class="btn btn-primary" type="button" @click="emit('subscribe')">Get Tomorrow's Top 3</button>
       </div>
-
     </div>
   </section>
 </template>
@@ -138,7 +135,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['back']);
+const emit = defineEmits(['back', 'subscribe']);
 
 const today = new Date();
 
@@ -146,7 +143,7 @@ const enrichedIncomeRows = computed(() =>
   (props.rows ?? []).map((row) => ({
     ...row,
     isExpired: new Date(row.date) < today,
-  }))
+  })),
 );
 </script>
 
@@ -285,10 +282,26 @@ const enrichedIncomeRows = computed(() =>
   vertical-align: middle;
 }
 
-.col-rank { width: 44px; }
-.col-ticker { min-width: 100px; }
-.col-price, .col-strike, .col-delta, .col-roi, .col-expires { text-align: right; }
-.col-action { width: 100px; text-align: right; }
+.col-rank {
+  width: 44px;
+}
+
+.col-ticker {
+  min-width: 100px;
+}
+
+.col-price,
+.col-strike,
+.col-delta,
+.col-roi,
+.col-expires {
+  text-align: right;
+}
+
+.col-action {
+  width: 100px;
+  text-align: right;
+}
 
 .rank-badge {
   display: inline-flex;
@@ -301,9 +314,20 @@ const enrichedIncomeRows = computed(() =>
   font-weight: 700;
 }
 
-.rank-badge--1 { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
-.rank-badge--2 { background: rgba(148, 163, 184, 0.12); color: #94a3b8; }
-.rank-badge--3 { background: rgba(180, 120, 80, 0.12); color: #b47850; }
+.rank-badge--1 {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+.rank-badge--2 {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+}
+
+.rank-badge--3 {
+  background: rgba(180, 120, 80, 0.12);
+  color: #b47850;
+}
 
 .ticker {
   font-weight: 700;
@@ -366,16 +390,18 @@ const enrichedIncomeRows = computed(() =>
 }
 
 .row-cta {
+  display: inline-block;
   font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.35);
   white-space: nowrap;
   opacity: 0;
   transform: translateX(-4px);
   transition: opacity 0.15s ease, transform 0.15s ease;
-  display: inline-block;
 }
 
-.muted { color: rgba(255, 255, 255, 0.4); }
+.muted {
+  color: rgba(255, 255, 255, 0.4);
+}
 
 .screener-footer {
   display: flex;
@@ -388,14 +414,19 @@ const enrichedIncomeRows = computed(() =>
   gap: 0.75rem;
 }
 
+.screener-footer-copy {
+  display: grid;
+  gap: 0.25rem;
+}
+
 .screener-footer-meta {
   font-size: 0.82rem;
 }
 
-.link {
-  color: rgba(255, 255, 255, 0.6);
-  text-decoration: underline;
-  text-underline-offset: 2px;
+.screener-footer-text {
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.4;
 }
 
 @media (max-width: 700px) {
@@ -406,6 +437,11 @@ const enrichedIncomeRows = computed(() =>
   .col-premium,
   .col-action {
     display: none;
+  }
+
+  .screener-footer .btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>
