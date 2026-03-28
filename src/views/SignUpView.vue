@@ -5,13 +5,16 @@
       <aside class="auth-panel auth-panel--accent">
         <button class="auth-home-link" type="button" @click="emit('back-home')">Back to app</button>
         <p class="auth-eyebrow">Register</p>
-        <h1>Create your PutPulse account</h1>
+        <h1>{{ props.dailyBriefIntent ? 'Create your account for the Daily Top 3' : 'Create your PutPulse account' }}</h1>
         <p class="auth-copy">
-          Start with registration, verify your email, then the backend will establish the authenticated session.
+          {{ props.dailyBriefIntent
+            ? 'Create your free account, verify your email, and we will turn on the Daily Top 3 if you keep the opt-in selected.'
+            : 'Start with registration, verify your email, then the backend will establish the authenticated session.' }}
         </p>
         <ul class="auth-points">
           <li>Username and email are both captured at sign-up.</li>
           <li>Email verification happens before local session creation.</li>
+          <li v-if="props.dailyBriefIntent">Daily Top 3 email delivery starts only after verification.</li>
           <li>Access token stays in memory while refresh remains cookie-based.</li>
         </ul>
       </aside>
@@ -21,7 +24,9 @@
           <p class="auth-eyebrow">Check your inbox</p>
           <h2>Verify {{ submittedEmail }}</h2>
           <p class="auth-copy">
-            The account was created. Use the verification link from the email to finish activation.
+            {{ form.daily_brief_opt_in
+              ? 'The account was created. Use the verification link from the email to finish activation and enable the Daily Top 3.'
+              : 'The account was created. Use the verification link from the email to finish activation.' }}
           </p>
           <div class="auth-actions">
             <button class="btn btn-primary" type="button" @click="emit('navigate-login')">Go to login</button>
@@ -34,6 +39,10 @@
             <h2>Create account</h2>
             <button class="link-button" type="button" @click="emit('navigate-login')">Already verified?</button>
           </div>
+
+          <p v-if="props.dailyBriefIntent" class="auth-feedback auth-feedback--info">
+            This account will be used for the Daily Top 3 email subscription.
+          </p>
 
           <label class="auth-field">
             <span>Username</span>
@@ -62,6 +71,14 @@
             <input v-model="form.password" type="password" autocomplete="new-password" minlength="8" required />
           </label>
 
+          <label class="auth-checkbox">
+            <input v-model="form.daily_brief_opt_in" type="checkbox" />
+            <span>
+              <strong>Email me the Daily Top 3</strong>
+              <small>Available after email verification. You can unsubscribe later.</small>
+            </span>
+          </label>
+
           <p v-if="errorMessage" class="auth-feedback auth-feedback--error">{{ errorMessage }}</p>
 
           <button class="btn btn-primary btn-block" type="submit" :disabled="submitting">
@@ -77,6 +94,13 @@
 import { reactive, ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 
+const props = defineProps({
+  dailyBriefIntent: {
+    type: Boolean,
+    default: false,
+  },
+});
+
 const emit = defineEmits(['back-home', 'navigate-login']);
 
 const auth = useAuthStore();
@@ -87,6 +111,7 @@ const form = reactive({
   password: '',
   first_name: '',
   last_name: '',
+  daily_brief_opt_in: props.dailyBriefIntent,
 });
 
 const submitting = ref(false);
@@ -258,6 +283,12 @@ const handleSubmit = async () => {
   color: #fecaca;
 }
 
+.auth-feedback--info {
+  background: rgba(8, 47, 73, 0.42);
+  border: 1px solid rgba(34, 211, 238, 0.24);
+  color: #d7f7ff;
+}
+
 .auth-success {
   display: grid;
   gap: 1rem;
@@ -267,6 +298,31 @@ const handleSubmit = async () => {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+.auth-checkbox {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 0.95rem;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.auth-checkbox input {
+  margin-top: 0.15rem;
+}
+
+.auth-checkbox span {
+  display: grid;
+  gap: 0.25rem;
+  color: #e2e8f0;
+}
+
+.auth-checkbox small {
+  color: #94a3b8;
+  line-height: 1.5;
 }
 
 @media (max-width: 900px) {

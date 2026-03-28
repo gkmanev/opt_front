@@ -14,7 +14,9 @@
         </div>
 
         <p class="auth-copy">
-          Log in with a verified email address or username. If the backend reports the account is unverified, you can resend the verification email here.
+          {{ props.dailyBriefIntent
+            ? 'Log in with your verified account to finish subscribing to the Daily Top 3. If the backend reports the account is unverified, you can resend the verification email here.'
+            : 'Log in with a verified email address or username. If the backend reports the account is unverified, you can resend the verification email here.' }}
         </p>
 
         <form class="auth-form" @submit.prevent="handleSubmit">
@@ -53,6 +55,13 @@
 <script setup>
 import { ref } from 'vue';
 import { isEmailNotVerifiedError, useAuthStore } from '../stores/auth';
+
+const props = defineProps({
+  dailyBriefIntent: {
+    type: Boolean,
+    default: false,
+  },
+});
 
 const emit = defineEmits(['authenticated', 'back-home', 'navigate-signup']);
 

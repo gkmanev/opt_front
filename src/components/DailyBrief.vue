@@ -105,9 +105,18 @@
       <div class="screener-footer">
         <div class="screener-footer-copy">
           <span class="screener-footer-meta muted">Showing top 3 curated picks today</span>
-          <span class="screener-footer-text">Want the shortlist in your inbox before the open?</span>
+          <span class="screener-footer-text">{{ subscribeDescription }}</span>
+          <span
+            v-if="subscribeMessage"
+            class="screener-footer-status"
+            :class="`screener-footer-status--${subscribeTone}`"
+          >
+            {{ subscribeMessage }}
+          </span>
         </div>
-        <button class="btn btn-primary" type="button" @click="emit('subscribe')">Get Tomorrow's Top 3</button>
+        <button class="btn btn-primary" type="button" :disabled="subscribeDisabled" @click="emit('subscribe')">
+          {{ subscribeLabel }}
+        </button>
       </div>
     </div>
   </section>
@@ -130,6 +139,26 @@ const props = defineProps({
     default: null,
   },
   loading: {
+    type: Boolean,
+    default: false,
+  },
+  subscribeLabel: {
+    type: String,
+    default: 'Subscribe to Daily Top 3',
+  },
+  subscribeDescription: {
+    type: String,
+    default: 'Want the shortlist in your inbox before the open?',
+  },
+  subscribeMessage: {
+    type: String,
+    default: '',
+  },
+  subscribeTone: {
+    type: String,
+    default: 'neutral',
+  },
+  subscribeDisabled: {
     type: Boolean,
     default: false,
   },
@@ -427,6 +456,23 @@ const enrichedIncomeRows = computed(() =>
   font-size: 0.92rem;
   color: rgba(255, 255, 255, 0.78);
   line-height: 1.4;
+}
+
+.screener-footer-status {
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.screener-footer-status--success {
+  color: #67e8a5;
+}
+
+.screener-footer-status--error {
+  color: #fda4af;
+}
+
+.screener-footer-status--neutral {
+  color: #cbd5e1;
 }
 
 @media (max-width: 700px) {

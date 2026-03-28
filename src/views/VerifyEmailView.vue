@@ -29,7 +29,6 @@
 
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
-import { extractApiErrorMessage } from '../api/client';
 import { useAuthStore } from '../stores/auth';
 
 const emit = defineEmits(['verified', 'back-home', 'navigate-login']);
@@ -51,29 +50,7 @@ const runVerification = async () => {
   }
 
   try {
-    const response = await fetch('https://api.putpulse.com/api/auth/verify-email/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ token }),
-    });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      throw new Error(
-        extractApiErrorMessage(
-          {
-            token: data?.token,
-            detail: data?.detail,
-          },
-          'Invalid or expired verification link',
-        ),
-      );
-    }
-
-    auth.setAccessToken(data.access);
-    auth.setUser(data.user);
+    await auth.verifyEmail(token);
     status.value = 'success';
     message.value = 'Your account is active and the authenticated session is ready. Redirecting into the dashboard.';
     redirectTimer = window.setTimeout(() => emit('verified'), 700);

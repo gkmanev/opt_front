@@ -1,8 +1,9 @@
 <template>
   <SignUpView
     v-if="currentRoute === '/sign-up'"
+    :daily-brief-intent="dailyBriefAuthIntent"
     @back-home="goHome"
-    @navigate-login="goToLogin"
+    @navigate-login="goToLogin({ preserveDailyBriefIntent: dailyBriefAuthIntent })"
   />
   <VerifyEmailView
     v-else-if="currentRoute === '/verify-email'"
@@ -12,9 +13,10 @@
   />
   <LoginView
     v-else-if="currentRoute === '/login'"
+    :daily-brief-intent="dailyBriefAuthIntent"
     @authenticated="handleAuthenticated"
     @back-home="goHome"
-    @navigate-signup="goToSignUp"
+    @navigate-signup="goToSignUp({ preserveDailyBriefIntent: dailyBriefAuthIntent })"
   />
   <div v-else class="page">
     <header class="site-header">
@@ -359,7 +361,18 @@
       </div>
     </section>
 
-    <DailyBrief :show-back="false" :open-ticker="openTicker" :rows="dailyBriefRows" :loading="weeklyIdeasLoading" />
+    <DailyBrief
+      :show-back="false"
+      :open-ticker="openTicker"
+      :rows="dailyBriefRows"
+      :loading="weeklyIdeasLoading"
+      :subscribe-label="dailyBriefSubscribeLabel"
+      :subscribe-description="dailyBriefSubscribeDescription"
+      :subscribe-message="dailyBriefCtaMessage"
+      :subscribe-tone="dailyBriefCtaTone"
+      :subscribe-disabled="dailyBriefSubscribeDisabled"
+      @subscribe="handleDailyBriefSubscribe"
+    />
 
     <section class="container kpi-grid">
       <div class="card kpi-card kpi-card--green">
@@ -921,6 +934,11 @@
       :open-ticker="openTicker"
       :rows="dailyBriefRows"
       :loading="weeklyIdeasLoading"
+      :subscribe-label="dailyBriefSubscribeLabel"
+      :subscribe-description="dailyBriefSubscribeDescription"
+      :subscribe-message="dailyBriefCtaMessage"
+      :subscribe-tone="dailyBriefCtaTone"
+      :subscribe-disabled="dailyBriefSubscribeDisabled"
       @back="currentPage = 'home'"
       @subscribe="handleDailyBriefSubscribe"
     />
@@ -1022,6 +1040,10 @@ const auth = useAuthStore();
 const routePath = ref(window.location.pathname || '/');
 const knownRoutes = new Set(['/', '/dashboard', '/login', '/profile', '/sign-up', '/verify-email']);
 const authRoutes = new Set(['/login', '/sign-up', '/verify-email']);
+const dailyBriefAuthIntent = ref(false);
+const dailyBriefCtaMessage = ref('');
+const dailyBriefCtaTone = ref('neutral');
+const dailyBriefCtaPending = ref(false);
 
 const syncRoute = () => {
   routePath.value = window.location.pathname || '/';
@@ -1045,20 +1067,103 @@ const navigateTo = (path, { replace = false } = {}) => {
 const currentRoute = computed(() => (knownRoutes.has(routePath.value) ? routePath.value : '/'));
 const isAuthenticated = auth.isAuthenticated;
 const authDisplayName = auth.displayName;
+const dailyBriefDestinationEmail = computed(() =>
+  auth.dailyBriefSubscription.value?.email ?? auth.state.user?.email ?? 'your email',
+);
+const dailyBriefSubscribeLabel = computed(() => {
+  if (!isAuthenticated.value) return 'Sign Up for Daily Top 3';
+  if (dailyBriefCtaPending.value) return 'Subscribing to Daily Top 3...';
+  if (auth.dailyBriefSubscriptionStatus.value === 'active') return 'Subscribed to Daily Top 3';
+  if (auth.dailyBriefSubscriptionStatus.value === 'pending_verification') return 'Subscription Pending Verification';
+  return 'Subscribe to Daily Top 3';
+});
+const dailyBriefSubscribeDescription = computed(() => {
+  if (!isAuthenticated.value) return 'Create a free account to receive the Daily Top 3 by email.';
+  if (auth.dailyBriefSubscriptionStatus.value === 'active') {
+    return `The Daily Top 3 is already set to go to ${dailyBriefDestinationEmail.value}.`;
+  }
+  if (auth.dailyBriefSubscriptionStatus.value === 'pending_verification') {
+    return 'Verify your account email to activate the Daily Top 3 subscription.';
+  }
+  return 'Subscribe with your verified account to get the shortlist before the open.';
+});
+const dailyBriefSubscribeDisabled = computed(() =>
+  dailyBriefCtaPending.value
+  || (isAuthenticated.value
+    && (auth.dailyBriefSubscriptionStatus.value === 'active'
+      || auth.dailyBriefSubscriptionStatus.value === 'pending_verification')),
+);
 
-const goHome = () => navigateTo('/', { replace: currentRoute.value !== '/' });
-const goToDashboard = () => navigateTo('/dashboard', { replace: currentRoute.value !== '/dashboard' });
-const goToLogin = () => navigateTo('/login');
-const goToProfile = () => navigateTo('/profile');
-const goToSignUp = () => navigateTo('/sign-up');
+const clearDailyBriefAuthIntent = () => {
+  dailyBriefAuthIntent.value = false;
+};
+
+const setDailyBriefCtaFeedback = (message = '', tone = 'neutral') => {
+  dailyBriefCtaMessage.value = message;
+  dailyBriefCtaTone.value = tone;
+};
+
+const resetDailyBriefCtaFeedback = () => {
+  setDailyBriefCtaFeedback('', 'neutral');
+};
+
+const goHome = () => {
+  clearDailyBriefAuthIntent();
+  resetDailyBriefCtaFeedback();
+  navigateTo('/', { replace: currentRoute.value !== '/' });
+};
+const goToDashboard = ({ preserveDailyBriefIntent = false } = {}) => {
+  if (!preserveDailyBriefIntent) clearDailyBriefAuthIntent();
+  navigateTo('/dashboard', { replace: currentRoute.value !== '/dashboard' });
+};
+const goToLogin = ({ preserveDailyBriefIntent = false } = {}) => {
+  if (!preserveDailyBriefIntent) clearDailyBriefAuthIntent();
+  if (!preserveDailyBriefIntent) resetDailyBriefCtaFeedback();
+  navigateTo('/login');
+};
+const goToProfile = () => {
+  clearDailyBriefAuthIntent();
+  navigateTo('/profile');
+};
+const goToSignUp = ({ preserveDailyBriefIntent = false } = {}) => {
+  if (!preserveDailyBriefIntent) clearDailyBriefAuthIntent();
+  if (!preserveDailyBriefIntent) resetDailyBriefCtaFeedback();
+  navigateTo('/sign-up');
+};
+const completeDailyBriefIntent = async () => {
+  dailyBriefCtaPending.value = true;
+  resetDailyBriefCtaFeedback();
+
+  try {
+    await auth.fetchDailyBriefSubscription({ force: true });
+
+    if (auth.dailyBriefSubscriptionStatus.value !== 'active') {
+      await auth.subscribeToDailyBrief({ source: 'daily_brief_cta' });
+    }
+
+    setDailyBriefCtaFeedback(`Subscribed. We will send the Daily Top 3 to ${dailyBriefDestinationEmail.value}.`, 'success');
+  } catch (error) {
+    setDailyBriefCtaFeedback(error.message || 'Unable to update the Daily Top 3 subscription.', 'error');
+  } finally {
+    dailyBriefCtaPending.value = false;
+    clearDailyBriefAuthIntent();
+  }
+};
 const handleDailyBriefSubscribe = () => {
-  if (isAuthenticated.value) {
-    currentPage.value = 'home';
-    goToDashboard();
+  resetDailyBriefCtaFeedback();
+
+  if (!isAuthenticated.value) {
+    dailyBriefAuthIntent.value = true;
+    goToSignUp({ preserveDailyBriefIntent: true });
     return;
   }
 
-  goToSignUp();
+  if (auth.dailyBriefSubscriptionStatus.value === 'active') {
+    setDailyBriefCtaFeedback(`Daily Top 3 is already going to ${dailyBriefDestinationEmail.value}.`);
+    return;
+  }
+
+  void completeDailyBriefIntent();
 };
 const isAuthResolved = computed(() => auth.state.initialized && !auth.state.initializing);
 
@@ -1772,13 +1877,20 @@ watch(filteredWeeklyIdeaGroups, (groups) => {
   );
 });
 
-const handleAuthenticated = () => {
+const handleAuthenticated = async () => {
+  const shouldCompleteDailyBriefIntent = dailyBriefAuthIntent.value;
   currentPage.value = 'home';
-  goToDashboard();
+  goToDashboard({ preserveDailyBriefIntent: shouldCompleteDailyBriefIntent });
+
+  if (shouldCompleteDailyBriefIntent) {
+    await completeDailyBriefIntent();
+  }
 };
 
 const handleLogout = async () => {
   await auth.logout();
+  clearDailyBriefAuthIntent();
+  resetDailyBriefCtaFeedback();
   currentPage.value = 'home';
   navigateTo('/', { replace: true });
 };
@@ -1797,8 +1909,12 @@ onUnmounted(() => {
 watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authResolved]) => {
   if (!authResolved) return;
 
+  if (signedIn) {
+    auth.fetchDailyBriefSubscription().catch(() => {});
+  }
+
   if (signedIn && authRoutes.has(route) && route !== '/verify-email') {
-    handleAuthenticated();
+    void handleAuthenticated();
     return;
   }
 

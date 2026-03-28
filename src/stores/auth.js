@@ -84,9 +84,55 @@ const mergeUsers = (...candidates) => {
   return Object.keys(merged).length ? merged : null;
 };
 
+const normalizeDailyBriefStatus = (value, fallbackIsActive = null) => {
+  if (typeof value === 'string' && value.trim()) return value.trim().toLowerCase().replace(/\s+/g, '_');
+  if (fallbackIsActive === true) return 'active';
+  if (fallbackIsActive === false) return 'unsubscribed';
+  return null;
+};
+
+const normalizeDailyBriefSubscription = (value) => {
+  if (!value || typeof value !== 'object') return null;
+
+  const status = normalizeDailyBriefStatus(value.status, value.is_active);
+  const email = typeof value.email === 'string' && value.email.trim() ? value.email.trim() : null;
+  const normalized = {
+    id: value.id ?? null,
+    status,
+    is_active: status === 'active',
+    email,
+    source: typeof value.source === 'string' && value.source.trim() ? value.source.trim() : null,
+    subscribed_at: value.subscribed_at ?? value.subscribedAt ?? null,
+    unsubscribed_at: value.unsubscribed_at ?? value.unsubscribedAt ?? null,
+    confirmed_at: value.confirmed_at ?? value.confirmedAt ?? null,
+  };
+
+  const entries = Object.entries(normalized).filter(([, entryValue]) => entryValue !== null && entryValue !== undefined && entryValue !== '');
+  return entries.length ? Object.fromEntries(entries) : null;
+};
+
+const extractDailyBriefSubscription = (value) => {
+  const candidates = [
+    value?.daily_brief_subscription,
+    value?.dailyBriefSubscription,
+    value?.subscription,
+    value,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeDailyBriefSubscription(candidate);
+    if (normalized) return normalized;
+  }
+
+  return null;
+};
+
 const state = reactive({
   accessToken: null,
   user: readStoredUser(),
+  dailyBriefSubscription: null,
+  dailyBriefSubscriptionLoading: false,
+  dailyBriefSubscriptionLoaded: false,
   initializing: false,
   initialized: false,
 });
@@ -97,6 +143,11 @@ let initializePromise = null;
 const applyAuthResponse = (data) => {
   state.accessToken = data?.access ?? null;
   state.user = mergeUsers(state.user, deriveUserFromAccessToken(data?.access), data?.user);
+  const dailyBriefSubscription = extractDailyBriefSubscription(data);
+  if (dailyBriefSubscription) {
+    state.dailyBriefSubscription = dailyBriefSubscription;
+    state.dailyBriefSubscriptionLoaded = true;
+  }
   writeStoredUser(state.user);
 };
 
@@ -116,7 +167,16 @@ const setUser = (user) => {
 const clearSession = () => {
   state.accessToken = null;
   state.user = null;
+  state.dailyBriefSubscription = null;
+  state.dailyBriefSubscriptionLoading = false;
+  state.dailyBriefSubscriptionLoaded = false;
   writeStoredUser(null);
+};
+
+const setDailyBriefSubscription = (subscription) => {
+  state.dailyBriefSubscription = extractDailyBriefSubscription(subscription);
+  state.dailyBriefSubscriptionLoaded = true;
+  return state.dailyBriefSubscription;
 };
 
 export const isEmailNotVerifiedError = (error) => {
@@ -237,6 +297,62 @@ const logout = async () => {
   }
 };
 
+const fetchDailyBriefSubscription = async ({ force = false } = {}) => {
+  if (!state.accessToken) {
+    state.dailyBriefSubscription = null;
+    state.dailyBriefSubscriptionLoaded = false;
+    return null;
+  }
+
+  if (state.dailyBriefSubscriptionLoading) return state.dailyBriefSubscription;
+  if (state.dailyBriefSubscriptionLoaded && !force) return state.dailyBriefSubscription;
+
+  state.dailyBriefSubscriptionLoading = true;
+
+  try {
+    const data = await requestJson('/api/daily-brief-subscription/');
+    return setDailyBriefSubscription(data);
+  } catch (error) {
+    if (error?.status === 404) {
+      state.dailyBriefSubscription = null;
+      state.dailyBriefSubscriptionLoaded = true;
+      return null;
+    }
+    throw error;
+  } finally {
+    state.dailyBriefSubscriptionLoading = false;
+  }
+};
+
+const subscribeToDailyBrief = async (payload = {}) => {
+  const data = await requestJson('/api/daily-brief-subscription/subscribe/', {
+    method: 'POST',
+    body: payload,
+  });
+
+  const subscription = extractDailyBriefSubscription(data) ?? {
+    status: 'active',
+    is_active: true,
+    email: state.user?.email ?? null,
+  };
+
+  return setDailyBriefSubscription(subscription);
+};
+
+const unsubscribeFromDailyBrief = async () => {
+  const data = await requestJson('/api/daily-brief-subscription/unsubscribe/', {
+    method: 'POST',
+  });
+
+  const subscription = extractDailyBriefSubscription(data) ?? {
+    status: 'unsubscribed',
+    is_active: false,
+    email: state.user?.email ?? null,
+  };
+
+  return setDailyBriefSubscription(subscription);
+};
+
 const displayName = computed(() => {
   const user = state.user;
   if (!user) return state.accessToken ? 'Signed in' : '';
@@ -246,18 +362,28 @@ const displayName = computed(() => {
 });
 
 const isAuthenticated = computed(() => Boolean(state.accessToken));
+const dailyBriefSubscription = computed(() => state.dailyBriefSubscription);
+const dailyBriefSubscriptionStatus = computed(() => state.dailyBriefSubscription?.status ?? null);
+const isDailyBriefSubscribed = computed(() => dailyBriefSubscriptionStatus.value === 'active');
 
 const authStore = {
   state,
   displayName,
   isAuthenticated,
+  dailyBriefSubscription,
+  dailyBriefSubscriptionStatus,
+  isDailyBriefSubscribed,
   setAccessToken,
   setUser,
+  setDailyBriefSubscription,
   initialize,
   register,
   verifyEmail,
   login,
   resendVerification,
+  fetchDailyBriefSubscription,
+  subscribeToDailyBrief,
+  unsubscribeFromDailyBrief,
   refreshAccessToken,
   logout,
   clearSession,
