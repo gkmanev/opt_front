@@ -1209,7 +1209,7 @@ tbody tr:hover {
 .kpi-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   align-items: stretch;
   margin: 3rem auto;
 }
@@ -1218,6 +1218,8 @@ tbody tr:hover {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 1.25rem;
+  min-width: 0;
 }
 
 .kpi-card h3 {
@@ -1234,7 +1236,7 @@ tbody tr:hover {
 }
 
 .kpi-stat {
-  font-size: 2rem;
+  font-size: clamp(2rem, 4vw, 2.6rem);
   font-weight: 700;
   line-height: 1.1;
   margin: 0.2rem 0 0;
@@ -1251,14 +1253,45 @@ tbody tr:hover {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  margin-bottom: 1.5rem;
 }
 
-.kpi-row {
+.kpi-copy {
+  min-width: 0;
+}
+
+.kpi-footer {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.kpi-tags {
+  display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.kpi-tag {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(71, 85, 105, 0.55);
+  background: rgba(15, 23, 42, 0.8);
+  color: #cbd5e1;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.kpi-tag--positive {
+  border-color: rgba(34, 197, 94, 0.24);
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
 }
 
 .badge-live {
@@ -2353,6 +2386,31 @@ tbody tr:hover {
     width: 100%;
   }
 
+  .kpi-grid {
+    gap: 1rem;
+    margin: 2rem auto;
+  }
+
+  .kpi-card {
+    padding: 1.35rem;
+  }
+
+  .kpi-header {
+    gap: 0.85rem;
+  }
+
+  .kpi-stat {
+    font-size: clamp(1.85rem, 8vw, 2.35rem);
+  }
+
+  .kpi-footer {
+    align-items: flex-start;
+  }
+
+  .badge-live {
+    align-self: flex-start;
+  }
+
   .site-footer {
     padding-bottom: 2.5rem;
   }
@@ -2360,5 +2418,36 @@ tbody tr:hover {
   .site-footer-disclaimer {
     font-size: 0.78rem;
     line-height: 1.65;
+  }
+}
+
+@media (max-width: 540px) {
+  .container {
+    width: min(1120px, 100% - 1.25rem);
+  }
+
+  .card {
+    padding: 1.35rem;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-header {
+    flex-direction: column;
+  }
+
+  .kpi-header .icon {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .kpi-tags {
+    width: 100%;
+  }
+
+  .kpi-tag {
+    white-space: normal;
   }
 }

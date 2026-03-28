@@ -72,32 +72,3 @@ export const getSymbols = async ({
 
   return Array.isArray(data) ? data : data.results ?? [];
 };
-
-const TV_SCANNER_URL = 'https://scanner.tradingview.com/america/scan';
-
-export const fetchTechnicalScores = async (tickers) => {
-  if (!tickers?.length) return {};
-  try {
-    const response = await fetch(TV_SCANNER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        filter: [{ left: 'name', operation: 'in_range', right: tickers }],
-        columns: ['name', 'Recommend.All|1M'],
-        range: [0, tickers.length * 4],
-      }),
-    });
-    if (!response.ok) return {};
-    const json = await response.json();
-    const map = {};
-    for (const item of json.data ?? []) {
-      const [name, score] = item.d;
-      if (name && score != null && !(name in map)) {
-        map[name] = score;
-      }
-    }
-    return map;
-  } catch {
-    return {};
-  }
-};

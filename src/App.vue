@@ -397,14 +397,18 @@
               />
             </svg>
           </span>
-          <div>
+          <div class="kpi-copy">
             <span class="section-eyebrow">SCREENED PUTS TODAY</span>
             <div class="kpi-stat">{{ filteredWeeklyIdeaGroups.length }}</div>
             <p class="kpi-subtitle">active opportunities</p>
           </div>
         </div>
-        <div class="kpi-row">
-          <span class="muted">ROI ≥ 2% · Fundamental Strength ≥ 75 · Neutral &amp; above</span>
+        <div class="kpi-footer">
+          <div class="kpi-tags">
+            <span class="kpi-tag">ROI &ge; 2%</span>
+            <span class="kpi-tag">Fundamental Strength &ge; 75</span>
+            <span class="kpi-tag">Neutral &amp; above</span>
+          </div>
           <span class="badge-live"><span class="live-dot"></span>Live</span>
         </div>
       </div>
@@ -447,15 +451,17 @@
               />
             </svg>
           </span>
-          <div>
+          <div class="kpi-copy">
             <span class="section-eyebrow">AVG. MONTHLY YIELD</span>
             <div class="kpi-stat">2.87%</div>
             <p class="kpi-subtitle">monthly premium</p>
           </div>
         </div>
-        <div class="kpi-row">
-          <span class="muted">30-day weighted average</span>
-          <span class="highlight roi-positive">Quality Companies Only</span>
+        <div class="kpi-footer">
+          <div class="kpi-tags">
+            <span class="kpi-tag">30-day weighted average</span>
+            <span class="kpi-tag kpi-tag--positive">Quality Companies Only</span>
+          </div>
         </div>
       </div>
     </section>
@@ -1028,7 +1034,7 @@
 
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { fetchTechnicalScores, getApiBaseUrl, getSymbols, setApiBaseUrl } from './api/investingApi';
+import { getApiBaseUrl, getSymbols, setApiBaseUrl } from './api/investingApi';
 import DailyBrief from './components/DailyBrief.vue';
 import { useAuthStore } from './stores/auth';
 import LoginView from './views/LoginView.vue';
@@ -1414,8 +1420,6 @@ const heroTopThreePremium = computed(() => heroTopThreeRow.value?.estPremium ?? 
 const weeklyIdeas = ref([]);
 const weeklyIdeasLoading = ref(false);
 const weeklyIdeasError = ref(false);
-const tvScores = ref({});
-
 const weeklyPageSize = 6;
 const weeklyCurrentPage = ref(1);
 
@@ -1510,7 +1514,7 @@ const formatFixedNumber = (value, digits = 2) => {
   return number.toFixed(digits);
 };
 
-const formatTvScore = (score) => {
+const formatTechnicalScore = (score) => {
   if (score === null || score === undefined) return null;
   if (score >= 0.5) return 'Strong Buy';
   if (score >= 0.1) return 'Buy';
@@ -1628,7 +1632,7 @@ const weeklyIdeaRows = computed(() =>
       strike: symbol.strike_price != null ? formatNumber(symbol.strike_price) : '—',
       rawScore: symbol.score != null ? Number(symbol.score) : null,
       score: formatStrengthScore(symbol.score),
-      tvTechnicals: formatTvScore(tvScores.value[symbol.ticker]) ?? '—',
+      tvTechnicals: formatTechnicalScore(symbol.technical_score) ?? '—',
     };
   }));
 
@@ -1707,7 +1711,7 @@ const expandedWeeklyIdeaRows = computed(() =>
         strike: strikeSource != null ? formatNumber(strikeSource) : 'вЂ”',
         rawScore: symbol.score != null ? Number(symbol.score) : null,
         score: formatStrengthScore(symbol.score),
-        tvTechnicals: formatTvScore(tvScores.value[symbol.ticker]) ?? 'вЂ”',
+      tvTechnicals: formatTechnicalScore(symbol.technical_score) ?? 'вЂ”',
       };
     });
   }));
@@ -1839,8 +1843,6 @@ const fetchWeeklyIdeas = async (filters = {}) => {
   weeklyIdeasError.value = false;
   try {
     weeklyIdeas.value = await getSymbols(filters);
-    const tickers = weeklyIdeas.value.map((s) => s.ticker).filter(Boolean);
-    tvScores.value = await fetchTechnicalScores(tickers);
   } catch (error) {
     console.error('Failed to fetch symbols', error);
     weeklyIdeas.value = [];
