@@ -1380,23 +1380,44 @@ const buildGroupDetailPanel = (group, contract) => {
   };
 };
 
-const topThreeRows = computed(() => {
-  const qualifying = expandedWeeklyIdeaRows.value.filter((row) => {
-    const tv = row.tvTechnicals;
-    if (tv !== 'Buy' && tv !== 'Strong Buy') return false;
-    const rsiValue = Number(row.rsi);
-    if (Number.isNaN(rsiValue) || rsiValue < 30 || rsiValue > 70) return false;
-    if (row.spreadValue === null || row.spreadValue >= 1.5) return false;
-    if (row.rawStrike === null || row.rawPrice === null || row.rawStrike >= row.rawPrice) return false;
-    return true;
+const dailyBriefCandidateRows = computed(() =>
+  expandedWeeklyIdeaRows.value.filter((row) =>
+    hasDisplayValue(row.ticker)
+    && row.hasOptionData
+    && row.rawScore !== null
+    && !Number.isNaN(row.rawScore)
+    && row.rawScore > 80
+    && row.rawRsi !== null
+    && row.rawRsi >= 30
+    && row.rawRsi <= 70
+    && (row.tvTechnicals === 'Buy' || row.tvTechnicals === 'Strong Buy')
+    && row.spreadValue !== null
+    && row.spreadValue < 1.5
+    && row.rawStrike !== null
+    && row.rawPrice !== null
+    && row.rawStrike < row.rawPrice
+    && row.rawAbsDelta !== null
+    && row.rawAbsDelta < 0.32
+    && row.roiValue !== null),
+);
+
+const rankedDailyBriefRows = computed(() => {
+  const bestRowByTicker = new Map();
+
+  dailyBriefCandidateRows.value.forEach((row) => {
+    const tickerKey = normalizeTickerSymbol(row.ticker);
+    if (!tickerKey) return;
+
+    const existing = bestRowByTicker.get(tickerKey);
+    if (!existing || compareDailyBriefRows(row, existing) < 0) {
+      bestRowByTicker.set(tickerKey, row);
+    }
   });
-  qualifying.sort((a, b) => {
-    const roiDiff = (b.roiValue ?? 0) - (a.roiValue ?? 0);
-    if (roiDiff !== 0) return roiDiff;
-    return (b.rawScore ?? 0) - (a.rawScore ?? 0);
-  });
-  return qualifying.slice(0, 3);
+
+  return Array.from(bestRowByTicker.values()).sort(compareDailyBriefRows);
 });
+
+const topThreeRows = computed(() => rankedDailyBriefRows.value.slice(0, 3));
 
 const dailyBriefRows = computed(() =>
   topThreeRows.value.map((row) => ({
@@ -1531,6 +1552,27 @@ const formatTechnicalScore = (score) => {
   if (score > -0.1) return 'Neutral';
   if (score > -0.5) return 'Sell';
   return 'Strong Sell';
+};
+
+const getDailyBriefTechnicalRank = (rating) => {
+  if (rating === 'Strong Buy') return 0;
+  if (rating === 'Buy') return 1;
+  return 2;
+};
+
+const normalizeTickerSymbol = (ticker) => String(ticker ?? '').trim().toUpperCase();
+
+const compareDailyBriefRows = (a, b) => {
+  const roiDiff = (b?.roiValue ?? Number.NEGATIVE_INFINITY) - (a?.roiValue ?? Number.NEGATIVE_INFINITY);
+  if (roiDiff !== 0) return roiDiff;
+
+  const scoreDiff = (b?.rawScore ?? Number.NEGATIVE_INFINITY) - (a?.rawScore ?? Number.NEGATIVE_INFINITY);
+  if (scoreDiff !== 0) return scoreDiff;
+
+  const technicalDiff = getDailyBriefTechnicalRank(a?.tvTechnicals) - getDailyBriefTechnicalRank(b?.tvTechnicals);
+  if (technicalDiff !== 0) return technicalDiff;
+
+  return String(a?.ticker ?? '').localeCompare(String(b?.ticker ?? ''), 'en-US');
 };
 
 const scoreSignalValue = (score) => {
@@ -1695,6 +1737,7 @@ const expandedWeeklyIdeaRows = computed(() =>
         ticker: symbol.ticker ?? 'вЂ”',
         rawPrice: priceValue === null || Number.isNaN(priceValue) ? null : priceValue,
         price: formatNumber(priceSource),
+        rawRsi: symbol.rsi != null && !Number.isNaN(Number(symbol.rsi)) ? Number(symbol.rsi) : null,
         rsi: formatNumber(symbol.rsi),
         roiValue: Number.isNaN(roiValue) ? null : roiValue,
         roi: formatPercent(roiSource),
@@ -1719,6 +1762,7 @@ const expandedWeeklyIdeaRows = computed(() =>
             ? null
             : askValue - bidValue,
         strike: strikeSource != null ? formatNumber(strikeSource) : 'вЂ”',
+        hasOptionData: primaryOption !== null,
         rawScore: symbol.score != null ? Number(symbol.score) : null,
         score: formatStrengthScore(symbol.score),
       tvTechnicals: formatTechnicalScore(symbol.technical_score) ?? 'вЂ”',
