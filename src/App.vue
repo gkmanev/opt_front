@@ -470,8 +470,9 @@
     <section class="container">
       <div class="card">
         <div class="card-header">
-          <h2>Weekly Options Ideas</h2>
-          <p class="muted">Screened options from our selected filter feed</p>
+          <h2>The Best Put-Selling Opportunities Now</h2>
+          <p class="muted">Only Companies Worth Owning</p>
+          <p class="muted">Eearning dates after the expiration</p>
         </div>
 
         <div class="filter-panel">
@@ -711,6 +712,10 @@
               <span>Mid</span>
             </label>
             <label class="filter-checkbox-label">
+              <input v-model="showDeltaColumn" class="filter-checkbox" type="checkbox" />
+              <span>Delta</span>
+            </label>
+            <label class="filter-checkbox-label">
               <input v-model="showVolumeColumn" class="filter-checkbox" type="checkbox" />
               <span>Volume</span>
             </label>
@@ -734,12 +739,13 @@
                   <th class="weekly-col-contracts">Expiration</th>
                   <th class="align-right">Price / Strike</th>
                   <th v-if="showMidColumn" class="align-right">Mid</th>
-                  <th class="align-right">Delta</th>
+                  <th v-if="showDeltaColumn" class="align-right">Delta</th>
+                  <th class="align-right">Chance of Profit</th>
                   <th v-if="showVolumeColumn" class="align-right">Volume</th>
                   <th v-if="showIvColumn" class="align-right">IV</th>
                   <th v-if="showRsiColumn" class="align-right">RSI</th>
-                  <th class="align-right">ROI</th>
-                  <th class="align-right">Score / Signal</th>
+                  <th class="align-right">ROI / mo</th>
+                  <th class="align-right weekly-col-score">Score / Technicals</th>
                   <th class="weekly-col-actions">Actions</th>
                 </tr>
               </thead>
@@ -772,7 +778,10 @@
                       </div>
                     </td>
                     <td v-if="showMidColumn" class="align-right weekly-value" data-label="Mid">{{ group.bestContract.mid }}</td>
-                    <td class="align-right weekly-value weekly-value--muted delta-txt" data-label="Delta">{{ group.bestContract.delta }}</td>
+                    <td v-if="showDeltaColumn" class="align-right weekly-value weekly-value--muted delta-txt" data-label="Delta">{{ group.bestContract.delta }}</td>
+                    <td class="align-right weekly-value weekly-value--muted profit-txt" data-label="Chance of Profit">
+                      {{ formatChanceOfProfit(group.bestContract.rawAbsDelta) }}
+                    </td>
                     <td v-if="showVolumeColumn" class="align-right weekly-value weekly-value--muted" data-label="Volume">{{ group.bestContract.volume }}</td>
                     <td v-if="showIvColumn" class="align-right weekly-value weekly-value--muted" data-label="IV">{{ group.bestContract.iv }}</td>
                     <td v-if="showRsiColumn" class="align-right weekly-value weekly-value--muted" data-label="RSI">{{ group.rsi }}</td>
@@ -781,12 +790,16 @@
                         {{ group.bestContract.roi }}
                       </span>
                     </td>
-                    <td class="align-right" data-label="Score / Signal">
+                    <td class="align-right weekly-col-score" data-label="Score / Signal">
                       <span class="weekly-score-badge" :class="scoreSignalBadgeClass(group.rawScore, group.tvTechnicals)">
-                        <span class="weekly-score-badge-value">{{ scoreSignalValue(group.rawScore) }}</span>
-                        <span class="weekly-score-badge-denom">/100</span>
-                        <span class="weekly-score-badge-dot" aria-hidden="true"></span>
-                        <span class="weekly-score-badge-signal">{{ group.tvTechnicals }}</span>
+                        <span class="weekly-score-badge-metric">
+                          <span class="weekly-score-badge-value">{{ scoreSignalValue(group.rawScore) }}</span>
+                          <span class="weekly-score-badge-denom">/100</span>
+                        </span>
+                        <span class="weekly-score-badge-signal-row">
+                          <span class="weekly-score-badge-dot" aria-hidden="true"></span>
+                          <span class="weekly-score-badge-signal">{{ group.tvTechnicals }}</span>
+                        </span>
                       </span>
                     </td>
                     <td class="weekly-col-actions" data-label="Actions">
@@ -913,13 +926,13 @@
     <section class="container cta">
       <div class="cta-card">
         <h2>Ready to start generating income?</h2>
-        <p>
-          Join thousands of investors using data-driven strategies to sell puts on quality
-          companies
+        <p class="cta-lead">
+          Join <strong>thousands of investors</strong> using data-driven strategies to sell
+          puts on <span class="cta-lead-accent">quality companies</span>
         </p>
         <div class="cta-actions">
-          <button class="btn btn-primary" type="button">Get Started Today</button>
-          <button class="btn btn-outline" type="button">Learn More</button>
+          <button class="btn btn-primary" type="button">Start For Free</button>
+          <button class="btn btn-outline" type="button">See How It Works</button>
         </div>
       </div>
     </section>
@@ -1022,8 +1035,7 @@
               </section>
             </div>
             <div class="ticker-panel-footer">
-              <span class="ticker-footer-label">Earning rated puts</span>
-              <span class="ticker-live-badge">Live</span>
+              
             </div>
           </aside>
         </div>
@@ -1203,6 +1215,7 @@ const appliedTvFilter = ref('neutral');
 const minScore = ref('75');
 const appliedMinScore = ref('75');
 const showMidColumn = ref(false);
+const showDeltaColumn = ref(true);
 const showVolumeColumn = ref(false);
 const showIvColumn = ref(false);
 const showRsiColumn = ref(false);
@@ -1516,6 +1529,7 @@ const activeTickerStrategyMeta = computed(() => {
 const weeklyVisibleColumnCount = computed(() =>
   7
   + (showMidColumn.value ? 1 : 0)
+  + (showDeltaColumn.value ? 1 : 0)
   + (showVolumeColumn.value ? 1 : 0)
   + (showIvColumn.value ? 1 : 0)
   + (showRsiColumn.value ? 1 : 0),
@@ -1648,6 +1662,14 @@ const formatAbsDeltaValue = (value) => {
   const number = Number(value);
   if (Number.isNaN(number)) return value;
   return Math.abs(number).toFixed(2);
+};
+
+const formatChanceOfProfit = (absDelta) => {
+  if (absDelta === null || absDelta === undefined || absDelta === '') return '—';
+  const number = Number(absDelta);
+  if (Number.isNaN(number)) return absDelta;
+  const probability = Math.max(0, 100 - (Math.abs(number) * 100));
+  return `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(probability)}%`;
 };
 
 const formatOptionDate = (value) => {

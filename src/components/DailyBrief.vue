@@ -7,7 +7,7 @@
 
       <div class="screener-header">
         <div class="screener-header-left">
-          <span class="section-eyebrow">CASHFLOW SCREENER</span>
+          
           <h2>Today's Top <span class="pick-count">{{ enrichedIncomeRows.length }}</span> picks</h2>
         </div>
         <div class="screener-strategy-strip">
@@ -191,7 +191,7 @@ const enrichedIncomeRows = computed(() =>
 }
 
 .screener-header-left h2 {
-  margin: 0.25rem 0 0;
+  margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
   display: flex;
@@ -218,6 +218,8 @@ const enrichedIncomeRows = computed(() =>
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
+  margin-top: 4px;
+  
 }
 
 .strategy-pill {
@@ -264,7 +266,7 @@ const enrichedIncomeRows = computed(() =>
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: rgba(255, 255, 255, 0.38);
+  color: #ccffe3;
   text-align: left;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
   white-space: nowrap;
