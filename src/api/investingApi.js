@@ -3,6 +3,7 @@ import { getApiBaseUrl, requestJson, setApiBaseUrl } from './client';
 export { getApiBaseUrl, setApiBaseUrl };
 
 const API_ENDPOINT_PATHS = Object.freeze({
+  'daily-briefs': '/api/daily-briefs/',
   investments: '/api/investments/',
   symbols: '/api/symbols/',
   'screener-types': '/api/screener-types/',
@@ -32,6 +33,10 @@ const publicRequestOptions = (params = {}) => ({
 });
 
 export const getInvestments = (params = {}) => request('investments', publicRequestOptions(params));
+export const getDailyBriefs = async (params = {}) => {
+  const data = await request('daily-briefs', publicRequestOptions(params));
+  return Array.isArray(data) ? data : data.results ?? data.value ?? [];
+};
 export const getScreenerTypes = (params = {}) => request('screener-types', publicRequestOptions(params));
 export const getScreenerFilters = (params = {}) => request('screener-filters', publicRequestOptions(params));
 export const getFinancialStatements = (params = {}) => request('financial-statements', publicRequestOptions(params));

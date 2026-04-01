@@ -135,7 +135,7 @@
           </div>
           <div class="hero-actions">
             <button class="btn btn-primary" type="button" @click="goToSignUp">Start For Free</button>
-            <button class="btn btn-outline" type="button">See How It Works</button>
+            <button class="btn btn-outline" type="button" @click="openWheelGuide">See How It Works</button>
           </div>
         </div>
 
@@ -365,7 +365,7 @@
       :show-back="false"
       :open-ticker="openTicker"
       :rows="dailyBriefRows"
-      :loading="weeklyIdeasLoading"
+      :loading="dailyBriefLoading"
       :subscribe-label="dailyBriefSubscribeLabel"
       :subscribe-description="dailyBriefSubscribeDescription"
       :subscribe-message="dailyBriefCtaMessage"
@@ -932,7 +932,7 @@
         </p>
         <div class="cta-actions">
           <button class="btn btn-primary" type="button">Start For Free</button>
-          <button class="btn btn-outline" type="button">See How It Works</button>
+          <button class="btn btn-outline" type="button" @click="openWheelGuide">See How It Works</button>
         </div>
       </div>
     </section>
@@ -952,7 +952,7 @@
       v-else-if="currentPage === 'dailyBrief'"
       :open-ticker="openTicker"
       :rows="dailyBriefRows"
-      :loading="weeklyIdeasLoading"
+      :loading="dailyBriefLoading"
       :subscribe-label="dailyBriefSubscribeLabel"
       :subscribe-description="dailyBriefSubscribeDescription"
       :subscribe-message="dailyBriefCtaMessage"
@@ -960,6 +960,12 @@
       :subscribe-disabled="dailyBriefSubscribeDisabled"
       @back="currentPage = 'home'"
       @subscribe="handleDailyBriefSubscribe"
+    />
+
+    <WheelStrategyGuide
+      :open="isWheelGuideOpen"
+      :candidates="dailyBriefRows"
+      @close="closeWheelGuide"
     />
 
     <teleport to="body">
@@ -1046,8 +1052,9 @@
 
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { getApiBaseUrl, getSymbols, setApiBaseUrl } from './api/investingApi';
+import { getApiBaseUrl, getDailyBriefs, getSymbols, setApiBaseUrl } from './api/investingApi';
 import DailyBrief from './components/DailyBrief.vue';
+import WheelStrategyGuide from './components/WheelStrategyGuide.vue';
 import { useAuthStore } from './stores/auth';
 import LoginView from './views/LoginView.vue';
 import ProfileView from './views/ProfileView.vue';
@@ -1220,6 +1227,7 @@ const showVolumeColumn = ref(false);
 const showIvColumn = ref(false);
 const showRsiColumn = ref(false);
 const currentPage = ref('home');
+const isWheelGuideOpen = ref(false);
 const isModalOpen = ref(false);
 const activeTicker = ref('');
 const overviewTimeframe = ref('1Y');
@@ -1393,6 +1401,8 @@ const buildGroupDetailPanel = (group, contract) => {
   };
 };
 
+const dailyBriefEntries = ref([]);
+
 const dailyBriefCandidateRows = computed(() =>
   expandedWeeklyIdeaRows.value.filter((row) =>
     hasDisplayValue(row.ticker)
@@ -1432,7 +1442,7 @@ const rankedDailyBriefRows = computed(() => {
 
 const topThreeRows = computed(() => rankedDailyBriefRows.value.slice(0, 3));
 
-const dailyBriefRows = computed(() =>
+const legacyDailyBriefRows = computed(() =>
   topThreeRows.value.map((row) => ({
     ticker: row.ticker,
     price: row.price,
@@ -1445,6 +1455,37 @@ const dailyBriefRows = computed(() =>
   }))
 );
 
+const dailyBriefRows = computed(() =>
+  dailyBriefEntries.value.map((entry) => {
+    const optionData = entry?.option_data && typeof entry.option_data === 'object' ? entry.option_data : {};
+    const ticker = normalizeTickerSymbol(entry?.ticker ?? optionData?.root);
+    const matchingWeeklyIdea = weeklyIdeas.value.find((idea) => normalizeTickerSymbol(idea?.ticker) === ticker);
+    const rawPrice = firstDefined(entry?.price, entry?.stock_price, entry?.underlying_price, matchingWeeklyIdea?.price);
+    const rawStrike = firstDefined(entry?.strike_price, optionData?.strike_price, optionData?.strike);
+    const rawMid = firstDefined(entry?.mid, optionData?.mid);
+    const rawRoi = firstDefined(entry?.roi, optionData?.roi);
+    const rawDelta = firstDefined(entry?.delta, optionData?.delta);
+    const rawExpiration = firstDefined(entry?.date, entry?.expiration, optionData?.expiration, entry?.option_exp);
+
+    return {
+      ticker: ticker || '—',
+      price: formatNumber(rawPrice),
+      strike: rawStrike != null ? formatNumber(rawStrike) : '—',
+      delta: formatDelta(rawDelta),
+      roi: formatPercent(rawRoi),
+      date: formatOptionDate(rawExpiration),
+      estPremium:
+        rawMid != null && !Number.isNaN(Number(rawMid))
+          ? `~$${Math.round(Number(rawMid) * 100).toLocaleString('en-US')}`
+          : '—',
+      estCollateral:
+        rawStrike != null && !Number.isNaN(Number(rawStrike))
+          ? `~$${Math.round(Number(rawStrike) * 100).toLocaleString('en-US')}`
+          : '—',
+    };
+  }),
+);
+
 const heroTopThreeRow = ref(null);
 
 const heroTopThreeTicker = computed(() => heroTopThreeRow.value?.ticker ?? '—');
@@ -1452,6 +1493,8 @@ const heroTopThreeStrike = computed(() => heroTopThreeRow.value?.strike ?? '—'
 const heroTopThreePremium = computed(() => heroTopThreeRow.value?.estPremium ?? '—');
 
 const weeklyIdeas = ref([]);
+const dailyBriefLoading = ref(false);
+const dailyBriefError = ref(false);
 const weeklyIdeasLoading = ref(false);
 const weeklyIdeasError = ref(false);
 const weeklyPageSize = 6;
@@ -1928,6 +1971,29 @@ const fetchWeeklyIdeas = async (filters = {}) => {
   }
 };
 
+const fetchDailyBriefRows = async () => {
+  dailyBriefLoading.value = true;
+  dailyBriefError.value = false;
+  try {
+    const data = await getDailyBriefs();
+    const rows = Array.isArray(data) ? data : [];
+    dailyBriefEntries.value = [...rows].sort((a, b) => {
+      const rankA = Number(a?.rank);
+      const rankB = Number(b?.rank);
+      if (!Number.isNaN(rankA) && !Number.isNaN(rankB) && rankA !== rankB) {
+        return rankA - rankB;
+      }
+      return String(a?.ticker ?? '').localeCompare(String(b?.ticker ?? ''), 'en-US');
+    });
+  } catch (error) {
+    console.error('Failed to fetch daily briefs', error);
+    dailyBriefEntries.value = [];
+    dailyBriefError.value = true;
+  } finally {
+    dailyBriefLoading.value = false;
+  }
+};
+
 watch(weeklyTotalPages, (value) => {
   if (weeklyCurrentPage.value > value) {
     weeklyCurrentPage.value = value;
@@ -1977,6 +2043,7 @@ onMounted(() => {
   window.addEventListener('popstate', syncRoute);
   syncRoute();
   auth.initialize();
+  fetchDailyBriefRows();
   fetchWeeklyIdeas();
 });
 
@@ -2256,6 +2323,14 @@ const openTicker = (ticker) => {
   overviewTimeframe.value = '1Y';
   activeTicker.value = ticker;
   isModalOpen.value = true;
+};
+
+const openWheelGuide = () => {
+  isWheelGuideOpen.value = true;
+};
+
+const closeWheelGuide = () => {
+  isWheelGuideOpen.value = false;
 };
 
 const closeModal = () => {
