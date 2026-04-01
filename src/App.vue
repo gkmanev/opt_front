@@ -1726,6 +1726,14 @@ const formatOptionDate = (value) => {
 
 const firstDefined = (...values) => values.find((value) => value !== null && value !== undefined && value !== '');
 const hasDisplayValue = (value) => value !== null && value !== undefined && /[A-Za-z0-9]/.test(String(value));
+const formatDateInput = (value) => {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const weeklyIdeaRows = computed(() =>
   weeklyIdeas.value.map((symbol) => {
@@ -1976,15 +1984,18 @@ const fetchDailyBriefRows = async () => {
   dailyBriefError.value = false;
   try {
     const data = await getDailyBriefs();
+    const todayEditionDate = formatDateInput(new Date());
     const rows = Array.isArray(data) ? data : [];
-    dailyBriefEntries.value = [...rows].sort((a, b) => {
-      const rankA = Number(a?.rank);
-      const rankB = Number(b?.rank);
-      if (!Number.isNaN(rankA) && !Number.isNaN(rankB) && rankA !== rankB) {
-        return rankA - rankB;
-      }
-      return String(a?.ticker ?? '').localeCompare(String(b?.ticker ?? ''), 'en-US');
-    });
+    dailyBriefEntries.value = rows
+      .filter((row) => formatDateInput(row?.edition_date) === todayEditionDate)
+      .sort((a, b) => {
+        const rankA = Number(a?.rank);
+        const rankB = Number(b?.rank);
+        if (!Number.isNaN(rankA) && !Number.isNaN(rankB) && rankA !== rankB) {
+          return rankA - rankB;
+        }
+        return String(a?.ticker ?? '').localeCompare(String(b?.ticker ?? ''), 'en-US');
+      });
   } catch (error) {
     console.error('Failed to fetch daily briefs', error);
     dailyBriefEntries.value = [];
