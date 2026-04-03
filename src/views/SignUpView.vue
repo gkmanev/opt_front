@@ -206,12 +206,12 @@ const handleSubmit = async () => {
 .auth-panel h1,
 .auth-panel h2 {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: 2rem;
   line-height: 1.05;
 }
 
 .auth-panel h2 {
-  font-size: 1.65rem;
+  font-size: 1.5rem;
 }
 
 .auth-copy {

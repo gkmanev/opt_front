@@ -130,7 +130,7 @@ onUnmounted(() => {
 
 .auth-panel h1 {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-size: 2rem;
 }
 
 .auth-copy {

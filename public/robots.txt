@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /login
+Disallow: /profile
+Disallow: /sign-up
+Disallow: /verify-email
+
+Sitemap: https://putpulse.com/sitemap.xml

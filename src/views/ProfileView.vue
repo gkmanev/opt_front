@@ -152,6 +152,14 @@ const initials = computed(() => {
   margin: 0;
 }
 
+.profile-hero-copy h1 {
+  font-size: 2rem;
+}
+
+.profile-card-header h2 {
+  font-size: 1.5rem;
+}
+
 .profile-subtitle,
 .profile-session-copy {
   margin: 0.85rem 0 0;

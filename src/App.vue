@@ -21,13 +21,39 @@
   <div v-else class="page">
     <header class="site-header">
       <div class="container header-inner">
-        <button class="brand brand-button" type="button" @click="goHome">
+        <a class="brand brand-button" href="/" @click="handleHomeLinkClick">
           <span class="status-dot"></span>
           <div>
             <span class="brand-name">PutPulse</span>
             <!-- <span class="brand-meta">Updated in real-time • Last sync 10s ago</span> -->
           </div>
-        </button>
+        </a>
+        <nav class="header-nav" aria-label="Strategy pages">
+          <a
+            class="header-nav-link"
+            :class="{ 'is-active': currentRoute === '/cash-secured-puts' }"
+            href="/cash-secured-puts"
+            @click="handleRouteLinkClick($event, '/cash-secured-puts')"
+          >
+            Cash-Secured Puts
+          </a>
+          <a
+            class="header-nav-link"
+            :class="{ 'is-active': currentRoute === '/covered-calls' }"
+            href="/covered-calls"
+            @click="handleRouteLinkClick($event, '/covered-calls')"
+          >
+            Covered Calls
+          </a>
+          <a
+            class="header-nav-link"
+            :class="{ 'is-active': currentRoute === '/wheel-strategy' }"
+            href="/wheel-strategy"
+            @click="handleRouteLinkClick($event, '/wheel-strategy')"
+          >
+            Wheel Strategy
+          </a>
+        </nav>
         <div class="header-actions">
           <template v-if="isAuthenticated">
             <button
@@ -41,8 +67,8 @@
             <button class="btn btn-ghost" type="button" @click="handleLogout">Logout</button>
           </template>
           <template v-else>
-            <button class="btn btn-ghost" type="button" @click="goToLogin">Login</button>
-            <button class="btn btn-primary" type="button" @click="goToSignUp">Start For Free</button>
+            <a class="btn btn-ghost" href="/login" @click="handleLoginLinkClick">Login</a>
+            <a class="btn btn-primary" href="/sign-up" @click="handleSignUpLinkClick">Start For Free</a>
           </template>
         </div>
       </div>
@@ -54,6 +80,37 @@
       :display-name="authDisplayName"
       @back-dashboard="goToDashboard"
       @logout="handleLogout"
+    />
+
+    <AboutView
+      v-else-if="currentRoute === '/about'"
+      @navigate-route="handleRouteLinkClick"
+    />
+
+    <CashSecuredPutsView
+      v-else-if="currentRoute === '/cash-secured-puts'"
+      @navigate-route="handleRouteLinkClick"
+    />
+
+    <ContactView
+      v-else-if="currentRoute === '/contact'"
+      @navigate-route="handleRouteLinkClick"
+    />
+
+    <CoveredCallsView
+      v-else-if="currentRoute === '/covered-calls'"
+      @navigate-route="handleRouteLinkClick"
+    />
+
+    <MethodologyView
+      v-else-if="currentRoute === '/methodology'"
+      @navigate-route="handleRouteLinkClick"
+    />
+
+    <WheelStrategyView
+      v-else-if="currentRoute === '/wheel-strategy'"
+      :candidates="dailyBriefRows"
+      @navigate-route="handleRouteLinkClick"
     />
 
     <template v-else-if="currentPage === 'home'">
@@ -134,7 +191,7 @@
             </div>
           </div>
           <div class="hero-actions">
-            <button class="btn btn-primary" type="button" @click="goToSignUp">Start For Free</button>
+            <a class="btn btn-primary" href="/sign-up" @click="handleSignUpLinkClick">Start For Free</a>
             <button class="btn btn-outline" type="button" @click="openWheelGuide">See How It Works</button>
           </div>
         </div>
@@ -923,6 +980,45 @@
       </div>
     </section>
 
+    <section class="container trust-center-section">
+      <div class="card">
+        <div class="strategy-library-grid">
+          <a
+            class="strategy-library-card"
+            href="/methodology"
+            @click="handleRouteLinkClick($event, '/methodology')"
+          >
+            <span class="strategy-library-tag">Process</span>
+            <h3>Methodology</h3>
+            <p>Understand how PutPulse narrows candidates into a shortlist and how to interpret the output.</p>
+            <span class="strategy-library-link">Read the page</span>
+          </a>
+
+          <a
+            class="strategy-library-card"
+            href="/about"
+            @click="handleRouteLinkClick($event, '/about')"
+          >
+            <span class="strategy-library-tag">Company</span>
+            <h3>About</h3>
+            <p>Learn what PutPulse is built for, who it is for, and what the product is intended to help with.</p>
+            <span class="strategy-library-link">Read the page</span>
+          </a>
+
+          <a
+            class="strategy-library-card"
+            href="/contact"
+            @click="handleRouteLinkClick($event, '/contact')"
+          >
+            <span class="strategy-library-tag">Support</span>
+            <h3>Contact</h3>
+            <p>Find the support channel, what to include in product questions, and what support can actually answer.</p>
+            <span class="strategy-library-link">Read the page</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
     <section class="container cta">
       <div class="cta-card">
         <h2>Ready to start generating income?</h2>
@@ -931,13 +1027,24 @@
           puts on <span class="cta-lead-accent">quality companies</span>
         </p>
         <div class="cta-actions">
-          <button class="btn btn-primary" type="button">Start For Free</button>
+          <a class="btn btn-primary" href="/sign-up" @click="handleSignUpLinkClick">Start For Free</a>
           <button class="btn btn-outline" type="button" @click="openWheelGuide">See How It Works</button>
         </div>
       </div>
     </section>
+    </template>
 
-    <footer class="container site-footer">
+    <footer v-if="showPublicFooter" class="container site-footer">
+      <div class="site-footer-links">
+        <a class="site-footer-link" href="/" @click="handleRouteLinkClick($event, '/')">Home</a>
+        <a class="site-footer-link" href="/about" @click="handleRouteLinkClick($event, '/about')">About</a>
+        <a class="site-footer-link" href="/cash-secured-puts" @click="handleRouteLinkClick($event, '/cash-secured-puts')">Cash-Secured Puts</a>
+        <a class="site-footer-link" href="/contact" @click="handleRouteLinkClick($event, '/contact')">Contact</a>
+        <a class="site-footer-link" href="/covered-calls" @click="handleRouteLinkClick($event, '/covered-calls')">Covered Calls</a>
+        <a class="site-footer-link" href="/methodology" @click="handleRouteLinkClick($event, '/methodology')">Methodology</a>
+        <a class="site-footer-link" href="/wheel-strategy" @click="handleRouteLinkClick($event, '/wheel-strategy')">Wheel Strategy</a>
+        <a class="site-footer-link" href="/sign-up" @click="handleRouteLinkClick($event, '/sign-up')">Start For Free</a>
+      </div>
       <p class="site-footer-disclaimer">
         This application is for informational and educational purposes only and does not
         constitute financial, investment, or trading advice. Options trading involves
@@ -946,21 +1053,6 @@
         decisions.
       </p>
     </footer>
-    </template>
-
-    <DailyBrief
-      v-else-if="currentPage === 'dailyBrief'"
-      :open-ticker="openTicker"
-      :rows="dailyBriefRows"
-      :loading="dailyBriefLoading"
-      :subscribe-label="dailyBriefSubscribeLabel"
-      :subscribe-description="dailyBriefSubscribeDescription"
-      :subscribe-message="dailyBriefCtaMessage"
-      :subscribe-tone="dailyBriefCtaTone"
-      :subscribe-disabled="dailyBriefSubscribeDisabled"
-      @back="currentPage = 'home'"
-      @subscribe="handleDailyBriefSubscribe"
-    />
 
     <WheelStrategyGuide
       :open="isWheelGuideOpen"
@@ -1056,22 +1148,62 @@ import { getApiBaseUrl, getDailyBriefs, getSymbols, setApiBaseUrl } from './api/
 import DailyBrief from './components/DailyBrief.vue';
 import WheelStrategyGuide from './components/WheelStrategyGuide.vue';
 import { useAuthStore } from './stores/auth';
+import AboutView from './views/AboutView.vue';
+import CashSecuredPutsView from './views/CashSecuredPutsView.vue';
+import CoveredCallsView from './views/CoveredCallsView.vue';
 import LoginView from './views/LoginView.vue';
+import ContactView from './views/ContactView.vue';
+import MethodologyView from './views/MethodologyView.vue';
 import ProfileView from './views/ProfileView.vue';
 import SignUpView from './views/SignUpView.vue';
 import VerifyEmailView from './views/VerifyEmailView.vue';
+import WheelStrategyView from './views/WheelStrategyView.vue';
 
 const auth = useAuthStore();
 const routePath = ref(window.location.pathname || '/');
-const knownRoutes = new Set(['/', '/dashboard', '/login', '/profile', '/sign-up', '/verify-email']);
+const legacyRouteRedirects = new Map([
+  ['/daily-brief', '/'],
+]);
+const knownRoutes = new Set([
+  '/',
+  '/about',
+  '/cash-secured-puts',
+  '/contact',
+  '/covered-calls',
+  '/dashboard',
+  '/login',
+  '/methodology',
+  '/profile',
+  '/sign-up',
+  '/verify-email',
+  '/wheel-strategy',
+]);
 const authRoutes = new Set(['/login', '/sign-up', '/verify-email']);
+const marketingRoutes = new Set([
+  '/',
+  '/about',
+  '/cash-secured-puts',
+  '/contact',
+  '/covered-calls',
+  '/methodology',
+  '/wheel-strategy',
+]);
 const dailyBriefAuthIntent = ref(false);
 const dailyBriefCtaMessage = ref('');
 const dailyBriefCtaTone = ref('neutral');
 const dailyBriefCtaPending = ref(false);
 
 const syncRoute = () => {
-  routePath.value = window.location.pathname || '/';
+  const currentPath = window.location.pathname || '/';
+  const redirectPath = legacyRouteRedirects.get(currentPath);
+
+  if (redirectPath) {
+    window.history.replaceState({}, '', redirectPath);
+    routePath.value = redirectPath;
+    return;
+  }
+
+  routePath.value = currentPath;
 };
 
 const navigateTo = (path, { replace = false } = {}) => {
@@ -1092,6 +1224,10 @@ const navigateTo = (path, { replace = false } = {}) => {
 const currentRoute = computed(() => (knownRoutes.has(routePath.value) ? routePath.value : '/'));
 const isAuthenticated = auth.isAuthenticated;
 const authDisplayName = auth.displayName;
+const configuredSiteUrl = String(import.meta.env.VITE_SITE_URL ?? '').trim().replace(/\/+$/, '');
+const runtimeSiteUrl = typeof window !== 'undefined' ? window.location.origin.replace(/\/+$/, '') : '';
+const siteUrl = configuredSiteUrl || runtimeSiteUrl || 'https://putpulse.com';
+const defaultSocialImageUrl = `${siteUrl}/putpulse-dot.svg`;
 const dailyBriefDestinationEmail = computed(() =>
   auth.dailyBriefSubscription.value?.email ?? auth.state.user?.email ?? 'your email',
 );
@@ -1135,10 +1271,12 @@ const resetDailyBriefCtaFeedback = () => {
 const goHome = () => {
   clearDailyBriefAuthIntent();
   resetDailyBriefCtaFeedback();
+  currentPage.value = 'home';
   navigateTo('/', { replace: currentRoute.value !== '/' });
 };
 const goToDashboard = ({ preserveDailyBriefIntent = false } = {}) => {
   if (!preserveDailyBriefIntent) clearDailyBriefAuthIntent();
+  currentPage.value = 'home';
   navigateTo('/dashboard', { replace: currentRoute.value !== '/dashboard' });
 };
 const goToLogin = ({ preserveDailyBriefIntent = false } = {}) => {
@@ -1227,6 +1365,282 @@ const showVolumeColumn = ref(false);
 const showIvColumn = ref(false);
 const showRsiColumn = ref(false);
 const currentPage = ref('home');
+const contentLastUpdated = '2026-04-01';
+const seoConfig = computed(() => {
+  if (currentRoute.value === '/') {
+    if (currentPage.value === 'dailyBrief') {
+      return {
+        title: 'Daily Top 3 | PutPulse',
+        description:
+          'Review today’s curated Daily Top 3 cash-secured put ideas and premium setups from PutPulse.',
+        robots: 'index,follow',
+        canonicalPath: '/',
+      };
+    }
+
+    return {
+      title: 'PutPulse | Cash-Secured Put Ideas and Wheel Strategy Insights',
+      description:
+        'Find cash-secured put-selling opportunities on fundamentally strong stocks, track monthly ROI targets, and follow a disciplined wheel strategy workflow.',
+      robots: 'index,follow',
+      canonicalPath: '/',
+    };
+  }
+
+  if (currentRoute.value === '/cash-secured-puts') {
+    return {
+      title: 'Cash-Secured Puts Guide | PutPulse',
+      description:
+        'Learn how cash-secured puts work, how assignment fits the strategy, and what to check before selling puts on stocks you want to own.',
+      robots: 'index,follow',
+      canonicalPath: '/cash-secured-puts',
+    };
+  }
+
+  if (currentRoute.value === '/methodology') {
+    return {
+      title: 'Methodology | PutPulse',
+      description:
+        'See how PutPulse narrows option setups into a shortlist and how to use the research output inside a disciplined options workflow.',
+      robots: 'index,follow',
+      canonicalPath: '/methodology',
+    };
+  }
+
+  if (currentRoute.value === '/about') {
+    return {
+      title: 'About PutPulse',
+      description:
+        'Learn what PutPulse is built for, who it serves, and how the product approaches option income research on quality stocks.',
+      robots: 'index,follow',
+      canonicalPath: '/about',
+    };
+  }
+
+  if (currentRoute.value === '/contact') {
+    return {
+      title: 'Contact PutPulse',
+      description:
+        'Contact PutPulse for product questions, support issues, methodology questions, and partnership inquiries.',
+      robots: 'index,follow',
+      canonicalPath: '/contact',
+    };
+  }
+
+  if (currentRoute.value === '/covered-calls') {
+    return {
+      title: 'Covered Calls Guide | PutPulse',
+      description:
+        'Learn how covered calls work, when to sell calls against stock you own, and how the strategy fits into a disciplined income workflow.',
+      robots: 'index,follow',
+      canonicalPath: '/covered-calls',
+    };
+  }
+
+  if (currentRoute.value === '/dashboard') {
+    return {
+      title: 'Dashboard | PutPulse',
+      description:
+        'Review filtered cash-secured put opportunities, daily brief picks, and wheel strategy setups inside your PutPulse dashboard.',
+      robots: 'noindex,follow',
+      canonicalPath: '/dashboard',
+    };
+  }
+
+  if (currentRoute.value === '/login') {
+    return {
+      title: 'Login | PutPulse',
+      description: 'Log in to access your PutPulse dashboard and daily cash-secured put ideas.',
+      robots: 'noindex,follow',
+      canonicalPath: '/login',
+    };
+  }
+
+  if (currentRoute.value === '/sign-up') {
+    return {
+      title: 'Start For Free | PutPulse',
+      description:
+        'Create a PutPulse account to access daily cash-secured put ideas and wheel strategy workflows.',
+      robots: 'noindex,follow',
+      canonicalPath: '/sign-up',
+    };
+  }
+
+  if (currentRoute.value === '/verify-email') {
+    return {
+      title: 'Verify Email | PutPulse',
+      description: 'Verify your email address to activate your PutPulse account.',
+      robots: 'noindex,follow',
+      canonicalPath: '/verify-email',
+    };
+  }
+
+  if (currentRoute.value === '/wheel-strategy') {
+    return {
+      title: 'Wheel Strategy Guide | PutPulse',
+      description:
+        'Understand the wheel strategy workflow: sell cash-secured puts, accept assignment on quality stocks, and sell covered calls with discipline.',
+      robots: 'index,follow',
+      canonicalPath: '/wheel-strategy',
+    };
+  }
+
+  return {
+    title: 'Profile | PutPulse',
+    description: 'Manage your PutPulse profile and subscription settings.',
+    robots: 'noindex,follow',
+    canonicalPath: '/profile',
+  };
+});
+const showPublicFooter = computed(() => marketingRoutes.has(currentRoute.value));
+const routeStructuredData = computed(() => {
+  if (currentRoute.value === '/cash-secured-puts') {
+    const pageUrl = buildCanonicalUrl('/cash-secured-puts');
+
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: 'Cash-Secured Puts Guide',
+        description:
+          'Learn how cash-secured puts work, how assignment fits the strategy, and what to check before selling puts on stocks you want to own.',
+        mainEntityOfPage: pageUrl,
+        dateModified: contentLastUpdated,
+        author: {
+          '@type': 'Organization',
+          name: 'PutPulse',
+        },
+        publisher: {
+          '@id': `${siteUrl}/#organization`,
+        },
+      },
+    ];
+  }
+
+  if (currentRoute.value === '/methodology') {
+    const pageUrl = buildCanonicalUrl('/methodology');
+
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: 'PutPulse Methodology',
+        description:
+          'See how PutPulse narrows option setups into a shortlist and how to use the research output inside a disciplined options workflow.',
+        mainEntityOfPage: pageUrl,
+        dateModified: contentLastUpdated,
+        author: {
+          '@type': 'Organization',
+          name: 'PutPulse',
+        },
+        publisher: {
+          '@id': `${siteUrl}/#organization`,
+        },
+      },
+    ];
+  }
+
+  if (currentRoute.value === '/about') {
+    const pageUrl = buildCanonicalUrl('/about');
+
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'AboutPage',
+        name: 'About PutPulse',
+        description:
+          'Learn what PutPulse is built for, who it serves, and how the product approaches option income research on quality stocks.',
+        url: pageUrl,
+        isPartOf: `${siteUrl}/#website`,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'PutPulse',
+        url: siteUrl,
+        description:
+          'PutPulse is an educational options research product focused on cash-secured puts, covered calls, and wheel strategy workflows.',
+      },
+    ];
+  }
+
+  if (currentRoute.value === '/contact') {
+    const pageUrl = buildCanonicalUrl('/contact');
+
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'ContactPage',
+        name: 'Contact PutPulse',
+        description:
+          'Contact PutPulse via admin@putpulse.com.',
+        url: pageUrl,
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: 'PutPulse',
+        url: siteUrl,
+        contactPoint: [
+          {
+            '@type': 'ContactPoint',
+            contactType: 'customer support',
+            email: 'admin@putpulse.com',
+            availableLanguage: ['en'],
+          },
+        ],
+      },
+    ];
+  }
+
+  if (currentRoute.value === '/covered-calls') {
+    const pageUrl = buildCanonicalUrl('/covered-calls');
+
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: 'Covered Calls Guide',
+        description:
+          'Learn how covered calls work, when to sell calls against stock you own, and how the strategy fits into a disciplined income workflow.',
+        mainEntityOfPage: pageUrl,
+        dateModified: contentLastUpdated,
+        author: {
+          '@type': 'Organization',
+          name: 'PutPulse',
+        },
+        publisher: {
+          '@id': `${siteUrl}/#organization`,
+        },
+      },
+    ];
+  }
+
+  if (currentRoute.value === '/wheel-strategy') {
+    const pageUrl = buildCanonicalUrl('/wheel-strategy');
+
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Article',
+        headline: 'Wheel Strategy Guide',
+        description:
+          'Understand the wheel strategy workflow: sell cash-secured puts, accept assignment on quality stocks, and sell covered calls with discipline.',
+        mainEntityOfPage: pageUrl,
+        dateModified: contentLastUpdated,
+        author: {
+          '@type': 'Organization',
+          name: 'PutPulse',
+        },
+        publisher: {
+          '@id': `${siteUrl}/#organization`,
+        },
+      },
+    ];
+  }
+
+  return [];
+});
 const isWheelGuideOpen = ref(false);
 const isModalOpen = ref(false);
 const activeTicker = ref('');
@@ -2050,6 +2464,139 @@ const handleLogout = async () => {
   navigateTo('/', { replace: true });
 };
 
+const shouldHandleClientNavigation = (event) =>
+  event
+  && !event.defaultPrevented
+  && event.button === 0
+  && !event.metaKey
+  && !event.ctrlKey
+  && !event.shiftKey
+  && !event.altKey;
+
+const handleNavigationLink = (event, navigate) => {
+  if (!shouldHandleClientNavigation(event)) return;
+  event.preventDefault();
+  navigate();
+};
+
+const navigatePublicPath = (path) => {
+  if (path === '/') {
+    goHome();
+    return;
+  }
+
+  if (path === '/login') {
+    goToLogin();
+    return;
+  }
+
+  if (path === '/sign-up') {
+    goToSignUp();
+    return;
+  }
+
+  navigateTo(path);
+};
+
+const handleRouteLinkClick = (event, path) => {
+  handleNavigationLink(event, () => navigatePublicPath(path));
+};
+
+const handleHomeLinkClick = (event) => {
+  handleRouteLinkClick(event, '/');
+};
+
+const handleLoginLinkClick = (event) => {
+  handleRouteLinkClick(event, '/login');
+};
+
+const handleSignUpLinkClick = (event) => {
+  handleRouteLinkClick(event, '/sign-up');
+};
+
+const ensureMetaTag = (attribute, value) => {
+  if (typeof document === 'undefined') return null;
+
+  let tag = document.head.querySelector(`meta[${attribute}="${value}"]`);
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.setAttribute(attribute, value);
+    document.head.appendChild(tag);
+  }
+
+  return tag;
+};
+
+const setMetaContent = (attribute, value, content) => {
+  const tag = ensureMetaTag(attribute, value);
+  if (!tag) return;
+  tag.setAttribute('content', content);
+};
+
+const ensureCanonicalLink = () => {
+  if (typeof document === 'undefined') return null;
+
+  let link = document.head.querySelector('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.setAttribute('rel', 'canonical');
+    document.head.appendChild(link);
+  }
+
+  return link;
+};
+
+const buildCanonicalUrl = (path) => `${siteUrl}${path === '/' ? '/' : path}`;
+
+const clearRouteStructuredData = () => {
+  if (typeof document === 'undefined') return;
+
+  document.head
+    .querySelectorAll('script[data-putpulse-route-jsonld="true"]')
+    .forEach((scriptTag) => scriptTag.remove());
+};
+
+const setRouteStructuredData = (items) => {
+  if (typeof document === 'undefined') return;
+
+  clearRouteStructuredData();
+
+  items.forEach((item) => {
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.dataset.putpulseRouteJsonld = 'true';
+    script.textContent = JSON.stringify(item);
+    document.head.appendChild(script);
+  });
+};
+
+const applySeoMetadata = () => {
+  if (typeof document === 'undefined') return;
+
+  const { title, description, robots, canonicalPath } = seoConfig.value;
+  document.title = title;
+
+  setMetaContent('name', 'description', description);
+  setMetaContent('name', 'robots', robots);
+  setMetaContent('property', 'og:type', 'website');
+  setMetaContent('property', 'og:site_name', 'PutPulse');
+  setMetaContent('property', 'og:title', title);
+  setMetaContent('property', 'og:description', description);
+  setMetaContent('property', 'og:url', buildCanonicalUrl(canonicalPath));
+  setMetaContent('property', 'og:image', defaultSocialImageUrl);
+  setMetaContent('name', 'twitter:card', 'summary');
+  setMetaContent('name', 'twitter:title', title);
+  setMetaContent('name', 'twitter:description', description);
+  setMetaContent('name', 'twitter:image', defaultSocialImageUrl);
+
+  const canonicalLink = ensureCanonicalLink();
+  if (canonicalLink) {
+    canonicalLink.setAttribute('href', buildCanonicalUrl(canonicalPath));
+  }
+
+  setRouteStructuredData(routeStructuredData.value);
+};
+
 onMounted(() => {
   window.addEventListener('popstate', syncRoute);
   syncRoute();
@@ -2077,6 +2624,10 @@ watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authRe
   if (!signedIn && route === '/profile') {
     navigateTo('/login', { replace: true });
   }
+}, { immediate: true });
+
+watch([currentRoute, currentPage], () => {
+  applySeoMetadata();
 }, { immediate: true });
 
 const clampValue = (value, min, max) => Math.min(Math.max(value, min), max);
@@ -2362,4 +2913,5 @@ watch(
   { flush: 'post' },
 );
 </script>
+
 

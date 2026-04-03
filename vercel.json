@@ -1,6 +1,26 @@
 {
   "rewrites": [
     {
+      "source": "/about",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cash-secured-puts",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/covered-calls",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/daily-brief",
+      "destination": "/index.html"
+    },
+    {
       "source": "/dashboard",
       "destination": "/index.html"
     },
@@ -9,11 +29,23 @@
       "destination": "/index.html"
     },
     {
+      "source": "/methodology",
+      "destination": "/index.html"
+    },
+    {
       "source": "/sign-up",
       "destination": "/index.html"
     },
     {
+      "source": "/profile",
+      "destination": "/index.html"
+    },
+    {
       "source": "/verify-email",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/wheel-strategy",
       "destination": "/index.html"
     }
   ]
