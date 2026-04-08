@@ -28,32 +28,50 @@
             <!-- <span class="brand-meta">Updated in real-time • Last sync 10s ago</span> -->
           </div>
         </a>
-        <nav class="header-nav" aria-label="Strategy pages">
-          <a
-            class="header-nav-link"
-            :class="{ 'is-active': currentRoute === '/cash-secured-puts' }"
-            href="/cash-secured-puts"
-            @click="handleRouteLinkClick($event, '/cash-secured-puts')"
-          >
-            Cash-Secured Puts
-          </a>
-          <a
-            class="header-nav-link"
-            :class="{ 'is-active': currentRoute === '/covered-calls' }"
-            href="/covered-calls"
-            @click="handleRouteLinkClick($event, '/covered-calls')"
-          >
-            Covered Calls
-          </a>
-          <a
-            class="header-nav-link"
-            :class="{ 'is-active': currentRoute === '/wheel-strategy' }"
-            href="/wheel-strategy"
-            @click="handleRouteLinkClick($event, '/wheel-strategy')"
-          >
-            Wheel Strategy
-          </a>
-        </nav>
+        <button
+          class="header-menu-toggle"
+          type="button"
+          :aria-expanded="isMobileMenuOpen ? 'true' : 'false'"
+          aria-controls="site-mobile-nav"
+          aria-label="Toggle navigation menu"
+          @click="toggleMobileMenu"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div
+          id="site-mobile-nav"
+          class="header-menu-shell"
+          :class="{ 'is-open': isMobileMenuOpen }"
+        >
+          <nav class="header-nav" aria-label="Strategy pages">
+            <a
+              class="header-nav-link"
+              :class="{ 'is-active': currentRoute === '/cash-secured-puts' }"
+              href="/cash-secured-puts"
+              @click="handleRouteLinkClick($event, '/cash-secured-puts')"
+            >
+              Cash-Secured Puts
+            </a>
+            <a
+              class="header-nav-link"
+              :class="{ 'is-active': currentRoute === '/covered-calls' }"
+              href="/covered-calls"
+              @click="handleRouteLinkClick($event, '/covered-calls')"
+            >
+              Covered Calls
+            </a>
+            <a
+              class="header-nav-link"
+              :class="{ 'is-active': currentRoute === '/wheel-strategy' }"
+              href="/wheel-strategy"
+              @click="handleRouteLinkClick($event, '/wheel-strategy')"
+            >
+              Wheel Strategy
+            </a>
+          </nav>
+        </div>
         <div class="header-actions">
           <template v-if="isAuthenticated">
             <button
@@ -67,8 +85,8 @@
             <button class="btn btn-ghost" type="button" @click="handleLogout">Logout</button>
           </template>
           <template v-else>
-            <a class="btn btn-ghost" href="/login" @click="handleLoginLinkClick">Login</a>
-            <a class="btn btn-primary" href="/sign-up" @click="handleSignUpLinkClick">Start For Free</a>
+            <a class="btn btn-ghost header-guest-action" href="/login" @click="handleLoginLinkClick">Login</a>
+            <a class="btn btn-primary header-guest-action" href="/sign-up" @click="handleSignUpLinkClick">Start For Free</a>
           </template>
         </div>
       </div>
@@ -1160,7 +1178,9 @@ import VerifyEmailView from './views/VerifyEmailView.vue';
 import WheelStrategyView from './views/WheelStrategyView.vue';
 
 const auth = useAuthStore();
+const mobileNavBreakpoint = 768;
 const routePath = ref(window.location.pathname || '/');
+const isMobileMenuOpen = ref(false);
 const legacyRouteRedirects = new Map([
   ['/daily-brief', '/'],
 ]);
@@ -1269,26 +1289,31 @@ const resetDailyBriefCtaFeedback = () => {
 };
 
 const goHome = () => {
+  isMobileMenuOpen.value = false;
   clearDailyBriefAuthIntent();
   resetDailyBriefCtaFeedback();
   currentPage.value = 'home';
   navigateTo('/', { replace: currentRoute.value !== '/' });
 };
 const goToDashboard = ({ preserveDailyBriefIntent = false } = {}) => {
+  isMobileMenuOpen.value = false;
   if (!preserveDailyBriefIntent) clearDailyBriefAuthIntent();
   currentPage.value = 'home';
   navigateTo('/dashboard', { replace: currentRoute.value !== '/dashboard' });
 };
 const goToLogin = ({ preserveDailyBriefIntent = false } = {}) => {
+  isMobileMenuOpen.value = false;
   if (!preserveDailyBriefIntent) clearDailyBriefAuthIntent();
   if (!preserveDailyBriefIntent) resetDailyBriefCtaFeedback();
   navigateTo('/login');
 };
 const goToProfile = () => {
+  isMobileMenuOpen.value = false;
   clearDailyBriefAuthIntent();
   navigateTo('/profile');
 };
 const goToSignUp = ({ preserveDailyBriefIntent = false } = {}) => {
+  isMobileMenuOpen.value = false;
   if (!preserveDailyBriefIntent) clearDailyBriefAuthIntent();
   if (!preserveDailyBriefIntent) resetDailyBriefCtaFeedback();
   navigateTo('/sign-up');
@@ -2457,6 +2482,7 @@ const handleAuthenticated = async () => {
 };
 
 const handleLogout = async () => {
+  isMobileMenuOpen.value = false;
   await auth.logout();
   clearDailyBriefAuthIntent();
   resetDailyBriefCtaFeedback();
@@ -2476,7 +2502,18 @@ const shouldHandleClientNavigation = (event) =>
 const handleNavigationLink = (event, navigate) => {
   if (!shouldHandleClientNavigation(event)) return;
   event.preventDefault();
+  isMobileMenuOpen.value = false;
   navigate();
+};
+
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value;
+};
+
+const syncMobileMenu = () => {
+  if (window.innerWidth > mobileNavBreakpoint) {
+    isMobileMenuOpen.value = false;
+  }
 };
 
 const navigatePublicPath = (path) => {
@@ -2599,6 +2636,8 @@ const applySeoMetadata = () => {
 
 onMounted(() => {
   window.addEventListener('popstate', syncRoute);
+  window.addEventListener('resize', syncMobileMenu);
+  syncMobileMenu();
   syncRoute();
   auth.initialize();
   fetchDailyBriefRows();
@@ -2607,6 +2646,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('popstate', syncRoute);
+  window.removeEventListener('resize', syncMobileMenu);
 });
 
 watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authResolved]) => {
