@@ -2165,6 +2165,12 @@ const formatOptionDate = (value) => {
 
 const firstDefined = (...values) => values.find((value) => value !== null && value !== undefined && value !== '');
 const hasDisplayValue = (value) => value !== null && value !== undefined && /[A-Za-z0-9]/.test(String(value));
+const isMissingDateValue = (value) => {
+  if (value === null || value === undefined || value === '') return true;
+  if (typeof value !== 'string') return false;
+  const normalized = value.trim().toLowerCase();
+  return normalized === '' || normalized === 'null' || normalized === 'none' || normalized === 'n/a' || normalized === 'na';
+};
 const formatDateInput = (value) => {
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return '';
@@ -2172,6 +2178,21 @@ const formatDateInput = (value) => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+};
+const normalizeComparableDate = (value) => {
+  if (isMissingDateValue(value)) return '';
+  const stringValue = String(value).trim();
+  if (/^\d{8}$/.test(stringValue)) {
+    return `${stringValue.slice(0, 4)}-${stringValue.slice(4, 6)}-${stringValue.slice(6, 8)}`;
+  }
+  return formatDateInput(stringValue);
+};
+const passesEarningsTimingFilter = (nextEarningsDate, expirationDate) => {
+  const normalizedNextEarningsDate = normalizeComparableDate(nextEarningsDate);
+  if (!normalizedNextEarningsDate) return true;
+  const normalizedExpirationDate = normalizeComparableDate(expirationDate);
+  if (!normalizedExpirationDate) return true;
+  return normalizedNextEarningsDate > normalizedExpirationDate;
 };
 
 const weeklyIdeaRows = computed(() =>
@@ -2231,6 +2252,12 @@ const expandedWeeklyIdeaRows = computed(() =>
       const vegaSource = firstDefined(contract?.vega, contract?.greeks?.vega, symbol.option_data?.vega, symbol.option_data?.greeks?.vega);
       const contractSymbol = firstDefined(contract?.option_symbol, symbol.option_symbol);
       const expirationSource = firstDefined(contract?.expiration, symbol.option_exp, symbol.expiration);
+      const nextEarningsDateSource = firstDefined(
+        symbol.next_earnings_date,
+        symbol.nextEarningsDate,
+        symbol.earnings_date,
+        symbol.earningsDate,
+      );
       const roiValue = Number(roiSource);
       const priceValue = priceSource != null ? Number(priceSource) : null;
       const strikeValue = strikeSource != null ? Number(strikeSource) : null;
@@ -2259,6 +2286,8 @@ const expandedWeeklyIdeaRows = computed(() =>
         rawBid: bidValue === null || Number.isNaN(bidValue) ? null : bidValue,
         rawAsk: askValue === null || Number.isNaN(askValue) ? null : askValue,
         rawStrike: strikeValue === null || Number.isNaN(strikeValue) ? null : strikeValue,
+        rawExpirationDate: expirationSource ?? null,
+        rawNextEarningsDate: nextEarningsDateSource ?? null,
         rawDelta: deltaValue === null || Number.isNaN(deltaValue) ? null : deltaValue,
         rawAbsDelta: deltaValue === null || Number.isNaN(deltaValue) ? null : Math.abs(deltaValue),
         rawGamma: gammaValue === null || Number.isNaN(gammaValue) ? null : gammaValue,
@@ -2284,7 +2313,10 @@ const expandedWeeklyIdeaRows = computed(() =>
 
 const filteredWeeklyIdeaRows = computed(() => {
   let rows = expandedWeeklyIdeaRows.value.filter((row) => row.roiValue !== null
-    && row.rawStrike !== null && row.rawPrice !== null && row.rawStrike < row.rawPrice);
+    && row.rawStrike !== null
+    && row.rawPrice !== null
+    && row.rawStrike < row.rawPrice
+    && passesEarningsTimingFilter(row.rawNextEarningsDate, row.rawExpirationDate));
 
   const roiThreshold = appliedMinRoi.value === '' ? null : Number(appliedMinRoi.value);
   if (roiThreshold !== null && !Number.isNaN(roiThreshold)) {
