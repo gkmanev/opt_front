@@ -188,6 +188,11 @@ const submittedEmail = ref('');
 const submittedPlan = ref('basic');
 
 onMounted(() => {
+  const urlPlan = new URLSearchParams(window.location.search).get('plan');
+  if (urlPlan === 'pro') {
+    selectedPlan.value = 'pro';
+    return;
+  }
   try {
     if (sessionStorage.getItem(SIGNUP_PLAN_KEY) === 'pro') {
       selectedPlan.value = 'pro';

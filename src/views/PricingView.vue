@@ -104,7 +104,7 @@
             <a
               v-else
               class="btn btn-primary pp-cta-btn"
-              href="/sign-up"
+              href="/sign-up?plan=pro"
               @click="handleProClick"
             >
               Get Pro
@@ -173,7 +173,7 @@
         <a
           v-if="!isAuthenticated"
           class="btn btn-primary"
-          href="/sign-up"
+          href="/sign-up?plan=pro"
           @click="handleProClick"
         >
           Start with Pro
