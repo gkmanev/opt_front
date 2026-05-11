@@ -152,6 +152,21 @@
       @navigate-route="handleRouteLinkClick"
     />
 
+    <TermsView
+      v-else-if="currentRoute === '/terms'"
+      @navigate-route="handleRouteLinkClick"
+    />
+
+    <PrivacyView
+      v-else-if="currentRoute === '/privacy'"
+      @navigate-route="handleRouteLinkClick"
+    />
+
+    <RefundView
+      v-else-if="currentRoute === '/refund-policy'"
+      @navigate-route="handleRouteLinkClick"
+    />
+
     <WheelStrategyView
       v-else-if="currentRoute === '/wheel-strategy'"
       :candidates="dailyBriefRows"
@@ -1099,6 +1114,9 @@
         <a class="site-footer-link" href="/methodology" @click="handleRouteLinkClick($event, '/methodology')">Methodology</a>
         <a class="site-footer-link" href="/wheel-strategy" @click="handleRouteLinkClick($event, '/wheel-strategy')">Wheel Strategy</a>
         <a class="site-footer-link" href="/pricing" @click="handleRouteLinkClick($event, '/pricing')">Pricing</a>
+        <a class="site-footer-link" href="/terms" @click="handleRouteLinkClick($event, '/terms')">Terms of Service</a>
+        <a class="site-footer-link" href="/privacy" @click="handleRouteLinkClick($event, '/privacy')">Privacy Policy</a>
+        <a class="site-footer-link" href="/refund-policy" @click="handleRouteLinkClick($event, '/refund-policy')">Refund Policy</a>
         <a class="site-footer-link" href="/sign-up" @click="handleRouteLinkClick($event, '/sign-up')">Start For Free</a>
       </div>
       <p class="site-footer-disclaimer">
@@ -1219,6 +1237,9 @@ import ContactView from './views/ContactView.vue';
 import MethodologyView from './views/MethodologyView.vue';
 import PricingView from './views/PricingView.vue';
 import ProfileView from './views/ProfileView.vue';
+import PrivacyView from './views/PrivacyView.vue';
+import RefundView from './views/RefundView.vue';
+import TermsView from './views/TermsView.vue';
 import SignUpView from './views/SignUpView.vue';
 import VerifyEmailView from './views/VerifyEmailView.vue';
 import WheelStrategyView from './views/WheelStrategyView.vue';
@@ -1234,6 +1255,9 @@ const knownRoutes = new Set([
   '/',
   '/about',
   '/pricing',
+  '/terms',
+  '/privacy',
+  '/refund-policy',
   '/cash-secured-puts',
   '/contact',
   '/covered-calls',
@@ -1250,6 +1274,9 @@ const marketingRoutes = new Set([
   '/',
   '/about',
   '/pricing',
+  '/terms',
+  '/privacy',
+  '/refund-policy',
   '/cash-secured-puts',
   '/contact',
   '/covered-calls',
@@ -1513,6 +1540,36 @@ const seoConfig = computed(() => {
         'PutPulse pricing — free Basic plan with 5 screener results, or Pro at $20/month for unlimited access, daily briefings, and full wheel setup details.',
       robots: 'index,follow',
       canonicalPath: '/pricing',
+    };
+  }
+
+  if (currentRoute.value === '/terms') {
+    return {
+      title: 'Terms of Service | PutPulse',
+      description:
+        'Read the PutPulse Terms of Service covering account usage, subscriptions, payments, intellectual property, and financial disclaimers.',
+      robots: 'index,follow',
+      canonicalPath: '/terms',
+    };
+  }
+
+  if (currentRoute.value === '/privacy') {
+    return {
+      title: 'Privacy Policy | PutPulse',
+      description:
+        'Read the PutPulse Privacy Policy — what data we collect, how we use it, third-party processors, your rights, and how to contact us.',
+      robots: 'index,follow',
+      canonicalPath: '/privacy',
+    };
+  }
+
+  if (currentRoute.value === '/refund-policy') {
+    return {
+      title: 'Refund Policy | PutPulse',
+      description:
+        'PutPulse refund policy — free Basic plan, no-contract Pro subscriptions, monthly and annual refund terms, and how to request a refund.',
+      robots: 'index,follow',
+      canonicalPath: '/refund-policy',
     };
   }
 
