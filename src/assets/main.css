@@ -130,6 +130,11 @@ body {
   align-items: center;
 }
 
+.header-upgrade-btn {
+  font-size: 0.82rem;
+  padding: 0.4rem 0.9rem;
+}
+
 .header-nav {
   display: flex;
   align-items: center;
@@ -834,6 +839,31 @@ tbody tr:hover {
 .weekly-empty-row td {
   padding: 1.2rem 1rem;
   color: #66778c;
+}
+
+.locked-rows-row {
+  background: transparent;
+}
+
+.locked-rows-cell {
+  padding: 0 !important;
+}
+
+.locked-rows-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.06), rgba(59, 130, 246, 0.06));
+  border-top: 1px solid rgba(34, 211, 238, 0.15);
+  border-bottom: 1px solid rgba(34, 211, 238, 0.15);
+}
+
+.locked-rows-label {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #94a3b8;
 }
 
 .ticker-group-row {

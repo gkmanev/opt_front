@@ -2,42 +2,102 @@
   <section class="auth-shell">
     <div class="auth-backdrop"></div>
     <div class="auth-layout">
-      <aside class="auth-panel auth-panel--accent">
+
+      <!-- Left: plan selector -->
+      <aside class="auth-panel auth-panel--plans">
         <button class="auth-home-link" type="button" @click="emit('back-home')">Back to app</button>
-        <p class="auth-eyebrow">Register</p>
-        <h1>{{ props.dailyBriefIntent ? 'Create your account for the Daily Top 3' : 'Create your PutPulse account' }}</h1>
-        <p class="auth-copy">
-          {{ props.dailyBriefIntent
-            ? 'Create your free account, verify your email, and we will turn on the Daily Top 3 if you keep the opt-in selected.'
-            : 'Start with registration, verify your email, then the backend will establish the authenticated session.' }}
-        </p>
-        <ul class="auth-points">
-          <li>Username and email are both captured at sign-up.</li>
-          <li>Email verification happens before local session creation.</li>
-          <li v-if="props.dailyBriefIntent">Daily Top 3 email delivery starts only after verification.</li>
-          <li>Access token stays in memory while refresh remains cookie-based.</li>
-        </ul>
+        <p class="auth-eyebrow">Choose your plan</p>
+        <h1>Start building your edge</h1>
+
+        <div class="plan-cards">
+          <!-- Basic -->
+          <button
+            class="plan-card"
+            :class="{ 'plan-card--selected': selectedPlan === 'basic' }"
+            type="button"
+            @click="selectedPlan = 'basic'"
+          >
+            <div class="plan-card-top">
+              <div class="plan-card-title-row">
+                <span class="plan-card-name">Basic</span>
+                <span class="plan-card-selector" aria-hidden="true"></span>
+              </div>
+              <div class="plan-card-price">
+                <span class="plan-price-amount">Free</span>
+              </div>
+            </div>
+            <ul class="plan-features">
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>5 screener results / day</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Strategy guides</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Basic filters</li>
+              <li><span class="plan-feat-dot plan-feat-dot--off"></span>Full screener access</li>
+              <li><span class="plan-feat-dot plan-feat-dot--off"></span>Daily Top 3 briefing</li>
+              <li><span class="plan-feat-dot plan-feat-dot--off"></span>Wheel setup details</li>
+            </ul>
+          </button>
+
+          <!-- Pro -->
+          <button
+            class="plan-card plan-card--pro"
+            :class="{ 'plan-card--selected': selectedPlan === 'pro' }"
+            type="button"
+            @click="selectedPlan = 'pro'"
+          >
+            <span class="plan-badge">Most popular</span>
+            <div class="plan-card-top">
+              <div class="plan-card-title-row">
+                <span class="plan-card-name">Pro</span>
+                <span class="plan-card-selector" aria-hidden="true"></span>
+              </div>
+              <div class="plan-card-price">
+                <span class="plan-price-currency">$</span>
+                <span class="plan-price-amount">20</span>
+                <span class="plan-price-period">/ mo</span>
+              </div>
+            </div>
+            <ul class="plan-features">
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Everything in Basic</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Unlimited screener results</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>All filters + sorting</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Daily Top 3 email briefing</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Wheel setup details</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Full data access</li>
+            </ul>
+          </button>
+        </div>
       </aside>
 
+      <!-- Right: registration form -->
       <section class="auth-panel">
         <div v-if="registrationComplete" class="auth-success">
           <p class="auth-eyebrow">Check your inbox</p>
           <h2>Verify {{ submittedEmail }}</h2>
           <p class="auth-copy">
-            {{ form.daily_brief_opt_in
-              ? 'The account was created. Use the verification link from the email to finish activation and enable the Daily Top 3.'
-              : 'The account was created. Use the verification link from the email to finish activation.' }}
+            <template v-if="submittedPlan === 'pro'">
+              Your account was created. Verify your email first — once you log in, we'll guide
+              you straight to Pro checkout to complete your subscription.
+            </template>
+            <template v-else>
+              {{ form.daily_brief_opt_in
+                ? 'The account was created. Use the verification link to finish activation and enable the Daily Top 3.'
+                : 'The account was created. Use the verification link to finish activation.' }}
+            </template>
           </p>
           <div class="auth-actions">
             <button class="btn btn-primary" type="button" @click="emit('navigate-login')">Go to login</button>
-            <button class="btn btn-outline" type="button" @click="registrationComplete = false">Register another account</button>
+            <button class="btn btn-outline" type="button" @click="resetForm">Register another account</button>
           </div>
         </div>
 
         <form v-else class="auth-form" @submit.prevent="handleSubmit">
           <div class="auth-form-header">
-            <h2>Create account</h2>
-            <button class="link-button" type="button" @click="emit('navigate-login')">Already verified?</button>
+            <div class="auth-form-title-row">
+              <h2>Create account</h2>
+              <span class="selected-plan-badge" :class="`selected-plan-badge--${selectedPlan}`">
+                {{ selectedPlan === 'pro' ? 'Pro · $20/mo' : 'Basic · Free' }}
+              </span>
+            </div>
+            <button class="link-button" type="button" @click="emit('navigate-login')">Already have an account?</button>
           </div>
 
           <p v-if="props.dailyBriefIntent" class="auth-feedback auth-feedback--info">
@@ -54,7 +114,6 @@
               <span>First name</span>
               <input v-model.trim="form.first_name" type="text" autocomplete="given-name" required />
             </label>
-
             <label class="auth-field">
               <span>Last name</span>
               <input v-model.trim="form.last_name" type="text" autocomplete="family-name" required />
@@ -82,17 +141,23 @@
           <p v-if="errorMessage" class="auth-feedback auth-feedback--error">{{ errorMessage }}</p>
 
           <button class="btn btn-primary btn-block" type="submit" :disabled="submitting">
-            {{ submitting ? 'Creating account...' : 'Create account' }}
+            <template v-if="submitting">Creating account…</template>
+            <template v-else-if="selectedPlan === 'pro'">Create account &amp; go Pro</template>
+            <template v-else>Create free account</template>
           </button>
         </form>
       </section>
+
     </div>
   </section>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
+
+const PRO_INTENT_KEY = 'putpulse.pending.pro';
+const SIGNUP_PLAN_KEY = 'putpulse.signup.plan';
 
 const props = defineProps({
   dailyBriefIntent: {
@@ -104,6 +169,8 @@ const props = defineProps({
 const emit = defineEmits(['back-home', 'navigate-login']);
 
 const auth = useAuthStore();
+
+const selectedPlan = ref('basic');
 
 const form = reactive({
   username: '',
@@ -118,6 +185,26 @@ const submitting = ref(false);
 const errorMessage = ref('');
 const registrationComplete = ref(false);
 const submittedEmail = ref('');
+const submittedPlan = ref('basic');
+
+onMounted(() => {
+  try {
+    if (sessionStorage.getItem(SIGNUP_PLAN_KEY) === 'pro') {
+      selectedPlan.value = 'pro';
+      sessionStorage.removeItem(SIGNUP_PLAN_KEY);
+    }
+  } catch { /* ignore */ }
+});
+
+const resetForm = () => {
+  registrationComplete.value = false;
+  form.username = '';
+  form.email = '';
+  form.password = '';
+  form.first_name = '';
+  form.last_name = '';
+  form.daily_brief_opt_in = props.dailyBriefIntent;
+};
 
 const handleSubmit = async () => {
   submitting.value = true;
@@ -126,6 +213,12 @@ const handleSubmit = async () => {
   try {
     await auth.register({ ...form });
     submittedEmail.value = form.email;
+    submittedPlan.value = selectedPlan.value;
+
+    if (selectedPlan.value === 'pro') {
+      try { sessionStorage.setItem(PRO_INTENT_KEY, '1'); } catch { /* ignore */ }
+    }
+
     registrationComplete.value = true;
   } catch (error) {
     errorMessage.value = error.message || 'Unable to create your account.';
@@ -162,7 +255,7 @@ const handleSubmit = async () => {
   margin: 0 auto;
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(280px, 420px) minmax(320px, 520px);
+  grid-template-columns: minmax(280px, 440px) minmax(320px, 520px);
   justify-content: center;
   gap: 1.5rem;
   align-items: center;
@@ -178,7 +271,7 @@ const handleSubmit = async () => {
   padding: 2rem;
 }
 
-.auth-panel--accent {
+.auth-panel--plans {
   background:
     linear-gradient(180deg, rgba(6, 20, 38, 0.96), rgba(8, 15, 26, 0.92)),
     rgba(9, 14, 28, 0.88);
@@ -191,7 +284,8 @@ const handleSubmit = async () => {
   font: inherit;
   cursor: pointer;
   padding: 0;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  display: block;
 }
 
 .auth-eyebrow {
@@ -203,40 +297,195 @@ const handleSubmit = async () => {
   font-weight: 700;
 }
 
-.auth-panel h1,
-.auth-panel h2 {
-  margin: 0;
-  font-size: 2rem;
-  line-height: 1.05;
+.auth-panel h1 {
+  margin: 0 0 1.5rem;
+  font-size: 1.75rem;
+  line-height: 1.1;
 }
 
 .auth-panel h2 {
+  margin: 0;
   font-size: 1.5rem;
 }
 
-.auth-copy {
-  margin: 1rem 0 0;
-  color: #94a3b8;
-  line-height: 1.7;
+/* ---- Plan cards ---- */
+.plan-cards {
+  display: grid;
+  gap: 0.85rem;
 }
 
-.auth-points {
-  margin: 1.5rem 0 0;
-  padding-left: 1rem;
+.plan-card {
+  position: relative;
+  width: 100%;
+  text-align: left;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 1.1rem;
+  padding: 1.1rem 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  color: #f8fafc;
+  font: inherit;
+}
+
+.plan-card:hover {
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.plan-card--selected {
+  border-color: rgba(34, 211, 238, 0.5);
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2), 0 8px 28px rgba(34, 211, 238, 0.1);
+}
+
+.plan-card--pro {
+  background:
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.08), transparent 50%),
+    rgba(15, 23, 42, 0.7);
+}
+
+.plan-badge {
+  position: absolute;
+  top: -0.6rem;
+  left: 1.1rem;
+  background: linear-gradient(90deg, #22d3ee, #60a5fa);
+  color: #082f49;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.18rem 0.6rem;
+  border-radius: 99px;
+}
+
+.plan-card-top {
+  margin-bottom: 0.85rem;
+}
+
+.plan-card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.plan-card-name {
+  font-size: 0.9rem;
+  font-weight: 700;
   color: #cbd5e1;
-  line-height: 1.7;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
+.plan-card-selector {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 1.5px solid rgba(148, 163, 184, 0.35);
+  transition: border-color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.plan-card--selected .plan-card-selector {
+  border-color: #22d3ee;
+  background: #22d3ee;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
+}
+
+.plan-card-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.1rem;
+}
+
+.plan-price-currency {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.plan-price-amount {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1;
+}
+
+.plan-price-period {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin-left: 0.1rem;
+}
+
+.plan-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+  border-top: 1px solid rgba(51, 65, 85, 0.7);
+  padding-top: 0.85rem;
+}
+
+.plan-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: #94a3b8;
+}
+
+.plan-feat-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.plan-feat-dot--on {
+  background: #22d3ee;
+}
+
+.plan-feat-dot--off {
+  background: rgba(100, 116, 139, 0.4);
+}
+
+/* ---- Form ---- */
 .auth-form {
   display: grid;
   gap: 1rem;
 }
 
 .auth-form-header {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.auth-form-title-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.selected-plan-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+}
+
+.selected-plan-badge--basic {
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.selected-plan-badge--pro {
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.2), rgba(59, 130, 246, 0.2));
+  color: #67e8f9;
+  border: 1px solid rgba(34, 211, 238, 0.35);
 }
 
 .auth-grid {
@@ -294,6 +543,12 @@ const handleSubmit = async () => {
   gap: 1rem;
 }
 
+.auth-copy {
+  margin: 0;
+  color: #94a3b8;
+  line-height: 1.7;
+}
+
 .auth-actions {
   display: flex;
   gap: 0.75rem;
@@ -325,6 +580,25 @@ const handleSubmit = async () => {
   line-height: 1.5;
 }
 
+.link-button {
+  background: none;
+  border: none;
+  color: #7dd3fc;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.link-button:hover {
+  color: #bae6fd;
+}
+
+.btn-block {
+  width: 100%;
+  justify-content: center;
+}
+
 @media (max-width: 900px) {
   .auth-layout {
     grid-template-columns: 1fr;
@@ -338,7 +612,7 @@ const handleSubmit = async () => {
   }
 
   .auth-grid,
-  .auth-form-header {
+  .auth-form-title-row {
     grid-template-columns: 1fr;
     display: grid;
   }

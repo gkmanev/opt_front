@@ -127,12 +127,28 @@ const extractDailyBriefSubscription = (value) => {
   return null;
 };
 
+const normalizePremiumSubscription = (value) => {
+  if (!value || typeof value !== 'object') return null;
+  // Backend exposes is_active (True when status is active/trialing); accept is_premium too for forward compat
+  const isPremiumValue = Boolean(value.is_premium ?? value.is_active);
+  return {
+    tier: isPremiumValue ? 'premium' : 'free',
+    status: value.status ?? null,
+    is_premium: isPremiumValue,
+    current_period_end: value.current_period_end ?? null,
+    cancel_at_period_end: Boolean(value.cancel_at_period_end),
+  };
+};
+
 const state = reactive({
   accessToken: null,
   user: readStoredUser(),
   dailyBriefSubscription: null,
   dailyBriefSubscriptionLoading: false,
   dailyBriefSubscriptionLoaded: false,
+  premiumSubscription: null,
+  premiumSubscriptionLoading: false,
+  premiumSubscriptionLoaded: false,
   initializing: false,
   initialized: false,
 });
@@ -147,6 +163,11 @@ const applyAuthResponse = (data) => {
   if (dailyBriefSubscription) {
     state.dailyBriefSubscription = dailyBriefSubscription;
     state.dailyBriefSubscriptionLoaded = true;
+  }
+  const premiumSubscription = normalizePremiumSubscription(data?.premium_subscription);
+  if (premiumSubscription) {
+    state.premiumSubscription = premiumSubscription;
+    state.premiumSubscriptionLoaded = true;
   }
   writeStoredUser(state.user);
 };
@@ -170,6 +191,9 @@ const clearSession = () => {
   state.dailyBriefSubscription = null;
   state.dailyBriefSubscriptionLoading = false;
   state.dailyBriefSubscriptionLoaded = false;
+  state.premiumSubscription = null;
+  state.premiumSubscriptionLoading = false;
+  state.premiumSubscriptionLoaded = false;
   writeStoredUser(null);
 };
 
@@ -369,6 +393,35 @@ const unsubscribeFromDailyBrief = async () => {
   return setDailyBriefSubscription(subscription);
 };
 
+const fetchPremiumSubscription = async ({ force = false } = {}) => {
+  if (!state.accessToken) {
+    state.premiumSubscription = null;
+    state.premiumSubscriptionLoaded = false;
+    return null;
+  }
+
+  if (state.premiumSubscriptionLoading) return state.premiumSubscription;
+  if (state.premiumSubscriptionLoaded && !force) return state.premiumSubscription;
+
+  state.premiumSubscriptionLoading = true;
+
+  try {
+    const data = await requestJson('/api/premium-subscription/');
+    state.premiumSubscription = normalizePremiumSubscription(data);
+    state.premiumSubscriptionLoaded = true;
+    return state.premiumSubscription;
+  } catch (error) {
+    if (error?.status === 404) {
+      state.premiumSubscription = { tier: 'free', status: null, is_premium: false, current_period_end: null, cancel_at_period_end: false };
+      state.premiumSubscriptionLoaded = true;
+      return state.premiumSubscription;
+    }
+    throw error;
+  } finally {
+    state.premiumSubscriptionLoading = false;
+  }
+};
+
 const displayName = computed(() => {
   const user = state.user;
   if (!user) return state.accessToken ? 'Signed in' : '';
@@ -381,6 +434,8 @@ const isAuthenticated = computed(() => Boolean(state.accessToken));
 const dailyBriefSubscription = computed(() => state.dailyBriefSubscription);
 const dailyBriefSubscriptionStatus = computed(() => state.dailyBriefSubscription?.status ?? null);
 const isDailyBriefSubscribed = computed(() => dailyBriefSubscriptionStatus.value === 'active');
+const premiumSubscription = computed(() => state.premiumSubscription);
+const isPremium = computed(() => state.premiumSubscription?.is_premium === true);
 
 const authStore = {
   state,
@@ -389,6 +444,8 @@ const authStore = {
   dailyBriefSubscription,
   dailyBriefSubscriptionStatus,
   isDailyBriefSubscribed,
+  premiumSubscription,
+  isPremium,
   setAccessToken,
   setUser,
   setDailyBriefSubscription,
@@ -400,6 +457,7 @@ const authStore = {
   fetchDailyBriefSubscription,
   subscribeToDailyBrief,
   unsubscribeFromDailyBrief,
+  fetchPremiumSubscription,
   refreshAccessToken,
   logout,
   clearSession,

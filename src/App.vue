@@ -70,10 +70,26 @@
             >
               Wheel Strategy
             </a>
+            <a
+              class="header-nav-link"
+              :class="{ 'is-active': currentRoute === '/pricing' }"
+              href="/pricing"
+              @click="handleRouteLinkClick($event, '/pricing')"
+            >
+              Pricing
+            </a>
           </nav>
         </div>
         <div class="header-actions">
           <template v-if="isAuthenticated">
+            <button
+              v-if="isFreeUser"
+              class="btn btn-primary header-upgrade-btn"
+              type="button"
+              @click="openPricingModal"
+            >
+              Upgrade
+            </button>
             <button
               class="user-chip user-chip--button"
               :class="{ 'is-active': currentRoute === '/profile' }"
@@ -96,8 +112,11 @@
       v-if="currentRoute === '/profile'"
       :user="auth.state.user"
       :display-name="authDisplayName"
+      :is-premium="isPremium"
+      :premium-subscription="auth.state.premiumSubscription"
       @back-dashboard="goToDashboard"
       @logout="handleLogout"
+      @open-pricing="openPricingModal"
     />
 
     <AboutView
@@ -122,6 +141,14 @@
 
     <MethodologyView
       v-else-if="currentRoute === '/methodology'"
+      @navigate-route="handleRouteLinkClick"
+    />
+
+    <PricingView
+      v-else-if="currentRoute === '/pricing'"
+      :is-authenticated="isAuthenticated"
+      :is-premium="isPremium"
+      @open-pricing="openPricingModal"
       @navigate-route="handleRouteLinkClick"
     />
 
@@ -961,6 +988,16 @@
                     </td>
                   </tr>
                 </template>
+                <tr v-if="isFreeUser && weeklyIdeasHasMore" class="locked-rows-row">
+                  <td :colspan="weeklyVisibleColumnCount" class="locked-rows-cell">
+                    <div class="locked-rows-overlay">
+                      <p class="locked-rows-label">More ideas are hidden on the free plan.</p>
+                      <button class="btn btn-primary" type="button" @click="openPricingModal">
+                        Upgrade to Premium
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -1061,6 +1098,7 @@
         <a class="site-footer-link" href="/covered-calls" @click="handleRouteLinkClick($event, '/covered-calls')">Covered Calls</a>
         <a class="site-footer-link" href="/methodology" @click="handleRouteLinkClick($event, '/methodology')">Methodology</a>
         <a class="site-footer-link" href="/wheel-strategy" @click="handleRouteLinkClick($event, '/wheel-strategy')">Wheel Strategy</a>
+        <a class="site-footer-link" href="/pricing" @click="handleRouteLinkClick($event, '/pricing')">Pricing</a>
         <a class="site-footer-link" href="/sign-up" @click="handleRouteLinkClick($event, '/sign-up')">Start For Free</a>
       </div>
       <p class="site-footer-disclaimer">
@@ -1076,6 +1114,12 @@
       :open="isWheelGuideOpen"
       :candidates="dailyBriefRows"
       @close="closeWheelGuide"
+    />
+
+    <PricingModal
+      :open="isPricingModalOpen"
+      @close="isPricingModalOpen = false"
+      @checkout-success="fetchWeeklyIdeas(buildCurrentFilters())"
     />
 
     <teleport to="body">
@@ -1164,6 +1208,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { getApiBaseUrl, getDailyBriefs, getSymbols, setApiBaseUrl } from './api/investingApi';
 import DailyBrief from './components/DailyBrief.vue';
+import PricingModal from './components/PricingModal.vue';
 import WheelStrategyGuide from './components/WheelStrategyGuide.vue';
 import { useAuthStore } from './stores/auth';
 import AboutView from './views/AboutView.vue';
@@ -1172,6 +1217,7 @@ import CoveredCallsView from './views/CoveredCallsView.vue';
 import LoginView from './views/LoginView.vue';
 import ContactView from './views/ContactView.vue';
 import MethodologyView from './views/MethodologyView.vue';
+import PricingView from './views/PricingView.vue';
 import ProfileView from './views/ProfileView.vue';
 import SignUpView from './views/SignUpView.vue';
 import VerifyEmailView from './views/VerifyEmailView.vue';
@@ -1187,6 +1233,7 @@ const legacyRouteRedirects = new Map([
 const knownRoutes = new Set([
   '/',
   '/about',
+  '/pricing',
   '/cash-secured-puts',
   '/contact',
   '/covered-calls',
@@ -1202,6 +1249,7 @@ const authRoutes = new Set(['/login', '/sign-up', '/verify-email']);
 const marketingRoutes = new Set([
   '/',
   '/about',
+  '/pricing',
   '/cash-secured-puts',
   '/contact',
   '/covered-calls',
@@ -1241,9 +1289,15 @@ const navigateTo = (path, { replace = false } = {}) => {
   window.scrollTo({ top: 0, behavior: 'auto' });
 };
 
+const PRO_INTENT_KEY = 'putpulse.pending.pro';
+
 const currentRoute = computed(() => (knownRoutes.has(routePath.value) ? routePath.value : '/'));
 const isAuthenticated = auth.isAuthenticated;
+const isPremium = auth.isPremium;
+const isFreeUser = computed(() => isAuthenticated.value && !isPremium.value);
 const authDisplayName = auth.displayName;
+const isPricingModalOpen = ref(false);
+const openPricingModal = () => { isPricingModalOpen.value = true; };
 const configuredSiteUrl = String(import.meta.env.VITE_SITE_URL ?? '').trim().replace(/\/+$/, '');
 const runtimeSiteUrl = typeof window !== 'undefined' ? window.location.origin.replace(/\/+$/, '') : '';
 const siteUrl = configuredSiteUrl || runtimeSiteUrl || 'https://putpulse.com';
@@ -1449,6 +1503,16 @@ const seoConfig = computed(() => {
         'Contact PutPulse for product questions, support issues, methodology questions, and partnership inquiries.',
       robots: 'index,follow',
       canonicalPath: '/contact',
+    };
+  }
+
+  if (currentRoute.value === '/pricing') {
+    return {
+      title: 'Pricing | PutPulse',
+      description:
+        'PutPulse pricing — free Basic plan with 5 screener results, or Pro at $20/month for unlimited access, daily briefings, and full wheel setup details.',
+      robots: 'index,follow',
+      canonicalPath: '/pricing',
     };
   }
 
@@ -1932,6 +1996,7 @@ const heroTopThreeStrike = computed(() => heroTopThreeRow.value?.strike ?? '—'
 const heroTopThreePremium = computed(() => heroTopThreeRow.value?.estPremium ?? '—');
 
 const weeklyIdeas = ref([]);
+const weeklyIdeasHasMore = ref(false);
 const dailyBriefLoading = ref(false);
 const dailyBriefError = ref(false);
 const weeklyIdeasLoading = ref(false);
@@ -2440,10 +2505,13 @@ const fetchWeeklyIdeas = async (filters = {}) => {
   weeklyIdeasLoading.value = true;
   weeklyIdeasError.value = false;
   try {
-    weeklyIdeas.value = await getSymbols(filters);
+    const { results, hasMore } = await getSymbols(filters);
+    weeklyIdeas.value = results;
+    weeklyIdeasHasMore.value = hasMore;
   } catch (error) {
     console.error('Failed to fetch symbols', error);
     weeklyIdeas.value = [];
+    weeklyIdeasHasMore.value = false;
     weeklyIdeasError.value = true;
   } finally {
     weeklyIdeasLoading.value = false;
@@ -2686,6 +2754,14 @@ watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authRe
 
   if (signedIn) {
     auth.fetchDailyBriefSubscription().catch(() => {});
+    auth.fetchPremiumSubscription().catch(() => {}).then(() => {
+      try {
+        if (!auth.isPremium.value && sessionStorage.getItem(PRO_INTENT_KEY)) {
+          sessionStorage.removeItem(PRO_INTENT_KEY);
+          isPricingModalOpen.value = true;
+        }
+      } catch { /* ignore storage errors */ }
+    });
   }
 
   if (signedIn && authRoutes.has(route) && route !== '/verify-email') {

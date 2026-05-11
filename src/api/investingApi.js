@@ -79,9 +79,14 @@ export const getSymbols = async ({
 } = {}) => {
   const data = await request('symbols', {
     params: buildSymbolsParams({ minPrice, maxPrice, minRsi, maxRsi, minRoi }),
-    auth: false,
-    skipRefresh: true,
+    auth: true,
   });
 
-  return Array.isArray(data) ? data : data.results ?? [];
+  if (Array.isArray(data)) {
+    return { results: data, hasMore: false };
+  }
+  return {
+    results: Array.isArray(data.results) ? data.results : [],
+    hasMore: data.has_more === true,
+  };
 };

@@ -58,6 +58,37 @@
             </button>
           </div>
         </article>
+
+        <article class="profile-card profile-card--subscription">
+          <div class="profile-card-header">
+            <p class="profile-card-eyebrow">Billing</p>
+            <h2>Subscription</h2>
+          </div>
+
+          <dl class="profile-details">
+            <div class="profile-detail-row">
+              <dt>Plan</dt>
+              <dd>
+                <span
+                  class="subscription-tier-badge"
+                  :class="isPremium ? 'subscription-tier-badge--premium' : 'subscription-tier-badge--free'"
+                >
+                  {{ isPremium ? 'Premium' : 'Free' }}
+                </span>
+              </dd>
+            </div>
+            <div v-if="isPremium && currentPeriodEnd" class="profile-detail-row">
+              <dt>Renews</dt>
+              <dd>{{ currentPeriodEnd }}</dd>
+            </div>
+          </dl>
+
+          <div v-if="!isPremium" class="profile-actions">
+            <button class="btn btn-primary" type="button" @click="emit('open-pricing')">
+              Upgrade to Premium
+            </button>
+          </div>
+        </article>
       </div>
     </div>
   </section>
@@ -75,9 +106,17 @@ const props = defineProps({
     type: String,
     default: 'Signed in',
   },
+  isPremium: {
+    type: Boolean,
+    default: false,
+  },
+  premiumSubscription: {
+    type: Object,
+    default: null,
+  },
 });
 
-const emit = defineEmits(['back-dashboard', 'logout']);
+const emit = defineEmits(['back-dashboard', 'logout', 'open-pricing']);
 
 const fallbackValue = 'Not provided';
 
@@ -97,6 +136,16 @@ const initials = computed(() => {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('') || 'OF';
+});
+
+const currentPeriodEnd = computed(() => {
+  const raw = props.premiumSubscription?.current_period_end;
+  if (!raw) return null;
+  try {
+    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(raw));
+  } catch {
+    return null;
+  }
 });
 </script>
 
@@ -226,6 +275,34 @@ const initials = computed(() => {
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1.5rem;
+}
+
+.profile-card--subscription {
+  background:
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.1), transparent 40%),
+    rgba(15, 23, 42, 0.82);
+}
+
+.subscription-tier-badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.subscription-tier-badge--free {
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.subscription-tier-badge--premium {
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.2), rgba(59, 130, 246, 0.2));
+  color: #67e8f9;
+  border: 1px solid rgba(34, 211, 238, 0.35);
 }
 
 @media (max-width: 640px) {
