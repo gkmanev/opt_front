@@ -262,15 +262,13 @@ const faqs = [
 ];
 
 const handleBasicClick = (event) => {
-  event.preventDefault();
   try { sessionStorage.removeItem(SIGNUP_PLAN_KEY); } catch { /* ignore */ }
   emit('navigate-route', event, '/sign-up');
 };
 
 const handleProClick = (event) => {
-  event.preventDefault();
   try { sessionStorage.setItem(SIGNUP_PLAN_KEY, 'pro'); } catch { /* ignore */ }
-  emit('navigate-route', event, '/sign-up');
+  emit('navigate-route', event, '/sign-up?plan=pro');
 };
 </script>
 

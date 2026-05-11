@@ -1303,15 +1303,19 @@ const syncRoute = () => {
 
 const navigateTo = (path, { replace = false } = {}) => {
   const nextPath = path || '/';
-  const targetPath = knownRoutes.has(nextPath) ? nextPath : '/';
+  const qIndex = nextPath.indexOf('?');
+  const pathname = qIndex === -1 ? nextPath : nextPath.slice(0, qIndex);
+  const search = qIndex === -1 ? '' : nextPath.slice(qIndex);
+  const targetPath = knownRoutes.has(pathname) ? pathname : '/';
+  const fullTarget = targetPath === '/' ? '/' : targetPath + search;
   const currentPath = window.location.pathname || '/';
 
-  if (currentPath === targetPath) {
+  if (currentPath === targetPath && !search) {
     syncRoute();
     return;
   }
 
-  window.history[replace ? 'replaceState' : 'pushState']({}, '', targetPath);
+  window.history[replace ? 'replaceState' : 'pushState']({}, '', fullTarget);
   syncRoute();
   window.scrollTo({ top: 0, behavior: 'auto' });
 };
@@ -2686,6 +2690,14 @@ const navigatePublicPath = (path) => {
 
   if (path === '/sign-up') {
     goToSignUp();
+    return;
+  }
+
+  if (path.startsWith('/sign-up?')) {
+    isMobileMenuOpen.value = false;
+    clearDailyBriefAuthIntent();
+    resetDailyBriefCtaFeedback();
+    navigateTo(path);
     return;
   }
 
