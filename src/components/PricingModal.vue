@@ -30,7 +30,7 @@
               <div class="pricing-plan-header">
                 <h3>Monthly</h3>
                 <div class="pricing-amount">
-                  <span class="pricing-currency">$</span>
+                  <span class="pricing-currency">€</span>
                   <span class="pricing-price">{{ monthlyPrice }}</span>
                   <span class="pricing-period">/ mo</span>
                 </div>
@@ -50,7 +50,7 @@
               <div class="pricing-plan-header">
                 <h3>Annual</h3>
                 <div class="pricing-amount">
-                  <span class="pricing-currency">$</span>
+                  <span class="pricing-currency">€</span>
                   <span class="pricing-price">{{ annualPrice }}</span>
                   <span class="pricing-period">/ yr</span>
                 </div>

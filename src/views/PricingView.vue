@@ -68,7 +68,7 @@
           <div class="pp-card-header">
             <p class="pp-plan-name">Pro</p>
             <div class="pp-price-row">
-              <span class="pp-price-currency">$</span>
+              <span class="pp-price-currency">€</span>
               <span class="pp-price-amount">20</span>
               <span class="pp-price-period">/ month</span>
             </div>
