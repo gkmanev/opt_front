@@ -245,11 +245,11 @@ const comparisonRows = [
 const faqs = [
   {
     q: 'Can I cancel at any time?',
-    a: 'Yes. You can cancel your Pro subscription at any time from your Paddle billing portal. You keep Pro access until the end of the current billing period.',
+    a: 'Yes. You can cancel your Pro subscription at any time from your Stripe billing portal. You keep Pro access until the end of the current billing period.',
   },
   {
     q: 'What payment methods are accepted?',
-    a: 'Payments are handled by Paddle, which supports all major credit and debit cards. Paddle acts as the merchant of record, so your invoice comes from Paddle.',
+    a: 'Payments are processed securely by Stripe, which supports all major credit and debit cards, Apple Pay, and Google Pay.',
   },
   {
     q: 'Is there a free trial for Pro?',

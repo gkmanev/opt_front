@@ -167,6 +167,11 @@
       @navigate-route="handleRouteLinkClick"
     />
 
+    <PaymentSuccessView
+      v-else-if="currentRoute === '/payment-success'"
+      @go-home="goHome"
+    />
+
     <WheelStrategyView
       v-else-if="currentRoute === '/wheel-strategy'"
       :candidates="dailyBriefRows"
@@ -1243,6 +1248,7 @@ import TermsView from './views/TermsView.vue';
 import SignUpView from './views/SignUpView.vue';
 import VerifyEmailView from './views/VerifyEmailView.vue';
 import WheelStrategyView from './views/WheelStrategyView.vue';
+import PaymentSuccessView from './views/PaymentSuccessView.vue';
 
 const auth = useAuthStore();
 const mobileNavBreakpoint = 768;
@@ -1265,6 +1271,7 @@ const knownRoutes = new Set([
   '/login',
   '/methodology',
   '/profile',
+  '/payment-success',
   '/sign-up',
   '/verify-email',
   '/wheel-strategy',

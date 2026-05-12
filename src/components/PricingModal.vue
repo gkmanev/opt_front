@@ -89,7 +89,7 @@
           <p v-if="checkoutError" class="pricing-error">{{ checkoutError }}</p>
 
           <p v-if="checkoutLoading" class="pricing-waiting">
-            Confirming your subscription&hellip;
+            Redirecting to checkout&hellip;
           </p>
         </div>
       </div>
@@ -99,7 +99,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { usePaddle } from '../composables/usePaddle';
+import { useStripe } from '../composables/useStripe';
 import { useAuthStore } from '../stores/auth';
 
 const props = defineProps({
@@ -112,28 +112,19 @@ const props = defineProps({
 const emit = defineEmits(['close', 'checkout-success']);
 
 const auth = useAuthStore();
-const { openCheckout } = usePaddle();
+const { openCheckout } = useStripe();
 
-const monthlyPrice = import.meta.env.VITE_PADDLE_PRICE_MONTHLY_DISPLAY ?? '—';
-const annualPrice = import.meta.env.VITE_PADDLE_PRICE_ANNUAL_DISPLAY ?? '—';
-const annualSavePct = import.meta.env.VITE_PADDLE_ANNUAL_SAVE_PCT ?? '—';
+const monthlyPrice = import.meta.env.VITE_STRIPE_PRICE_MONTHLY_DISPLAY ?? '—';
+const annualPrice = import.meta.env.VITE_STRIPE_PRICE_ANNUAL_DISPLAY ?? '—';
+const annualSavePct = import.meta.env.VITE_STRIPE_ANNUAL_SAVE_PCT ?? '—';
 
 const PRICE_IDS = {
-  monthly: import.meta.env.VITE_PADDLE_PRICE_ID_MONTHLY,
-  annual: import.meta.env.VITE_PADDLE_PRICE_ID_ANNUAL,
+  monthly: import.meta.env.VITE_STRIPE_PRICE_ID_MONTHLY,
+  annual: import.meta.env.VITE_STRIPE_PRICE_ID_ANNUAL,
 };
 
 const checkoutLoading = ref(false);
 const checkoutError = ref(null);
-
-const pollForPremium = async () => {
-  for (let i = 0; i < 12; i++) {
-    await new Promise((r) => setTimeout(r, 1000));
-    await auth.fetchPremiumSubscription({ force: true });
-    if (auth.isPremium.value) return true;
-  }
-  return false;
-};
 
 const checkout = async (plan) => {
   checkoutError.value = null;
@@ -143,24 +134,17 @@ const checkout = async (plan) => {
     return;
   }
 
+  checkoutLoading.value = true;
   try {
     await openCheckout({
       priceId,
       userId: auth.state.user?.id,
       userEmail: auth.state.user?.email,
-      onSuccess: async () => {
-        checkoutLoading.value = true;
-        const upgraded = await pollForPremium();
-        checkoutLoading.value = false;
-        if (upgraded) {
-          emit('checkout-success');
-          emit('close');
-        } else {
-          checkoutError.value = 'Subscription confirmed — refresh the page if the screener does not update.';
-        }
-      },
+      successUrl: `${window.location.origin}/payment-success`,
+      cancelUrl: window.location.href,
     });
   } catch {
+    checkoutLoading.value = false;
     checkoutError.value = 'Unable to open checkout. Please try again.';
   }
 };
