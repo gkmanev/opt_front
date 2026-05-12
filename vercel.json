@@ -26,6 +26,10 @@
     {
       "source": "/verify-email",
       "destination": "/index.html"
+    },
+    {
+      "source": "/payment-success",
+      "destination": "/index.html"
     }
   ]
 }
