@@ -2810,12 +2810,12 @@ const applySeoMetadata = () => {
   setRouteStructuredData(routeStructuredData.value);
 };
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('popstate', syncRoute);
   window.addEventListener('resize', syncMobileMenu);
   syncMobileMenu();
   syncRoute();
-  auth.initialize();
+  await auth.initialize();
   fetchDailyBriefRows();
   fetchWeeklyIdeas();
 });
