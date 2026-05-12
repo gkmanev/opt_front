@@ -143,9 +143,9 @@ const checkout = async (plan) => {
       successUrl: `${window.location.origin}/payment-success`,
       cancelUrl: window.location.href,
     });
-  } catch {
+  } catch (err) {
     checkoutLoading.value = false;
-    checkoutError.value = 'Unable to open checkout. Please try again.';
+    checkoutError.value = err?.message || 'Unable to open checkout. Please try again.';
   }
 };
 </script>
