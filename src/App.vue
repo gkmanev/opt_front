@@ -1231,6 +1231,7 @@
 
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { ApiError } from './api/client';
 import { getApiBaseUrl, getDailyBriefs, getSymbols, setApiBaseUrl } from './api/investingApi';
 import DailyBrief from './components/DailyBrief.vue';
 import CookieBanner from './components/CookieBanner.vue';
@@ -2579,11 +2580,17 @@ const fetchWeeklyIdeas = async (filters = {}) => {
     const { results, hasMore } = await getSymbols(filters);
     weeklyIdeas.value = results;
     weeklyIdeasHasMore.value = hasMore;
+    return true;
   } catch (error) {
-    console.error('Failed to fetch symbols', error);
-    weeklyIdeas.value = [];
-    weeklyIdeasHasMore.value = false;
-    weeklyIdeasError.value = true;
+    if (error instanceof ApiError && error.status === 403) {
+      isPricingModalOpen.value = true;
+    } else {
+      console.error('Failed to fetch symbols', error);
+      weeklyIdeas.value = [];
+      weeklyIdeasHasMore.value = false;
+      weeklyIdeasError.value = true;
+    }
+    return false;
   } finally {
     weeklyIdeasLoading.value = false;
   }
@@ -2932,14 +2939,16 @@ const onMinScoreChange = (event) => {
   minScore.value = event.target.value;
 };
 
-const applyFilters = () => {
+const applyFilters = async () => {
   weeklyCurrentPage.value = 1;
-  appliedMinRoi.value = minRoi.value;
-  appliedMaxSpread.value = maxSpread.value;
-  appliedTvFilter.value = tvFilter.value;
-  appliedMinScore.value = minScore.value;
-  appliedDeltaRange.value = [...deltaRange.value];
-  fetchWeeklyIdeas(buildCurrentFilters());
+  const success = await fetchWeeklyIdeas(buildCurrentFilters());
+  if (success) {
+    appliedMinRoi.value = minRoi.value;
+    appliedMaxSpread.value = maxSpread.value;
+    appliedTvFilter.value = tvFilter.value;
+    appliedMinScore.value = minScore.value;
+    appliedDeltaRange.value = [...deltaRange.value];
+  }
 };
 
 const resetFilters = () => {
