@@ -1224,6 +1224,8 @@
         </div>
       </transition>
     </teleport>
+
+    <CookieBanner @navigate-route="handleRouteLinkClick" />
   </div>
 </template>
 
@@ -1231,6 +1233,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { getApiBaseUrl, getDailyBriefs, getSymbols, setApiBaseUrl } from './api/investingApi';
 import DailyBrief from './components/DailyBrief.vue';
+import CookieBanner from './components/CookieBanner.vue';
 import PricingModal from './components/PricingModal.vue';
 import WheelStrategyGuide from './components/WheelStrategyGuide.vue';
 import { useAuthStore } from './stores/auth';
