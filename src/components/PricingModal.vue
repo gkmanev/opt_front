@@ -91,6 +91,11 @@
           <p v-if="checkoutLoading" class="pricing-waiting">
             Redirecting to checkout&hellip;
           </p>
+
+          <p class="pricing-signin-hint">
+            Already a subscriber?
+            <button type="button" class="pricing-signin-link" @click="emit('login-required')">Sign in</button>
+          </p>
         </div>
       </div>
     </Transition>
@@ -98,7 +103,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
 import { useStripe } from '../composables/useStripe';
 import { useAuthStore } from '../stores/auth';
 
@@ -109,7 +114,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['close', 'checkout-success']);
+const emit = defineEmits(['close', 'checkout-success', 'login-required']);
 
 const auth = useAuthStore();
 const { openCheckout } = useStripe();
@@ -123,10 +128,23 @@ const PRICE_IDS = {
   annual: import.meta.env.VITE_STRIPE_PRICE_ID_ANNUAL,
 };
 
+watch(() => props.open, (isOpen) => {
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}, { immediate: true });
+
+onUnmounted(() => {
+  document.body.style.overflow = '';
+});
+
 const checkoutLoading = ref(false);
 const checkoutError = ref(null);
 
 const checkout = async (plan) => {
+  if (!auth.isAuthenticated.value) {
+    emit('login-required');
+    return;
+  }
+
   checkoutError.value = null;
   const priceId = PRICE_IDS[plan];
   if (!priceId) {
@@ -358,6 +376,28 @@ const checkout = async (plan) => {
   color: #67e8f9;
   font-size: 0.88rem;
   text-align: center;
+}
+
+.pricing-signin-hint {
+  margin: 1.25rem 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.pricing-signin-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #67e8f9;
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.pricing-signin-link:hover {
+  color: #a5f3fc;
 }
 
 .pricing-modal-enter-active,

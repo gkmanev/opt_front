@@ -1143,6 +1143,7 @@
       :open="isPricingModalOpen"
       @close="isPricingModalOpen = false"
       @checkout-success="fetchWeeklyIdeas(buildCurrentFilters())"
+      @login-required="isPricingModalOpen = false; goToLogin()"
     />
 
     <teleport to="body">
@@ -2833,6 +2834,7 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('popstate', syncRoute);
   window.removeEventListener('resize', syncMobileMenu);
+  document.body.style.overflow = '';
 });
 
 watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authResolved]) => {
@@ -3135,6 +3137,10 @@ const closeModal = () => {
   isModalOpen.value = false;
   activeTicker.value = '';
 };
+
+watch(isModalOpen, (isOpen) => {
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}, { immediate: true });
 
 watch(
   [isModalOpen, activeTicker, overviewTimeframe],

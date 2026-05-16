@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, defineComponent } from "vue";
+import { computed, reactive, ref, defineComponent, watch, onUnmounted } from "vue";
 
 defineOptions({
   name: "FrontDev",
@@ -578,6 +578,14 @@ const StockDrawer = defineComponent({
       const [a, b] = r.put_selling_guidance.recommended_delta_range;
       return `${a.toFixed(2)} to ${b.toFixed(2)}`;
     }
+
+    watch(() => props.open, (isOpen) => {
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    }, { immediate: true });
+
+    onUnmounted(() => {
+      document.body.style.overflow = '';
+    });
 
     return {
       uiProfile,
