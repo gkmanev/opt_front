@@ -78,6 +78,14 @@
             >
               Pricing
             </a>
+            <a
+              class="header-nav-link"
+              :class="{ 'is-active': currentRoute === '/agent' }"
+              href="/agent"
+              @click="handleRouteLinkClick($event, '/agent')"
+            >
+              AI Agent
+            </a>
           </nav>
         </div>
         <div class="header-actions">
@@ -170,6 +178,10 @@
     <PaymentSuccessView
       v-else-if="currentRoute === '/payment-success'"
       @go-home="goHome"
+    />
+
+    <AgentChatView
+      v-else-if="currentRoute === '/agent'"
     />
 
     <WheelStrategyView
@@ -1254,6 +1266,7 @@ import SignUpView from './views/SignUpView.vue';
 import VerifyEmailView from './views/VerifyEmailView.vue';
 import WheelStrategyView from './views/WheelStrategyView.vue';
 import PaymentSuccessView from './views/PaymentSuccessView.vue';
+import AgentChatView from './views/AgentChatView.vue';
 
 const auth = useAuthStore();
 const mobileNavBreakpoint = 768;
@@ -1272,6 +1285,7 @@ const knownRoutes = new Set([
   '/cash-secured-puts',
   '/contact',
   '/covered-calls',
+  '/agent',
   '/dashboard',
   '/login',
   '/methodology',

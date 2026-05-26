@@ -3,13 +3,13 @@ import { configureApiClient, extractApiErrorMessage, requestJson } from '../api/
 
 const USER_STORAGE_KEY = 'putpulse.auth.user';
 
-const canUseStorage = () => typeof window !== 'undefined' && typeof window.sessionStorage !== 'undefined';
+const canUseStorage = () => typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
 
 const readStoredUser = () => {
   if (!canUseStorage()) return null;
 
   try {
-    const rawValue = window.sessionStorage.getItem(USER_STORAGE_KEY);
+    const rawValue = window.localStorage.getItem(USER_STORAGE_KEY);
     if (!rawValue) return null;
     const parsed = JSON.parse(rawValue);
     return parsed && typeof parsed === 'object' ? parsed : null;
@@ -22,12 +22,12 @@ const writeStoredUser = (user) => {
   if (!canUseStorage()) return;
 
   if (!user) {
-    window.sessionStorage.removeItem(USER_STORAGE_KEY);
+    window.localStorage.removeItem(USER_STORAGE_KEY);
     return;
   }
 
   try {
-    window.sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+    window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
   } catch {
     // Ignore storage quota / availability errors and keep in-memory auth working.
   }
