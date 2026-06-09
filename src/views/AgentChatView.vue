@@ -122,12 +122,13 @@ const renderMarkdown = (text) => {
 };
 
 const suggestions = [
-  { icon: 'PUT', text: 'Top PUT selling opportunities right now' },
-  { icon: 'VS', text: 'Compare TSLA vs NVDA PUT options' },
-  { icon: 'F', text: 'Analyze NVDA fundamentals' },
-  { icon: 'IV', text: 'Best high IV stocks for selling covered calls' },
-  { icon: 'R', text: 'Defensive options strategies for a bear market' },
-  { icon: '101', text: 'Explain the wheel strategy with examples' },
+  { icon: 'PUT', text: 'Find the best cash-secured put opportunities under $200.' },
+  { icon: '10K', text: 'I have $10,000. Which puts can I sell using a wheel strategy?' },
+  { icon: '2%', text: 'Find puts with 2% monthly return on fundamentally strong companies' },
+  { icon: '25K', text: 'Build a monthly income options plan with $25,000 capital.' },
+  { icon: 'CC', text: 'Show conservative covered calls for stocks I already own.' },
+  { icon: 'BPS', text: 'Suggest bull put credit spreads with high premium and limited risk.' },
+  { icon: 'PLTR', text: 'Analyze PLTR fundamentals and options suitability.' },
 ];
 
 const userInput = ref('');
