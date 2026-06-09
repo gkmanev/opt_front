@@ -21,7 +21,7 @@
         </div>
 
         <div class="agent-messages" ref="messagesEl">
-          <div v-if="!conversationHistory.length && !isLoading" class="agent-empty">
+          <div v-if="!conversationHistory.length && !isSending" class="agent-empty">
             <div class="agent-empty-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-linecap="round" stroke-linejoin="round" />
@@ -56,19 +56,10 @@
               <div v-else class="agent-bubble">{{ msg.content }}</div>
             </div>
           </template>
-
-          <div v-if="isLoading" class="agent-message agent-message--assistant">
-            <span class="agent-message-role">AI</span>
-            <div class="agent-bubble agent-bubble--loading">
-              <span class="agent-dot"></span>
-              <span class="agent-dot"></span>
-              <span class="agent-dot"></span>
-            </div>
-          </div>
         </div>
 
-        <div v-if="errorMessage" class="agent-error" role="alert">
-          {{ errorMessage }}
+        <div v-if="jobError" class="agent-error" role="alert">
+          {{ jobError }}
         </div>
 
         <form class="agent-form" @submit.prevent="sendMessage">
@@ -76,22 +67,22 @@
             ref="inputEl"
             v-model="userInput"
             class="agent-input"
-            placeholder="Ask about options strategies, stocks, or investment ideas…"
+            placeholder="Ask about options strategies, stocks, or investment ideas..."
             rows="1"
-            :disabled="isLoading"
+            :disabled="isSending"
             @keydown.enter.exact.prevent="sendMessage"
             @input="autoResize"
           ></textarea>
           <button
             class="btn btn-primary agent-send-btn"
             type="submit"
-            :disabled="isLoading || !userInput.trim()"
+            :disabled="isSending || !userInput.trim()"
           >
-            <svg v-if="!isLoading" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+            <svg v-if="!isSending" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
               <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
             </svg>
             <span v-else class="agent-send-spinner" aria-hidden="true"></span>
-            <span class="agent-send-label">{{ isLoading ? 'Thinking…' : 'Send' }}</span>
+            <span class="agent-send-label">{{ isSending ? sendButtonLabel : 'Send' }}</span>
           </button>
         </form>
       </div>
@@ -100,12 +91,16 @@
 </template>
 
 <script setup>
-import { nextTick, ref } from 'vue';
+import { computed, nextTick, onUnmounted, ref } from 'vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { requestJson } from '../api/client';
 
 marked.use({ breaks: true, gfm: true });
+
+const POLL_INTERVAL_MS = 1500;
+const QUEUED_LABEL = 'Queued...';
+const THINKING_LABEL = 'Thinking...';
 
 const renderMarkdown = (text) => {
   const html = DOMPurify.sanitize(marked.parse(text ?? ''));
@@ -114,8 +109,8 @@ const renderMarkdown = (text) => {
   el.querySelectorAll('table').forEach((table) => {
     const headers = [...table.querySelectorAll('thead th')].map((th) => th.textContent.trim());
     table.querySelectorAll('tbody tr').forEach((tr) => {
-      [...tr.querySelectorAll('td')].forEach((td, i) => {
-        if (headers[i]) td.setAttribute('data-label', headers[i]);
+      [...tr.querySelectorAll('td')].forEach((td, index) => {
+        if (headers[index]) td.setAttribute('data-label', headers[index]);
       });
     });
     const wrap = document.createElement('div');
@@ -127,20 +122,26 @@ const renderMarkdown = (text) => {
 };
 
 const suggestions = [
-  { icon: '📉', text: 'Top PUT selling opportunities right now' },
-  { icon: '⚖️', text: 'Compare TSLA vs NVDA PUT options' },
-  { icon: '🔍', text: 'Analyze NVDA fundamentals' },
-  { icon: '📊', text: 'Best high IV stocks for selling covered calls' },
-  { icon: '🛡️', text: 'Defensive options strategies for a bear market' },
-  { icon: '💡', text: 'Explain the wheel strategy with examples' },
+  { icon: 'PUT', text: 'Top PUT selling opportunities right now' },
+  { icon: 'VS', text: 'Compare TSLA vs NVDA PUT options' },
+  { icon: 'F', text: 'Analyze NVDA fundamentals' },
+  { icon: 'IV', text: 'Best high IV stocks for selling covered calls' },
+  { icon: 'R', text: 'Defensive options strategies for a bear market' },
+  { icon: '101', text: 'Explain the wheel strategy with examples' },
 ];
 
 const userInput = ref('');
 const conversationHistory = ref([]);
-const isLoading = ref(false);
-const errorMessage = ref('');
+const isSending = ref(false);
+const currentJobId = ref(null);
+const jobStatus = ref('');
+const jobError = ref('');
 const messagesEl = ref(null);
 const inputEl = ref(null);
+const activePollToken = ref(0);
+let pollTimeoutId = null;
+
+const sendButtonLabel = computed(() => (jobStatus.value === 'pending' ? QUEUED_LABEL : THINKING_LABEL));
 
 const scrollToBottom = async () => {
   await nextTick();
@@ -155,19 +156,110 @@ const autoResize = () => {
   inputEl.value.style.height = `${Math.min(inputEl.value.scrollHeight, 160)}px`;
 };
 
+const clearPollTimeout = () => {
+  if (pollTimeoutId !== null) {
+    window.clearTimeout(pollTimeoutId);
+    pollTimeoutId = null;
+  }
+};
+
+const resetJobState = () => {
+  clearPollTimeout();
+  currentJobId.value = null;
+  jobStatus.value = '';
+  isSending.value = false;
+};
+
+const cancelActiveJob = () => {
+  activePollToken.value += 1;
+  resetJobState();
+};
+
+const updateAssistantMessage = async (messageIndex, content) => {
+  if (!conversationHistory.value[messageIndex]) return;
+  conversationHistory.value[messageIndex] = {
+    ...conversationHistory.value[messageIndex],
+    content,
+  };
+  await scrollToBottom();
+};
+
+const schedulePoll = (jobId, messageIndex, pollToken) => {
+  clearPollTimeout();
+  pollTimeoutId = window.setTimeout(() => {
+    void pollJob(jobId, messageIndex, pollToken);
+  }, POLL_INTERVAL_MS);
+};
+
+const pollJob = async (jobId, messageIndex, pollToken) => {
+  if (!jobId || pollToken !== activePollToken.value) return;
+
+  try {
+    const data = await requestJson(`/api/agent/${jobId}/`, {
+      method: 'GET',
+      auth: true,
+    });
+
+    if (pollToken !== activePollToken.value) return;
+
+    const status = String(data?.status ?? '').toLowerCase();
+    const answer = typeof data?.answer === 'string' ? data.answer : '';
+    const error = typeof data?.error === 'string' ? data.error : '';
+
+    currentJobId.value = jobId;
+    jobStatus.value = status;
+
+    if (status === 'completed') {
+      jobError.value = '';
+      await updateAssistantMessage(messageIndex, answer || 'No response returned.');
+      resetJobState();
+      return;
+    }
+
+    if (status === 'failed') {
+      const message = error || 'The agent request failed. Please try again.';
+      jobError.value = message;
+      await updateAssistantMessage(messageIndex, `Error: ${message}`);
+      resetJobState();
+      return;
+    }
+
+    await updateAssistantMessage(messageIndex, status === 'pending' ? QUEUED_LABEL : THINKING_LABEL);
+    schedulePoll(jobId, messageIndex, pollToken);
+  } catch (err) {
+    if (pollToken !== activePollToken.value) return;
+
+    const message = err.message || 'Failed to check agent status. Please try again.';
+    jobError.value = message;
+    await updateAssistantMessage(messageIndex, `Error: ${message}`);
+    resetJobState();
+  }
+};
+
 const sendMessage = async () => {
   const query = userInput.value.trim();
-  if (!query || isLoading.value) return;
+  if (!query || isSending.value) return;
 
-  errorMessage.value = '';
+  cancelActiveJob();
+  jobError.value = '';
   userInput.value = '';
   if (inputEl.value) inputEl.value.style.height = 'auto';
 
   const historyBeforeQuery = [...conversationHistory.value];
-  conversationHistory.value = [...historyBeforeQuery, { role: 'user', content: query }];
+  const nextHistory = [
+    ...historyBeforeQuery,
+    { role: 'user', content: query },
+    { role: 'assistant', content: QUEUED_LABEL },
+  ];
+  const assistantMessageIndex = nextHistory.length - 1;
+  conversationHistory.value = nextHistory;
   await scrollToBottom();
 
-  isLoading.value = true;
+  isSending.value = true;
+  jobStatus.value = 'pending';
+
+  const pollToken = activePollToken.value + 1;
+  activePollToken.value = pollToken;
 
   try {
     const data = await requestJson('/api/agent/', {
@@ -175,13 +267,49 @@ const sendMessage = async () => {
       body: { query, history: historyBeforeQuery },
       auth: true,
     });
-    conversationHistory.value = data.history;
-    await scrollToBottom();
+
+    if (pollToken !== activePollToken.value) return;
+
+    const jobId = data?.job_id;
+    const status = String(data?.status ?? '').toLowerCase();
+    const answer = typeof data?.answer === 'string' ? data.answer : '';
+    const error = typeof data?.error === 'string' ? data.error : '';
+
+    if (!jobId) {
+      throw new Error('The server did not return a job ID.');
+    }
+
+    currentJobId.value = jobId;
+    jobStatus.value = status || 'pending';
+    jobError.value = '';
+
+    if (status === 'completed') {
+      await updateAssistantMessage(assistantMessageIndex, answer || 'No response returned.');
+      resetJobState();
+      return;
+    }
+
+    if (status === 'failed') {
+      const message = error || 'The agent request failed. Please try again.';
+      jobError.value = message;
+      await updateAssistantMessage(assistantMessageIndex, `Error: ${message}`);
+      resetJobState();
+      return;
+    }
+
+    await updateAssistantMessage(
+      assistantMessageIndex,
+      status === 'running' ? THINKING_LABEL : QUEUED_LABEL,
+    );
+    schedulePoll(jobId, assistantMessageIndex, pollToken);
   } catch (err) {
-    conversationHistory.value = historyBeforeQuery;
-    errorMessage.value = err.message || 'Something went wrong. Please try again.';
+    if (pollToken !== activePollToken.value) return;
+
+    const message = err.message || 'Something went wrong. Please try again.';
+    jobError.value = message;
+    await updateAssistantMessage(assistantMessageIndex, `Error: ${message}`);
+    resetJobState();
   } finally {
-    isLoading.value = false;
     await nextTick();
     inputEl.value?.focus();
   }
@@ -189,15 +317,20 @@ const sendMessage = async () => {
 
 const useSuggestion = (text) => {
   userInput.value = text;
-  sendMessage();
+  void sendMessage();
 };
 
 const clearConversation = () => {
+  cancelActiveJob();
   conversationHistory.value = [];
-  errorMessage.value = '';
+  jobError.value = '';
   userInput.value = '';
   if (inputEl.value) inputEl.value.style.height = 'auto';
 };
+
+onUnmounted(() => {
+  cancelActiveJob();
+});
 </script>
 
 <style scoped>
@@ -335,7 +468,6 @@ const clearConversation = () => {
   white-space: pre-wrap;
 }
 
-/* markdown content resets */
 .agent-bubble--md :deep(p) { margin: 0 0 0.6em; }
 .agent-bubble--md :deep(p:last-child) { margin-bottom: 0; }
 .agent-bubble--md :deep(h1),
@@ -432,7 +564,6 @@ const clearConversation = () => {
   background: rgba(15, 23, 42, 0.4);
 }
 
-/* mobile: flip table to card list */
 @media (max-width: 640px) {
   .agent-bubble--md :deep(.md-table-wrap) {
     overflow-x: visible;
@@ -507,29 +638,6 @@ const clearConversation = () => {
   border: 1px solid rgba(148, 163, 184, 0.15);
   border-bottom-left-radius: 0.25rem;
   color: #cbd5e1;
-}
-
-.agent-bubble--loading {
-  display: flex;
-  gap: 0.4rem;
-  align-items: center;
-  padding: 0.8rem 1.2rem;
-}
-
-.agent-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #64748b;
-  animation: agent-dot-pulse 1.2s ease-in-out infinite;
-}
-
-.agent-dot:nth-child(2) { animation-delay: 0.2s; }
-.agent-dot:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes agent-dot-pulse {
-  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
-  40% { opacity: 1; transform: scale(1); }
 }
 
 .agent-error {
@@ -645,7 +753,9 @@ const clearConversation = () => {
 }
 
 .agent-suggestion-icon {
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   flex-shrink: 0;
 }
 
