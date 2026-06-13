@@ -1,97 +1,137 @@
 <template>
-  <section class="agent-page">
-    <div class="container agent-layout">
-      <div class="agent-card card">
-        <div class="agent-header">
-          <div class="agent-header-copy">
-            <span class="section-eyebrow">AI Assistant</span>
-            <h1 class="agent-title">Ask the AI Agent</h1>
-            <p class="agent-subtitle muted">
-              Ask anything about options strategies, stocks, or investment ideas.
-            </p>
-          </div>
-          <button
-            v-if="conversationHistory.length"
-            class="btn btn-muted agent-clear-btn"
-            type="button"
-            @click="clearConversation"
-          >
-            Clear
-          </button>
-        </div>
+  <section class="agent-page" :class="{ 'agent-page--hero': isHeroMode }">
 
-        <div class="agent-messages" ref="messagesEl">
-          <div v-if="!conversationHistory.length && !isSending" class="agent-empty">
-            <div class="agent-empty-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </div>
-            <p class="agent-empty-text">Start a conversation below</p>
-            <div class="agent-suggestions">
+    <!-- Ambient glow (hero only) -->
+    <div v-if="isHeroMode" class="agent-glow-bg" aria-hidden="true">
+      <div class="agent-glow agent-glow--1"></div>
+      <div class="agent-glow agent-glow--2"></div>
+      <div class="agent-glow agent-glow--3"></div>
+    </div>
+
+    <!-- Hero heading -->
+    <Transition name="hero-fade">
+      <div v-if="isHeroMode" class="agent-hero-content">
+        <span class="agent-hero-eyebrow">Beginner Friendly • Consistent Cash Flow</span>
+        <h1 class="agent-hero-title">Get consistent monthly income by selling Puts (The Wheel Strategy)</h1>
+        <p class="agent-hero-subtitle">Data-driven put-selling ideas on stocks you'd be comfortable owning</p>
+      </div>
+    </Transition>
+
+    <!-- Chat header + messages (active conversation) -->
+    <div v-if="!isHeroMode" class="container agent-chat-wrap">
+      <div class="agent-chat-header">
+        <div class="agent-header-copy">
+          <span class="section-eyebrow">AI Assistant</span>
+          <h1 class="agent-title">Ask the AI Agent</h1>
+          <p class="agent-subtitle muted">Ask anything about options strategies, stocks, or investment ideas.</p>
+        </div>
+        <button
+          v-if="conversationHistory.length"
+          class="btn btn-muted agent-clear-btn"
+          type="button"
+          @click="clearConversation"
+        >
+          Clear
+        </button>
+      </div>
+
+      <div class="agent-messages" ref="messagesEl">
+        <template v-for="(msg, idx) in conversationHistory" :key="idx">
+          <div
+            class="agent-message"
+            :class="msg.role === 'user' ? 'agent-message--user' : 'agent-message--assistant'"
+          >
+            <span class="agent-message-role">{{ msg.role === 'user' ? 'You' : 'AI' }}</span>
+            <div
+              v-if="msg.role === 'assistant'"
+              class="agent-bubble agent-bubble--md"
+              v-html="renderMarkdown(msg.content)"
+            ></div>
+            <div v-else class="agent-bubble">{{ msg.content }}</div>
+          </div>
+        </template>
+      </div>
+
+      <div v-if="jobError" class="agent-error" role="alert">{{ jobError }}</div>
+    </div>
+
+    <!-- Composer area -->
+    <div class="agent-composer-outer" :class="{ 'agent-composer-outer--hero': isHeroMode }">
+
+      <!-- Carousel suggestion (hero only) -->
+      <div v-if="isHeroMode" class="agent-suggestions">
+        <div class="agent-carousel">
+          <button class="agent-carousel-arrow" type="button" @click="prevSuggestion" aria-label="Previous suggestion">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+              <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+          </button>
+          <div class="agent-carousel-track">
+            <Transition :name="carouselTransition" mode="out-in">
               <button
-                v-for="suggestion in suggestions"
-                :key="suggestion.text"
+                :key="currentSuggestionIndex"
                 class="agent-suggestion-btn"
                 type="button"
-                @click="useSuggestion(suggestion.text)"
+                @click="useSuggestion(suggestions[currentSuggestionIndex].text)"
               >
-                <span class="agent-suggestion-icon">{{ suggestion.icon }}</span>
-                <span>{{ suggestion.text }}</span>
+                <span class="agent-suggestion-icon">{{ suggestions[currentSuggestionIndex].icon }}</span>
+                <span>{{ suggestions[currentSuggestionIndex].text }}</span>
               </button>
-            </div>
+            </Transition>
           </div>
-
-          <template v-for="(msg, idx) in conversationHistory" :key="idx">
-            <div
-              class="agent-message"
-              :class="msg.role === 'user' ? 'agent-message--user' : 'agent-message--assistant'"
-            >
-              <span class="agent-message-role">{{ msg.role === 'user' ? 'You' : 'AI' }}</span>
-              <div
-                v-if="msg.role === 'assistant'"
-                class="agent-bubble agent-bubble--md"
-                v-html="renderMarkdown(msg.content)"
-              ></div>
-              <div v-else class="agent-bubble">{{ msg.content }}</div>
-            </div>
-          </template>
+          <button class="agent-carousel-arrow" type="button" @click="nextSuggestion" aria-label="Next suggestion">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+          </button>
         </div>
-
-        <div v-if="jobError" class="agent-error" role="alert">
-          {{ jobError }}
-        </div>
-
-        <form class="agent-form" @submit.prevent="sendMessage">
-          <textarea
-            ref="inputEl"
-            v-model="userInput"
-            class="agent-input"
-            placeholder="Ask about options strategies, stocks, or investment ideas..."
-            rows="1"
-            :disabled="isSending"
-            @keydown.enter.exact.prevent="sendMessage"
-            @input="autoResize"
-          ></textarea>
+        <div class="agent-suggestion-dots">
           <button
-            class="btn btn-primary agent-send-btn"
+            v-for="(_, i) in suggestions"
+            :key="i"
+            class="agent-suggestion-dot"
+            :class="{ 'agent-suggestion-dot--active': i === currentSuggestionIndex }"
+            type="button"
+            @click="goToSuggestion(i)"
+            :aria-label="`Suggestion ${i + 1}`"
+          ></button>
+        </div>
+      </div>
+
+      <!-- Composer card -->
+      <form class="agent-composer" @submit.prevent="sendMessage">
+        <textarea
+          ref="inputEl"
+          v-model="userInput"
+          class="agent-input"
+          placeholder="Ask about options strategies, stocks, or investment ideas..."
+          rows="1"
+          :disabled="isSending"
+          @input="autoResize"
+        ></textarea>
+        <div class="agent-composer-toolbar">
+          <span v-if="isSending" class="agent-status-label">{{ sendButtonLabel }}</span>
+          <span v-else class="agent-composer-hint">Click ↑ to send</span>
+          <button
+            class="agent-send-btn"
             type="submit"
             :disabled="isSending || !userInput.trim()"
+            aria-label="Send"
           >
             <svg v-if="!isSending" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
               <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
             </svg>
             <span v-else class="agent-send-spinner" aria-hidden="true"></span>
-            <span class="agent-send-label">{{ isSending ? sendButtonLabel : 'Send' }}</span>
           </button>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
+
   </section>
 </template>
 
 <script setup>
-import { computed, nextTick, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { requestJson } from '../api/client';
@@ -142,7 +182,42 @@ const inputEl = ref(null);
 const activePollToken = ref(0);
 let pollTimeoutId = null;
 
+const isHeroMode = computed(() => !conversationHistory.value.length);
 const sendButtonLabel = computed(() => (jobStatus.value === 'pending' ? QUEUED_LABEL : THINKING_LABEL));
+
+const currentSuggestionIndex = ref(0);
+const carouselTransition = ref('carousel-next');
+let suggestionIntervalId = null;
+
+const resetSuggestionInterval = () => {
+  if (suggestionIntervalId !== null) clearInterval(suggestionIntervalId);
+  suggestionIntervalId = setInterval(() => {
+    carouselTransition.value = 'carousel-next';
+    currentSuggestionIndex.value = (currentSuggestionIndex.value + 1) % suggestions.length;
+  }, 3500);
+};
+
+const nextSuggestion = () => {
+  carouselTransition.value = 'carousel-next';
+  currentSuggestionIndex.value = (currentSuggestionIndex.value + 1) % suggestions.length;
+  resetSuggestionInterval();
+};
+
+const prevSuggestion = () => {
+  carouselTransition.value = 'carousel-prev';
+  currentSuggestionIndex.value = (currentSuggestionIndex.value - 1 + suggestions.length) % suggestions.length;
+  resetSuggestionInterval();
+};
+
+const goToSuggestion = (i) => {
+  carouselTransition.value = i > currentSuggestionIndex.value ? 'carousel-next' : 'carousel-prev';
+  currentSuggestionIndex.value = i;
+  resetSuggestionInterval();
+};
+
+onMounted(() => {
+  resetSuggestionInterval();
+});
 
 const scrollToBottom = async () => {
   await nextTick();
@@ -331,105 +406,176 @@ const clearConversation = () => {
 
 onUnmounted(() => {
   cancelActiveJob();
+  if (suggestionIntervalId !== null) clearInterval(suggestionIntervalId);
 });
 </script>
 
 <style scoped>
+/* ── Page shell ─────────────────────────────────────────────────────────── */
 .agent-page {
-  padding: 2rem 0 4rem;
-}
-
-.agent-layout {
+  position: relative;
   display: flex;
   flex-direction: column;
+  padding: 2rem 0 3rem;
+  overflow: hidden;
 }
 
-.agent-card {
+.agent-page--hero {
+  min-height: calc(100vh - 4rem);
+  justify-content: center;
+  align-items: center;
+  padding: 0 1rem 3rem;
+}
+
+/* ── Ambient glow ──────────────────────────────────────────────────────── */
+.agent-glow-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.agent-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+}
+
+.agent-glow--1 {
+  width: 55%;
+  height: 55%;
+  top: -8%;
+  left: 15%;
+  background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.11) 0%, transparent 70%);
+}
+
+.agent-glow--2 {
+  width: 45%;
+  height: 45%;
+  bottom: 5%;
+  right: 5%;
+  background: radial-gradient(ellipse at center, rgba(139, 92, 246, 0.09) 0%, transparent 70%);
+}
+
+.agent-glow--3 {
+  width: 35%;
+  height: 35%;
+  bottom: 0;
+  left: 0;
+  background: radial-gradient(ellipse at center, rgba(34, 211, 238, 0.07) 0%, transparent 70%);
+}
+
+/* ── Hero heading ──────────────────────────────────────────────────────── */
+.agent-hero-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding: 2rem;
-  max-height: calc(100vh - 10rem);
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+  max-width: 720px;
+  width: 100%;
+  z-index: 1;
 }
 
-.agent-header {
+.agent-hero-eyebrow {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 2rem;
+  padding: 0.3rem 0.9rem;
+}
+
+.agent-hero-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.5vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: #f8fafc;
+}
+
+.agent-hero-subtitle {
+  margin: 0;
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  color: #94a3b8;
+  max-width: 520px;
+  line-height: 1.6;
+}
+
+/* hero-fade transition */
+.hero-fade-enter-active,
+.hero-fade-leave-active {
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.hero-fade-enter-from,
+.hero-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* ── Chat layout (active conversation) ────────────────────────────────── */
+.agent-chat-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.agent-chat-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  padding-top: 0.5rem;
 }
 
 .agent-header-copy {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .agent-title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: #f8fafc;
 }
 
 .agent-subtitle {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
 .agent-clear-btn {
   flex-shrink: 0;
   font-size: 0.8rem;
-  padding: 0.45rem 0.9rem;
+  padding: 0.4rem 0.85rem;
 }
 
+/* ── Messages ──────────────────────────────────────────────────────────── */
 .agent-messages {
-  flex: 1;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  min-height: 280px;
-  max-height: 55vh;
+  min-height: 240px;
+  max-height: 52vh;
+  overflow-y: auto;
   padding-right: 0.25rem;
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
 }
 
-.agent-messages::-webkit-scrollbar {
-  width: 4px;
-}
-
+.agent-messages::-webkit-scrollbar { width: 4px; }
 .agent-messages::-webkit-scrollbar-thumb {
   background: rgba(148, 163, 184, 0.25);
   border-radius: 999px;
-}
-
-.agent-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  height: 100%;
-  min-height: 200px;
-  color: #64748b;
-}
-
-.agent-empty-icon {
-  width: 48px;
-  height: 48px;
-  color: #334155;
-}
-
-.agent-empty-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.agent-empty-text {
-  margin: 0;
-  font-size: 0.9rem;
 }
 
 .agent-message {
@@ -467,8 +613,20 @@ onUnmounted(() => {
 
 .agent-message--user .agent-bubble {
   white-space: pre-wrap;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(59, 130, 246, 0.15));
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  border-bottom-right-radius: 0.25rem;
+  color: #e2e8f0;
 }
 
+.agent-message--assistant .agent-bubble {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-bottom-left-radius: 0.25rem;
+  color: #cbd5e1;
+}
+
+/* ── Markdown styles ───────────────────────────────────────────────────── */
 .agent-bubble--md :deep(p) { margin: 0 0 0.6em; }
 .agent-bubble--md :deep(p:last-child) { margin-bottom: 0; }
 .agent-bubble--md :deep(h1),
@@ -529,7 +687,6 @@ onUnmounted(() => {
   border: 1px solid rgba(148, 163, 184, 0.15);
   -webkit-overflow-scrolling: touch;
 }
-
 .agent-bubble--md :deep(table) {
   border-collapse: collapse;
   width: 100%;
@@ -545,9 +702,7 @@ onUnmounted(() => {
   white-space: nowrap;
 }
 .agent-bubble--md :deep(th:last-child),
-.agent-bubble--md :deep(td:last-child) {
-  border-right: none;
-}
+.agent-bubble--md :deep(td:last-child) { border-right: none; }
 .agent-bubble--md :deep(th) {
   background: rgba(30, 41, 59, 0.9);
   color: #94a3b8;
@@ -558,11 +713,17 @@ onUnmounted(() => {
   position: sticky;
   top: 0;
 }
-.agent-bubble--md :deep(tbody tr:last-child td) {
-  border-bottom: none;
+.agent-bubble--md :deep(tbody tr:last-child td) { border-bottom: none; }
+.agent-bubble--md :deep(tr:nth-child(even) td) { background: rgba(15, 23, 42, 0.4); }
+.agent-bubble--md :deep(hr) {
+  border: none;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+  margin: 0.75em 0;
 }
-.agent-bubble--md :deep(tr:nth-child(even) td) {
-  background: rgba(15, 23, 42, 0.4);
+.agent-bubble--md :deep(a) {
+  color: #38bdf8;
+  text-decoration: underline;
+  text-decoration-color: rgba(56, 189, 248, 0.4);
 }
 
 @media (max-width: 640px) {
@@ -577,9 +738,7 @@ onUnmounted(() => {
     min-width: unset;
     width: 100%;
   }
-  .agent-bubble--md :deep(thead) {
-    display: none;
-  }
+  .agent-bubble--md :deep(thead) { display: none; }
   .agent-bubble--md :deep(tr) {
     display: block;
     background: rgba(15, 23, 42, 0.6);
@@ -588,9 +747,7 @@ onUnmounted(() => {
     margin-bottom: 0.6rem;
     padding: 0.25rem 0;
   }
-  .agent-bubble--md :deep(tr:nth-child(even) td) {
-    background: transparent;
-  }
+  .agent-bubble--md :deep(tr:nth-child(even) td) { background: transparent; }
   .agent-bubble--md :deep(td) {
     display: flex;
     justify-content: space-between;
@@ -602,9 +759,7 @@ onUnmounted(() => {
     white-space: normal;
     font-size: 0.83rem;
   }
-  .agent-bubble--md :deep(td:last-child) {
-    border-bottom: none;
-  }
+  .agent-bubble--md :deep(td:last-child) { border-bottom: none; }
   .agent-bubble--md :deep(td::before) {
     content: attr(data-label);
     font-size: 0.7rem;
@@ -616,31 +771,8 @@ onUnmounted(() => {
     min-width: 40%;
   }
 }
-.agent-bubble--md :deep(hr) {
-  border: none;
-  border-top: 1px solid rgba(148, 163, 184, 0.15);
-  margin: 0.75em 0;
-}
-.agent-bubble--md :deep(a) {
-  color: #38bdf8;
-  text-decoration: underline;
-  text-decoration-color: rgba(56, 189, 248, 0.4);
-}
 
-.agent-message--user .agent-bubble {
-  background: linear-gradient(135deg, rgba(34, 211, 238, 0.15), rgba(59, 130, 246, 0.15));
-  border: 1px solid rgba(34, 211, 238, 0.25);
-  border-bottom-right-radius: 0.25rem;
-  color: #e2e8f0;
-}
-
-.agent-message--assistant .agent-bubble {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  border-bottom-left-radius: 0.25rem;
-  color: #cbd5e1;
-}
-
+/* ── Error ─────────────────────────────────────────────────────────────── */
 .agent-error {
   padding: 0.75rem 1rem;
   background: rgba(239, 68, 68, 0.1);
@@ -650,38 +782,74 @@ onUnmounted(() => {
   font-size: 0.875rem;
 }
 
-.agent-form {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-end;
-  border-top: 1px solid rgba(148, 163, 184, 0.12);
-  padding-top: 1.25rem;
+/* ── Composer outer ────────────────────────────────────────────────────── */
+.agent-composer-outer {
+  width: 100%;
+  padding: 0 1rem;
+  z-index: 1;
 }
 
+.agent-composer-outer--hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* in chat mode: sits below .container content, constrain width */
+.agent-page:not(.agent-page--hero) .agent-composer-outer {
+  max-width: 80rem;
+  margin: 1rem auto 0;
+  padding: 0 max(1rem, calc((100% - 80rem) / 2 + 1rem));
+}
+
+/* ── Composer card ─────────────────────────────────────────────────────── */
+.agent-composer {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 1.25rem;
+  padding: 1rem 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.agent-composer:focus-within {
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(56, 189, 248, 0.2);
+}
+
+/* Hero mode: larger box */
+.agent-composer-outer--hero .agent-composer {
+  border-radius: 1.5rem;
+  padding: 1.25rem 1.25rem 1rem;
+  min-height: 7rem;
+}
+
+/* ── Input ─────────────────────────────────────────────────────────────── */
 .agent-input {
-  flex: 1;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 0.75rem;
-  color: #f8fafc;
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #0f172a;
   font: inherit;
-  font-size: 0.9rem;
-  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
   resize: none;
-  overflow: hidden;
-  min-height: 2.75rem;
-  max-height: 160px;
-  line-height: 1.5;
-  transition: border-color 0.2s;
+  overflow-y: auto;
+  min-height: 3rem;
+  max-height: 200px;
 }
 
 .agent-input::placeholder {
-  color: #475569;
-}
-
-.agent-input:focus {
-  outline: none;
-  border-color: rgba(34, 211, 238, 0.4);
+  color: #94a3b8;
 }
 
 .agent-input:disabled {
@@ -689,62 +857,131 @@ onUnmounted(() => {
   cursor: not-allowed;
 }
 
+/* ── Composer toolbar ──────────────────────────────────────────────────── */
+.agent-composer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.agent-status-label,
+.agent-composer-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.agent-status-label {
+  color: #64748b;
+  font-style: italic;
+}
+
+/* ── Send button ───────────────────────────────────────────────────────── */
 .agent-send-btn {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: #38bdf8;
+  border: none;
+  color: #0c1221;
+  cursor: pointer;
   flex-shrink: 0;
-  padding: 0.7rem 1.1rem;
-  font-size: 0.875rem;
+  transition: background 0.15s, transform 0.1s, opacity 0.15s;
+}
+
+.agent-send-btn:hover:not(:disabled) {
+  background: #7dd3fc;
+  transform: scale(1.06);
+}
+
+.agent-send-btn:active:not(:disabled) {
+  transform: scale(0.95);
 }
 
 .agent-send-btn:disabled {
-  opacity: 0.5;
+  background: #e2e8f0;
+  color: #94a3b8;
   cursor: not-allowed;
-  filter: none;
-}
-
-.agent-send-label {
-  font-size: 0.875rem;
 }
 
 .agent-send-spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #fff;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(12, 18, 33, 0.3);
+  border-top-color: #0c1221;
   border-radius: 50%;
   animation: agent-spin 0.6s linear infinite;
-  flex-shrink: 0;
 }
 
 @keyframes agent-spin {
   to { transform: rotate(360deg); }
 }
 
+/* ── Carousel suggestions ──────────────────────────────────────────────── */
 .agent-suggestions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.agent-carousel {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  max-width: 560px;
+}
+
+.agent-carousel-track {
+  flex: 1;
+  position: relative;
+  display: flex;
   justify-content: center;
-  max-width: 520px;
-  margin-top: 0.5rem;
+  align-items: center;
+  min-height: 2.4rem;
+  overflow: hidden;
+}
+
+.agent-carousel-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  color: #64748b;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  padding: 0;
+}
+
+.agent-carousel-arrow:hover {
+  border-color: rgba(34, 211, 238, 0.35);
+  color: #e2e8f0;
+  background: rgba(34, 211, 238, 0.06);
 }
 
 .agent-suggestion-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 2rem;
   color: #94a3b8;
   font: inherit;
-  font-size: 0.8rem;
-  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+  padding: 0.5rem 1.1rem;
   cursor: pointer;
+  white-space: nowrap;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
-  text-align: left;
 }
 
 .agent-suggestion-btn:hover {
@@ -754,27 +991,66 @@ onUnmounted(() => {
 }
 
 .agent-suggestion-icon {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   flex-shrink: 0;
+  color: #38bdf8;
 }
 
+/* directional slide transitions */
+.carousel-next-enter-active,
+.carousel-next-leave-active,
+.carousel-prev-enter-active,
+.carousel-prev-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  position: absolute;
+}
+
+.carousel-next-enter-from { opacity: 0; transform: translateX(28px); }
+.carousel-next-leave-to   { opacity: 0; transform: translateX(-28px); }
+.carousel-prev-enter-from { opacity: 0; transform: translateX(-28px); }
+.carousel-prev-leave-to   { opacity: 0; transform: translateX(28px); }
+
+/* dots */
+.agent-suggestion-dots {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.agent-suggestion-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.25s, width 0.25s, transform 0.25s;
+}
+
+.agent-suggestion-dot--active {
+  background: #38bdf8;
+  width: 18px;
+}
+
+.agent-suggestion-dot:hover:not(.agent-suggestion-dot--active) {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
-  .agent-card {
-    padding: 1.25rem;
+  .agent-page--hero {
+    padding: 0 0.75rem 2rem;
   }
 
   .agent-message {
     max-width: 92%;
   }
 
-  .agent-send-label {
+  .agent-composer-hint {
     display: none;
-  }
-
-  .agent-send-btn {
-    padding: 0.7rem;
   }
 }
 </style>
