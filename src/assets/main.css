@@ -2792,14 +2792,23 @@ tbody tr:hover {
   }
 
   .user-chip {
+    display: inline-block;
     min-height: 3rem;
     padding-top: 0.55rem;
     padding-bottom: 0.55rem;
     white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .user-chip--button {
     max-width: 100%;
+  }
+
+  .kpi-tag {
+    display: inline-block;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .card-header.split {
