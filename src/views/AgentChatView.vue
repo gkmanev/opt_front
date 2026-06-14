@@ -75,7 +75,7 @@
                 @click="useSuggestion(suggestions[currentSuggestionIndex].text)"
               >
                 <span class="agent-suggestion-icon">{{ suggestions[currentSuggestionIndex].icon }}</span>
-                <span>{{ suggestions[currentSuggestionIndex].text }}</span>
+                <span class="agent-suggestion-label">{{ suggestions[currentSuggestionIndex].text }}</span>
               </button>
             </Transition>
           </div>
@@ -933,16 +933,17 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.65rem;
   width: 100%;
-  max-width: 560px;
+  max-width: 760px;
 }
 
 .agent-carousel-track {
   flex: 1;
+  min-width: 0;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 2.4rem;
+  min-height: 3rem;
   overflow: hidden;
 }
 
@@ -971,6 +972,7 @@ onUnmounted(() => {
 .agent-suggestion-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(148, 163, 184, 0.18);
@@ -980,7 +982,12 @@ onUnmounted(() => {
   font-size: 0.85rem;
   padding: 0.5rem 1.1rem;
   cursor: pointer;
-  white-space: nowrap;
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
@@ -996,6 +1003,10 @@ onUnmounted(() => {
   letter-spacing: 0.04em;
   flex-shrink: 0;
   color: #38bdf8;
+}
+
+.agent-suggestion-label {
+  min-width: 0;
 }
 
 /* directional slide transitions */
