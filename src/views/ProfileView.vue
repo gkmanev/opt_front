@@ -4,10 +4,12 @@
       <section class="profile-hero">
         <div class="profile-avatar">{{ initials }}</div>
         <div class="profile-hero-copy">
-          <p class="profile-eyebrow">Profile</p>
-          <h1>{{ displayName }}</h1>
+          <p class="profile-eyebrow">{{ mode === 'settings' ? 'Settings' : 'Profile' }}</p>
+          <h1>{{ mode === 'settings' ? 'Account settings' : displayName }}</h1>
           <p class="profile-subtitle">
-            Review your account details and return to the dashboard when you're ready to keep scanning ideas.
+            {{ mode === 'settings'
+              ? 'Manage your identity, subscription, and session preferences from one place.'
+              : 'Review your account details and return to the dashboard when you are ready to keep scanning ideas.' }}
           </p>
         </div>
       </section>
@@ -105,6 +107,10 @@ const props = defineProps({
   displayName: {
     type: String,
     default: 'Signed in',
+  },
+  mode: {
+    type: String,
+    default: 'profile',
   },
   isPremium: {
     type: Boolean,

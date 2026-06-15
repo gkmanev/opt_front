@@ -57,6 +57,17 @@
 
     <!-- Composer area -->
     <div class="agent-composer-outer" :class="{ 'agent-composer-outer--hero': isHeroMode }">
+      <div class="agent-prompt-chips" :class="{ 'agent-prompt-chips--hero': isHeroMode }">
+        <button
+          v-for="prompt in quickPromptChips"
+          :key="prompt"
+          class="agent-prompt-chip"
+          type="button"
+          @click="useSuggestion(prompt)"
+        >
+          {{ prompt }}
+        </button>
+      </div>
 
       <!-- Carousel suggestion (hero only) -->
       <div v-if="isHeroMode" class="agent-suggestions">
@@ -104,16 +115,17 @@
           ref="inputEl"
           v-model="userInput"
           class="agent-input"
-          placeholder="Ask about options strategies, stocks, or investment ideas..."
+          placeholder="Ask the AI to screen puts, build an income plan, or explain the wheel strategy..."
           rows="1"
           :disabled="isSending"
           @input="autoResize"
         ></textarea>
         <div class="agent-composer-toolbar">
           <span v-if="isSending" class="agent-status-label">{{ sendButtonLabel }}</span>
-          <span v-else class="agent-composer-hint">Click ↑ to send</span>
+          <span v-else class="agent-composer-hint">Try a prompt or type your own question</span>
           <button
             class="agent-send-btn"
+            :class="{ 'agent-send-btn--ready': userInput.trim() && !isSending }"
             type="submit"
             :disabled="isSending || !userInput.trim()"
             aria-label="Send"
@@ -121,6 +133,7 @@
             <svg v-if="!isSending" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
               <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
             </svg>
+            <span v-if="!isSending" class="agent-send-btn-label">Send</span>
             <span v-else class="agent-send-spinner" aria-hidden="true"></span>
           </button>
         </div>
@@ -161,14 +174,17 @@ const renderMarkdown = (text) => {
   return el.innerHTML;
 };
 
+const quickPromptChips = [
+  'Show me put ideas for TSLA',
+  'Build a $10k income plan',
+  'Explain the wheel strategy',
+];
+
 const suggestions = [
-  { icon: 'PUT', text: 'Find the best cash-secured put opportunities under $200.' },
-  { icon: '10K', text: 'I have $10,000. Which puts can I sell using a wheel strategy?' },
-  { icon: '2%', text: 'Find puts with 2% monthly return on fundamentally strong companies' },
-  { icon: '25K', text: 'Build a monthly income options plan with $25,000 capital.' },
-  { icon: 'CC', text: 'Show conservative covered calls for stocks I already own.' },
-  { icon: 'BPS', text: 'Suggest bull put credit spreads with high premium and limited risk.' },
-  { icon: 'PLTR', text: 'Analyze PLTR fundamentals and options suitability.' },
+  { icon: 'TSLA', text: 'Show me put ideas for TSLA with conservative strike selection.' },
+  { icon: '10K', text: 'Build a $10,000 income-focused wheel plan I can start this month.' },
+  { icon: 'CAP', text: 'Capital: $25,000. Build an options income plan with position sizing.' },
+  { icon: 'WHEEL', text: 'Explain the wheel strategy step by step for a beginner.' },
 ];
 
 const userInput = ref('');
@@ -422,9 +438,9 @@ onUnmounted(() => {
 
 .agent-page--hero {
   min-height: calc(100vh - 4rem);
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  padding: 0 1rem 3rem;
+  padding: 2.25rem 1rem 3rem;
 }
 
 /* ── Ambient glow ──────────────────────────────────────────────────────── */
@@ -472,7 +488,7 @@ onUnmounted(() => {
   align-items: center;
   text-align: center;
   gap: 1rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   max-width: 720px;
   width: 100%;
   z-index: 1;
@@ -793,7 +809,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.9rem;
   max-width: 720px;
   margin: 0 auto;
   padding: 0;
@@ -804,6 +820,40 @@ onUnmounted(() => {
   max-width: 80rem;
   margin: 1rem auto 0;
   padding: 0 max(1rem, calc((100% - 80rem) / 2 + 1rem));
+}
+
+.agent-prompt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.agent-prompt-chips--hero {
+  justify-content: center;
+}
+
+.agent-prompt-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.7rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background: rgba(255, 255, 255, 0.96);
+  color: #0f172a;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.agent-prompt-chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
 }
 
 /* ── Composer card ─────────────────────────────────────────────────────── */
@@ -880,19 +930,27 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  background: #38bdf8;
+  gap: 0.4rem;
+  min-width: 5.1rem;
+  height: 2.5rem;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  background: #cbd5e1;
   border: none;
-  color: #0c1221;
+  color: #64748b;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.15s, transform 0.1s, opacity 0.15s;
+  transition: background 0.15s, transform 0.1s, opacity 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.agent-send-btn--ready {
+  background: linear-gradient(135deg, #22d3ee, #3b82f6);
+  color: #04111d;
+  box-shadow: 0 10px 24px rgba(56, 189, 248, 0.28);
 }
 
 .agent-send-btn:hover:not(:disabled) {
-  background: #7dd3fc;
+  background: linear-gradient(135deg, #67e8f9, #60a5fa);
   transform: scale(1.06);
 }
 
@@ -904,6 +962,7 @@ onUnmounted(() => {
   background: #e2e8f0;
   color: #94a3b8;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .agent-send-spinner {
@@ -913,6 +972,11 @@ onUnmounted(() => {
   border-top-color: #0c1221;
   border-radius: 50%;
   animation: agent-spin 0.6s linear infinite;
+}
+
+.agent-send-btn-label {
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 @keyframes agent-spin {
@@ -1031,37 +1095,63 @@ onUnmounted(() => {
 }
 
 .agent-suggestion-dot {
-  width: 6px;
-  height: 6px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.25);
+  background: transparent;
   border: none;
   padding: 0;
   cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.agent-suggestion-dot::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.32);
   transition: background 0.25s, width 0.25s, transform 0.25s;
 }
 
 .agent-suggestion-dot--active {
-  background: #38bdf8;
-  width: 18px;
+  transform: scale(1.02);
 }
 
-.agent-suggestion-dot:hover:not(.agent-suggestion-dot--active) {
-  background: rgba(148, 163, 184, 0.5);
+.agent-suggestion-dot--active::before {
+  background: #38bdf8;
+  width: 20px;
+}
+
+.agent-suggestion-dot:hover:not(.agent-suggestion-dot--active)::before {
+  background: rgba(148, 163, 184, 0.6);
 }
 
 /* ── Responsive ────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .agent-page--hero {
-    padding: 0 0.75rem 2rem;
+    padding: 1.4rem 0.75rem 2rem;
   }
 
   .agent-message {
     max-width: 92%;
   }
 
+  .agent-composer-toolbar {
+    align-items: flex-end;
+    gap: 0.75rem;
+  }
+
   .agent-composer-hint {
-    display: none;
+    display: block;
+    line-height: 1.45;
+  }
+
+  .agent-prompt-chip {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>

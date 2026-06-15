@@ -90,23 +90,55 @@
         </div>
         <div class="header-actions">
           <template v-if="isAuthenticated">
-            <button
-              v-if="isFreeUser"
-              class="btn btn-primary header-upgrade-btn"
-              type="button"
-              @click="openPricingModal"
-            >
-              Upgrade
-            </button>
-            <button
-              class="user-chip user-chip--button"
-              :class="{ 'is-active': currentRoute === '/profile' }"
-              type="button"
-              @click="goToProfile"
-            >
-              {{ authDisplayName }}
-            </button>
-            <button class="btn btn-ghost" type="button" @click="handleLogout">Logout</button>
+            <div ref="accountMenuRef" class="account-menu">
+              <button
+                class="account-menu-trigger"
+                :class="{ 'is-active': isAccountMenuOpen || currentRoute === '/profile' || currentRoute === '/settings' }"
+                type="button"
+                aria-haspopup="menu"
+                :aria-expanded="isAccountMenuOpen ? 'true' : 'false'"
+                aria-label="Open account menu"
+                @click="toggleAccountMenu"
+              >
+                <span class="account-menu-avatar">{{ authInitials }}</span>
+                <svg class="account-menu-chevron" viewBox="0 0 20 20" aria-hidden="true">
+                  <path
+                    d="M5.5 7.5 10 12l4.5-4.5"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.7"
+                  />
+                </svg>
+              </button>
+
+              <transition name="account-menu-fade">
+                <div v-if="isAccountMenuOpen" class="account-menu-popover" role="menu">
+                  <div class="account-menu-summary">
+                    <p class="account-menu-name">{{ authDisplayName }}</p>
+                    <p class="account-menu-meta">{{ accountMenuMeta }}</p>
+                  </div>
+                  <button class="account-menu-item" type="button" @click="goToProfileFromMenu">Profile</button>
+                  <button class="account-menu-item" type="button" @click="goToSettingsFromMenu">Settings</button>
+                  <button
+                    v-if="isFreeUser"
+                    class="account-menu-item account-menu-item--accent"
+                    type="button"
+                    @click="openPricingFromMenu"
+                  >
+                    Upgrade to Premium
+                  </button>
+                  <button
+                    class="account-menu-item account-menu-item--danger"
+                    type="button"
+                    @click="handleLogout"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </transition>
+            </div>
           </template>
           <template v-else>
             <a class="btn btn-ghost header-guest-action" href="/login" @click="handleLoginLinkClick">Login</a>
@@ -117,11 +149,12 @@
     </header>
 
     <ProfileView
-      v-if="currentRoute === '/profile'"
+      v-if="currentRoute === '/profile' || currentRoute === '/settings'"
       :user="auth.state.user"
       :display-name="authDisplayName"
       :is-premium="isPremium"
       :premium-subscription="auth.state.premiumSubscription"
+      :mode="currentRoute === '/settings' ? 'settings' : 'profile'"
       @back-dashboard="goToDashboard"
       @logout="handleLogout"
       @open-pricing="openPricingModal"
@@ -601,7 +634,7 @@
     </section>
 
 
-    <section class="container">
+    <section id="screener-section" ref="screenerSection" class="container">
       <div class="card">
         <div class="card-header">
           <h2>The Best Put-Selling Opportunities Now</h2>
@@ -1145,6 +1178,55 @@
       </p>
     </footer>
 
+    <nav v-if="showMobileTabBar" class="mobile-tab-bar" aria-label="Primary">
+      <button
+        class="mobile-tab-bar__item"
+        :class="{ 'is-active': activeMobileTab === 'dashboard' }"
+        type="button"
+        @click="handleDashboardTab"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
+        </svg>
+        <span>Dashboard</span>
+      </button>
+      <button
+        class="mobile-tab-bar__item"
+        :class="{ 'is-active': activeMobileTab === 'screener' }"
+        type="button"
+        @click="handleScreenerTab"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 6h16M7 12h10M10 18h4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
+        </svg>
+        <span>Screener</span>
+      </button>
+      <button
+        class="mobile-tab-bar__item"
+        :class="{ 'is-active': activeMobileTab === 'portfolio' }"
+        type="button"
+        @click="handlePortfolioTab"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h13A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.8" />
+          <path d="M9 7V5.75A1.75 1.75 0 0 1 10.75 4h2.5A1.75 1.75 0 0 1 15 5.75V7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
+          <path d="M4 12h16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" />
+        </svg>
+        <span>Portfolio</span>
+      </button>
+      <button
+        class="mobile-tab-bar__item"
+        :class="{ 'is-active': activeMobileTab === 'chat' }"
+        type="button"
+        @click="handleChatTab"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6.5 18.5 4 20v-4.5A7.5 7.5 0 1 1 11.5 23a7.45 7.45 0 0 1-5-1.9z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
+        </svg>
+        <span>Chat</span>
+      </button>
+    </nav>
+
     <WheelStrategyGuide
       :open="isWheelGuideOpen"
       :candidates="dailyBriefRows"
@@ -1272,6 +1354,10 @@ const auth = useAuthStore();
 const mobileNavBreakpoint = 768;
 const routePath = ref(window.location.pathname || '/');
 const isMobileMenuOpen = ref(false);
+const isAccountMenuOpen = ref(false);
+const accountMenuRef = ref(null);
+const screenerSection = ref(null);
+const isScreenerTabSelected = ref(false);
 const legacyRouteRedirects = new Map([
   ['/daily-brief', '/'],
 ]);
@@ -1291,6 +1377,7 @@ const knownRoutes = new Set([
   '/methodology',
   '/profile',
   '/payment-success',
+  '/settings',
   '/sign-up',
   '/verify-email',
   '/wheel-strategy',
@@ -1353,6 +1440,16 @@ const isAuthenticated = auth.isAuthenticated;
 const isPremium = auth.isPremium;
 const isFreeUser = computed(() => isAuthenticated.value && !isPremium.value);
 const authDisplayName = auth.displayName;
+const authInitials = computed(() => {
+  const seed = String(authDisplayName.value || auth.state.user?.username || auth.state.user?.email || 'PutPulse').trim();
+  return seed
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('') || 'PP';
+});
+const accountMenuMeta = computed(() => auth.state.user?.email || auth.state.user?.username || 'Signed in account');
 const isPricingModalOpen = ref(false);
 const openPricingModal = () => { isPricingModalOpen.value = true; };
 const configuredSiteUrl = String(import.meta.env.VITE_SITE_URL ?? '').trim().replace(/\/+$/, '');
@@ -1385,6 +1482,13 @@ const dailyBriefSubscribeDisabled = computed(() =>
     && (auth.dailyBriefSubscriptionStatus.value === 'active'
       || auth.dailyBriefSubscriptionStatus.value === 'pending_verification')),
 );
+const showMobileTabBar = computed(() => !authRoutes.has(currentRoute.value));
+const activeMobileTab = computed(() => {
+  if (currentRoute.value === '/agent') return 'chat';
+  if (currentRoute.value === '/profile' || currentRoute.value === '/settings') return 'portfolio';
+  if ((currentRoute.value === '/' || currentRoute.value === '/dashboard') && isScreenerTabSelected.value) return 'screener';
+  return 'dashboard';
+});
 
 const clearDailyBriefAuthIntent = () => {
   dailyBriefAuthIntent.value = false;
@@ -1399,8 +1503,14 @@ const resetDailyBriefCtaFeedback = () => {
   setDailyBriefCtaFeedback('', 'neutral');
 };
 
+const closeAccountMenu = () => {
+  isAccountMenuOpen.value = false;
+};
+
 const goHome = () => {
   isMobileMenuOpen.value = false;
+  closeAccountMenu();
+  isScreenerTabSelected.value = false;
   clearDailyBriefAuthIntent();
   resetDailyBriefCtaFeedback();
   currentPage.value = 'home';
@@ -1408,26 +1518,49 @@ const goHome = () => {
 };
 const goToDashboard = ({ preserveDailyBriefIntent = false } = {}) => {
   isMobileMenuOpen.value = false;
+  closeAccountMenu();
+  isScreenerTabSelected.value = false;
   if (!preserveDailyBriefIntent) clearDailyBriefAuthIntent();
   currentPage.value = 'home';
   navigateTo('/dashboard', { replace: currentRoute.value !== '/dashboard' });
 };
 const goToLogin = ({ preserveDailyBriefIntent = false } = {}) => {
   isMobileMenuOpen.value = false;
+  closeAccountMenu();
   if (!preserveDailyBriefIntent) clearDailyBriefAuthIntent();
   if (!preserveDailyBriefIntent) resetDailyBriefCtaFeedback();
   navigateTo('/login');
 };
 const goToProfile = () => {
   isMobileMenuOpen.value = false;
+  closeAccountMenu();
+  isScreenerTabSelected.value = false;
   clearDailyBriefAuthIntent();
   navigateTo('/profile');
 };
+const goToSettings = () => {
+  isMobileMenuOpen.value = false;
+  closeAccountMenu();
+  isScreenerTabSelected.value = false;
+  clearDailyBriefAuthIntent();
+  navigateTo('/settings');
+};
 const goToSignUp = ({ preserveDailyBriefIntent = false } = {}) => {
   isMobileMenuOpen.value = false;
+  closeAccountMenu();
   if (!preserveDailyBriefIntent) clearDailyBriefAuthIntent();
   if (!preserveDailyBriefIntent) resetDailyBriefCtaFeedback();
   navigateTo('/sign-up');
+};
+const openPricingFromMenu = () => {
+  closeAccountMenu();
+  openPricingModal();
+};
+const goToProfileFromMenu = () => {
+  goToProfile();
+};
+const goToSettingsFromMenu = () => {
+  goToSettings();
 };
 const completeDailyBriefIntent = async () => {
   dailyBriefCtaPending.value = true;
@@ -1648,6 +1781,15 @@ const seoConfig = computed(() => {
       description: 'Verify your email address to activate your PutPulse account.',
       robots: 'noindex,follow',
       canonicalPath: '/verify-email',
+    };
+  }
+
+  if (currentRoute.value === '/settings') {
+    return {
+      title: 'Settings | PutPulse',
+      description: 'Manage your PutPulse account settings, subscription, and session preferences.',
+      robots: 'noindex,follow',
+      canonicalPath: '/settings',
     };
   }
 
@@ -2676,6 +2818,8 @@ const handleAuthenticated = async () => {
 
 const handleLogout = async () => {
   isMobileMenuOpen.value = false;
+  closeAccountMenu();
+  isScreenerTabSelected.value = false;
   await auth.logout();
   clearDailyBriefAuthIntent();
   resetDailyBriefCtaFeedback();
@@ -2696,15 +2840,74 @@ const handleNavigationLink = (event, navigate) => {
   if (!shouldHandleClientNavigation(event)) return;
   event.preventDefault();
   isMobileMenuOpen.value = false;
+  closeAccountMenu();
   navigate();
 };
 
 const toggleMobileMenu = () => {
+  closeAccountMenu();
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
+};
+
+const toggleAccountMenu = () => {
+  isMobileMenuOpen.value = false;
+  isAccountMenuOpen.value = !isAccountMenuOpen.value;
 };
 
 const syncMobileMenu = () => {
   if (window.innerWidth > mobileNavBreakpoint) {
+    isMobileMenuOpen.value = false;
+  }
+};
+
+const scrollToScreener = ({ behavior = 'smooth' } = {}) => {
+  screenerSection.value?.scrollIntoView({ behavior, block: 'start' });
+};
+
+const handleDashboardTab = () => {
+  goToDashboard();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const handleScreenerTab = async () => {
+  closeAccountMenu();
+  isMobileMenuOpen.value = false;
+  isScreenerTabSelected.value = true;
+
+  if (currentRoute.value !== '/' && currentRoute.value !== '/dashboard') {
+    currentPage.value = 'home';
+    navigateTo('/dashboard');
+    await nextTick();
+    window.setTimeout(() => scrollToScreener(), 40);
+    return;
+  }
+
+  scrollToScreener();
+};
+
+const handlePortfolioTab = () => {
+  if (!isAuthenticated.value) {
+    goToSignUp();
+    return;
+  }
+  goToProfile();
+};
+
+const handleChatTab = () => {
+  closeAccountMenu();
+  isScreenerTabSelected.value = false;
+  navigatePublicPath('/agent');
+};
+
+const handleDocumentPointerDown = (event) => {
+  if (!isAccountMenuOpen.value) return;
+  if (accountMenuRef.value?.contains(event.target)) return;
+  closeAccountMenu();
+};
+
+const handleDocumentKeydown = (event) => {
+  if (event.key === 'Escape') {
+    closeAccountMenu();
     isMobileMenuOpen.value = false;
   }
 };
@@ -2838,6 +3041,8 @@ const applySeoMetadata = () => {
 onMounted(async () => {
   window.addEventListener('popstate', syncRoute);
   window.addEventListener('resize', syncMobileMenu);
+  document.addEventListener('pointerdown', handleDocumentPointerDown);
+  document.addEventListener('keydown', handleDocumentKeydown);
   syncMobileMenu();
   syncRoute();
   await auth.initialize();
@@ -2848,6 +3053,8 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('popstate', syncRoute);
   window.removeEventListener('resize', syncMobileMenu);
+  document.removeEventListener('pointerdown', handleDocumentPointerDown);
+  document.removeEventListener('keydown', handleDocumentKeydown);
   document.body.style.overflow = '';
 });
 
@@ -2871,7 +3078,7 @@ watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authRe
     return;
   }
 
-  if (!signedIn && route === '/profile') {
+  if (!signedIn && (route === '/profile' || route === '/settings')) {
     navigateTo('/login', { replace: true });
   }
 }, { immediate: true });
@@ -2879,6 +3086,13 @@ watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authRe
 watch([currentRoute, currentPage], () => {
   applySeoMetadata();
 }, { immediate: true });
+
+watch(currentRoute, (route) => {
+  closeAccountMenu();
+  if (route !== '/' && route !== '/dashboard') {
+    isScreenerTabSelected.value = false;
+  }
+});
 
 const clampValue = (value, min, max) => Math.min(Math.max(value, min), max);
 const clampSteppedValue = (value, min, max, step) => {
