@@ -2261,10 +2261,6 @@ tbody tr:hover {
   color: #7f95aa;
 }
 
-.mobile-tab-bar {
-  display: none;
-}
-
 .ticker-panel-backdrop {
   position: fixed;
   inset: 0;
@@ -3015,55 +3011,6 @@ tbody tr:hover {
     align-items: flex-start;
   }
 
-  .mobile-tab-bar {
-    position: fixed;
-    left: 0.75rem;
-    right: 0.75rem;
-    bottom: calc(0.75rem + env(safe-area-inset-bottom));
-    z-index: 25;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.45rem;
-    padding: 0.5rem;
-    border: 1px solid rgba(148, 163, 184, 0.16);
-    border-radius: 1.2rem;
-    background: rgba(2, 6, 23, 0.94);
-    box-shadow: 0 20px 44px rgba(2, 6, 23, 0.42);
-    backdrop-filter: blur(18px);
-  }
-
-  .mobile-tab-bar__item {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.28rem;
-    min-height: 3.5rem;
-    padding: 0.45rem 0.2rem;
-    border: none;
-    border-radius: 0.95rem;
-    background: transparent;
-    color: #64748b;
-    font: inherit;
-    font-size: 0.72rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
-  }
-
-  .mobile-tab-bar__item svg {
-    width: 1.2rem;
-    height: 1.2rem;
-  }
-
-  .mobile-tab-bar__item.is-active {
-    background: linear-gradient(145deg, rgba(34, 211, 238, 0.16), rgba(59, 130, 246, 0.14));
-    color: #f8fafc;
-  }
-
-  .mobile-tab-bar__item:active {
-    transform: translateY(1px);
-  }
 }
 
 @media (max-width: 540px) {

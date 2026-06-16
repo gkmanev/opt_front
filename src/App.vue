@@ -21,7 +21,7 @@
   <div v-else class="page">
     <header class="site-header">
       <div class="container header-inner">
-        <a class="brand brand-button" href="/" @click="handleHomeLinkClick">
+        <a class="brand brand-button" :href="brandHomePath" @click="handleBrandLinkClick">
           <span class="status-dot"></span>
           <div>
             <span class="brand-name">PutPulse</span>
@@ -48,30 +48,6 @@
           <nav class="header-nav" aria-label="Strategy pages">
             <a
               class="header-nav-link"
-              :class="{ 'is-active': currentRoute === '/cash-secured-puts' }"
-              href="/cash-secured-puts"
-              @click="handleRouteLinkClick($event, '/cash-secured-puts')"
-            >
-              Cash-Secured Puts
-            </a>
-            <a
-              class="header-nav-link"
-              :class="{ 'is-active': currentRoute === '/covered-calls' }"
-              href="/covered-calls"
-              @click="handleRouteLinkClick($event, '/covered-calls')"
-            >
-              Covered Calls
-            </a>
-            <a
-              class="header-nav-link"
-              :class="{ 'is-active': currentRoute === '/wheel-strategy' }"
-              href="/wheel-strategy"
-              @click="handleRouteLinkClick($event, '/wheel-strategy')"
-            >
-              Wheel Strategy
-            </a>
-            <a
-              class="header-nav-link"
               :class="{ 'is-active': currentRoute === '/pricing' }"
               href="/pricing"
               @click="handleRouteLinkClick($event, '/pricing')"
@@ -80,7 +56,7 @@
             </a>
             <a
               class="header-nav-link"
-              :class="{ 'is-active': currentRoute === '/agent' }"
+              :class="{ 'is-active': currentRoute === '/' || currentRoute === '/agent' }"
               href="/agent"
               @click="handleRouteLinkClick($event, '/agent')"
             >
@@ -214,7 +190,7 @@
     />
 
     <AgentChatView
-      v-else-if="currentRoute === '/agent'"
+      v-else-if="currentRoute === '/' || currentRoute === '/agent'"
     />
 
     <WheelStrategyView
@@ -223,7 +199,7 @@
       @navigate-route="handleRouteLinkClick"
     />
 
-    <template v-else-if="currentPage === 'home'">
+    <template v-else-if="currentRoute === '/dashboard' && currentPage === 'home'">
     <section class="container hero">
       <div class="hero-grid">
         <div class="hero-copy">
@@ -634,7 +610,7 @@
     </section>
 
 
-    <section id="screener-section" ref="screenerSection" class="container">
+    <section id="screener-section" class="container">
       <div class="card">
         <div class="card-header">
           <h2>The Best Put-Selling Opportunities Now</h2>
@@ -1158,11 +1134,8 @@
       <div class="site-footer-links">
         <a class="site-footer-link" href="/" @click="handleRouteLinkClick($event, '/')">Home</a>
         <a class="site-footer-link" href="/about" @click="handleRouteLinkClick($event, '/about')">About</a>
-        <a class="site-footer-link" href="/cash-secured-puts" @click="handleRouteLinkClick($event, '/cash-secured-puts')">Cash-Secured Puts</a>
         <a class="site-footer-link" href="/contact" @click="handleRouteLinkClick($event, '/contact')">Contact</a>
-        <a class="site-footer-link" href="/covered-calls" @click="handleRouteLinkClick($event, '/covered-calls')">Covered Calls</a>
         <a class="site-footer-link" href="/methodology" @click="handleRouteLinkClick($event, '/methodology')">Methodology</a>
-        <a class="site-footer-link" href="/wheel-strategy" @click="handleRouteLinkClick($event, '/wheel-strategy')">Wheel Strategy</a>
         <a class="site-footer-link" href="/pricing" @click="handleRouteLinkClick($event, '/pricing')">Pricing</a>
         <a class="site-footer-link" href="/terms" @click="handleRouteLinkClick($event, '/terms')">Terms of Service</a>
         <a class="site-footer-link" href="/privacy" @click="handleRouteLinkClick($event, '/privacy')">Privacy Policy</a>
@@ -1177,55 +1150,6 @@
         decisions.
       </p>
     </footer>
-
-    <nav v-if="showMobileTabBar" class="mobile-tab-bar" aria-label="Primary">
-      <button
-        class="mobile-tab-bar__item"
-        :class="{ 'is-active': activeMobileTab === 'dashboard' }"
-        type="button"
-        @click="handleDashboardTab"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 11.5 12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
-        </svg>
-        <span>Dashboard</span>
-      </button>
-      <button
-        class="mobile-tab-bar__item"
-        :class="{ 'is-active': activeMobileTab === 'screener' }"
-        type="button"
-        @click="handleScreenerTab"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 6h16M7 12h10M10 18h4" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
-        </svg>
-        <span>Screener</span>
-      </button>
-      <button
-        class="mobile-tab-bar__item"
-        :class="{ 'is-active': activeMobileTab === 'portfolio' }"
-        type="button"
-        @click="handlePortfolioTab"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h13A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5z" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.8" />
-          <path d="M9 7V5.75A1.75 1.75 0 0 1 10.75 4h2.5A1.75 1.75 0 0 1 15 5.75V7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
-          <path d="M4 12h16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.8" />
-        </svg>
-        <span>Portfolio</span>
-      </button>
-      <button
-        class="mobile-tab-bar__item"
-        :class="{ 'is-active': activeMobileTab === 'chat' }"
-        type="button"
-        @click="handleChatTab"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M6.5 18.5 4 20v-4.5A7.5 7.5 0 1 1 11.5 23a7.45 7.45 0 0 1-5-1.9z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" />
-        </svg>
-        <span>Chat</span>
-      </button>
-    </nav>
 
     <WheelStrategyGuide
       :open="isWheelGuideOpen"
@@ -1356,7 +1280,6 @@ const routePath = ref(window.location.pathname || '/');
 const isMobileMenuOpen = ref(false);
 const isAccountMenuOpen = ref(false);
 const accountMenuRef = ref(null);
-const screenerSection = ref(null);
 const isScreenerTabSelected = ref(false);
 const legacyRouteRedirects = new Map([
   ['/daily-brief', '/'],
@@ -1384,7 +1307,6 @@ const knownRoutes = new Set([
 ]);
 const authRoutes = new Set(['/login', '/sign-up', '/verify-email']);
 const marketingRoutes = new Set([
-  '/',
   '/about',
   '/pricing',
   '/terms',
@@ -1439,7 +1361,15 @@ const currentRoute = computed(() => (knownRoutes.has(routePath.value) ? routePat
 const isAuthenticated = auth.isAuthenticated;
 const isPremium = auth.isPremium;
 const isFreeUser = computed(() => isAuthenticated.value && !isPremium.value);
+const isStaffUser = computed(() => auth.state.user?.is_staff === true || auth.state.user?.is_superuser === true);
+const brandHomePath = computed(() => (isStaffUser.value ? '/dashboard' : '/'));
 const authDisplayName = auth.displayName;
+const deriveUserType = (user) => {
+  if (!user) return 'anonymous';
+  if (user.is_superuser === true) return 'superuser';
+  if (user.is_staff === true) return 'staff';
+  return 'regular';
+};
 const authInitials = computed(() => {
   const seed = String(authDisplayName.value || auth.state.user?.username || auth.state.user?.email || 'PutPulse').trim();
   return seed
@@ -1482,14 +1412,6 @@ const dailyBriefSubscribeDisabled = computed(() =>
     && (auth.dailyBriefSubscriptionStatus.value === 'active'
       || auth.dailyBriefSubscriptionStatus.value === 'pending_verification')),
 );
-const showMobileTabBar = computed(() => !authRoutes.has(currentRoute.value));
-const activeMobileTab = computed(() => {
-  if (currentRoute.value === '/agent') return 'chat';
-  if (currentRoute.value === '/profile' || currentRoute.value === '/settings') return 'portfolio';
-  if ((currentRoute.value === '/' || currentRoute.value === '/dashboard') && isScreenerTabSelected.value) return 'screener';
-  return 'dashboard';
-});
-
 const clearDailyBriefAuthIntent = () => {
   dailyBriefAuthIntent.value = false;
 };
@@ -1636,6 +1558,26 @@ const showRsiColumn = ref(false);
 const currentPage = ref('home');
 const contentLastUpdated = '2026-04-01';
 const seoConfig = computed(() => {
+  if (currentRoute.value === '/') {
+    return {
+      title: 'PutPulse AI Agent',
+      description:
+        'Use the PutPulse AI agent to research setups, ask trading workflow questions, and explore option ideas from a single chat interface.',
+      robots: 'index,follow',
+      canonicalPath: '/',
+    };
+  }
+
+  if (currentRoute.value === '/agent') {
+    return {
+      title: 'PutPulse AI Agent',
+      description:
+        'Use the PutPulse AI agent to research setups, ask trading workflow questions, and explore option ideas from a single chat interface.',
+      robots: 'noindex,follow',
+      canonicalPath: '/',
+    };
+  }
+
   if (currentRoute.value === '/') {
     if (currentPage.value === 'dailyBrief') {
       return {
@@ -2860,45 +2802,6 @@ const syncMobileMenu = () => {
   }
 };
 
-const scrollToScreener = ({ behavior = 'smooth' } = {}) => {
-  screenerSection.value?.scrollIntoView({ behavior, block: 'start' });
-};
-
-const handleDashboardTab = () => {
-  goToDashboard();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-const handleScreenerTab = async () => {
-  closeAccountMenu();
-  isMobileMenuOpen.value = false;
-  isScreenerTabSelected.value = true;
-
-  if (currentRoute.value !== '/' && currentRoute.value !== '/dashboard') {
-    currentPage.value = 'home';
-    navigateTo('/dashboard');
-    await nextTick();
-    window.setTimeout(() => scrollToScreener(), 40);
-    return;
-  }
-
-  scrollToScreener();
-};
-
-const handlePortfolioTab = () => {
-  if (!isAuthenticated.value) {
-    goToSignUp();
-    return;
-  }
-  goToProfile();
-};
-
-const handleChatTab = () => {
-  closeAccountMenu();
-  isScreenerTabSelected.value = false;
-  navigatePublicPath('/agent');
-};
-
 const handleDocumentPointerDown = (event) => {
   if (!isAccountMenuOpen.value) return;
   if (accountMenuRef.value?.contains(event.target)) return;
@@ -2945,6 +2848,10 @@ const handleRouteLinkClick = (event, path) => {
 
 const handleHomeLinkClick = (event) => {
   handleRouteLinkClick(event, '/');
+};
+
+const handleBrandLinkClick = (event) => {
+  handleRouteLinkClick(event, brandHomePath.value);
 };
 
 const handleLoginLinkClick = (event) => {
@@ -3061,6 +2968,11 @@ onUnmounted(() => {
 watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authResolved]) => {
   if (!authResolved) return;
 
+  if (route === '/dashboard' && !isStaffUser.value) {
+    navigateTo('/', { replace: true });
+    return;
+  }
+
   if (signedIn) {
     auth.fetchDailyBriefSubscription().catch(() => {});
     auth.fetchPremiumSubscription().catch(() => {}).then(() => {
@@ -3086,6 +2998,22 @@ watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authRe
 watch([currentRoute, currentPage], () => {
   applySeoMetadata();
 }, { immediate: true });
+
+watch(
+  () => auth.state.user,
+  (user) => {
+    if (!user) return;
+    console.log('Current user type', {
+      type: deriveUserType(user),
+      is_staff: user.is_staff ?? null,
+      is_superuser: user.is_superuser ?? null,
+      is_active: user.is_active ?? null,
+      username: user.username ?? null,
+      email: user.email ?? null,
+    });
+  },
+  { immediate: true },
+);
 
 watch(currentRoute, (route) => {
   closeAccountMenu();
