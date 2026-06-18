@@ -53,11 +53,43 @@
       </div>
 
       <div v-if="jobError" class="agent-error" role="alert">{{ jobError }}</div>
+
+      <form class="agent-composer agent-composer--chat" @submit.prevent="sendMessage">
+        <textarea
+          ref="inputEl"
+          v-model="userInput"
+          class="agent-input"
+          placeholder="Ask the AI to screen puts, build an income plan, or explain the wheel strategy..."
+          rows="1"
+          :disabled="isSending"
+          @input="autoResize"
+        ></textarea>
+        <div class="agent-composer-toolbar">
+          <span v-if="isSending" class="agent-status-label">{{ sendButtonLabel }}</span>
+          <span v-else class="agent-composer-hint">Try a prompt or type your own question</span>
+          <button
+            class="agent-send-btn"
+            :class="{ 'agent-send-btn--ready': userInput.trim() && !isSending }"
+            type="submit"
+            :disabled="isSending || !userInput.trim()"
+            aria-label="Send"
+          >
+            <svg v-if="!isSending" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+            </svg>
+            <span v-if="!isSending" class="agent-send-btn-label">Send</span>
+            <span v-else class="agent-send-spinner" aria-hidden="true"></span>
+          </button>
+        </div>
+      </form>
     </div>
 
     <!-- Composer area -->
-    <div class="agent-composer-outer" :class="{ 'agent-composer-outer--hero': isHeroMode }">
-      <div class="agent-prompt-chips" :class="{ 'agent-prompt-chips--hero': isHeroMode }">
+    <div
+      v-if="isHeroMode"
+      class="agent-composer-outer agent-composer-outer--hero"
+    >
+      <div class="agent-prompt-chips agent-prompt-chips--hero">
         <button
           v-for="prompt in quickPromptChips"
           :key="prompt"
@@ -175,16 +207,16 @@ const renderMarkdown = (text) => {
 };
 
 const quickPromptChips = [
-  'Show me put ideas for TSLA',
-  'Build a $10k income plan',
-  'Explain the wheel strategy',
+  'Find income-generating put ideas under 200$',
+  'Build a monthly income plan',
+  'What makes a stock worth selling puts on?',
 ];
 
 const suggestions = [
-  { icon: 'TSLA', text: 'Show me put ideas for TSLA with conservative strike selection.' },
-  { icon: '10K', text: 'Build a $10,000 income-focused wheel plan I can start this month.' },
-  { icon: 'CAP', text: 'Capital: $25,000. Build an options income plan with position sizing.' },
-  { icon: 'WHEEL', text: 'Explain the wheel strategy step by step for a beginner.' },
+  { icon: 'PUT', text: 'Screen high-quality stocks for cash-secured puts with 2–3% monthly ROI and strong fundamentals.' },
+  { icon: '$25K', text: 'I have $25,000. Build a wheel strategy income plan with position sizing and monthly targets.' },
+  { icon: 'CYCLE', text: 'Walk me through the full wheel cycle: selling a put, getting assigned, then selling a covered call.' },
+  { icon: 'WHY', text: 'Why is assignment a feature and not a bug? Explain the wheel strategy logic for a beginner.' },
 ];
 
 const userInput = ref('');
@@ -540,7 +572,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  width: 100%;
+  min-width: 0;
 }
 
 .agent-chat-header {
@@ -599,6 +631,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 0.3rem;
   max-width: 80%;
+  min-width: 0;
 }
 
 .agent-message--user {
@@ -625,6 +658,7 @@ onUnmounted(() => {
   font-size: 0.9rem;
   line-height: 1.55;
   word-break: break-word;
+  max-width: 100%;
 }
 
 .agent-message--user .agent-bubble {
@@ -800,26 +834,18 @@ onUnmounted(() => {
 
 /* ── Composer outer ────────────────────────────────────────────────────── */
 .agent-composer-outer {
-  width: 100%;
-  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  width: min(1120px, calc(100% - 3rem));
+  min-width: 0;
+  margin: 0 auto;
+  padding: 0;
   z-index: 1;
 }
 
 .agent-composer-outer--hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.9rem;
   max-width: 720px;
-  margin: 0 auto;
-  padding: 0;
-}
-
-/* in chat mode: sits below .container content, constrain width */
-.agent-page:not(.agent-page--hero) .agent-composer-outer {
-  max-width: 80rem;
-  margin: 1rem auto 0;
-  padding: 0 max(1rem, calc((100% - 80rem) / 2 + 1rem));
 }
 
 .agent-prompt-chips {
@@ -827,6 +853,7 @@ onUnmounted(() => {
   flex-wrap: wrap;
   gap: 0.65rem;
   width: 100%;
+  min-width: 0;
 }
 
 .agent-prompt-chips--hero {
@@ -847,6 +874,10 @@ onUnmounted(() => {
   font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
+  max-width: 100%;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
   transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -859,6 +890,7 @@ onUnmounted(() => {
 /* ── Composer card ─────────────────────────────────────────────────────── */
 .agent-composer {
   width: 100%;
+  min-width: 0;
   background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 1.25rem;
@@ -868,6 +900,10 @@ onUnmounted(() => {
   gap: 0.5rem;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.agent-composer--chat {
+  margin-top: 1rem;
 }
 
 .agent-composer:focus-within {
