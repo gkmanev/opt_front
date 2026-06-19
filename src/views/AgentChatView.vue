@@ -117,7 +117,7 @@
                 type="button"
                 @click="useSuggestion(suggestions[currentSuggestionIndex].text)"
               >
-                <span class="agent-suggestion-icon">{{ suggestions[currentSuggestionIndex].icon }}</span>
+                <span class="agent-suggestion-icon" v-html="suggestions[currentSuggestionIndex].icon"></span>
                 <span class="agent-suggestion-label">{{ suggestions[currentSuggestionIndex].text }}</span>
               </button>
             </Transition>
@@ -213,10 +213,22 @@ const quickPromptChips = [
 ];
 
 const suggestions = [
-  { icon: 'PUT', text: 'Screen high-quality stocks for cash-secured puts with 2–3% monthly ROI and strong fundamentals.' },
-  { icon: '$25K', text: 'I have $25,000. Build a wheel strategy income plan with position sizing and monthly targets.' },
-  { icon: 'CYCLE', text: 'Walk me through the full wheel cycle: selling a put, getting assigned, then selling a covered call.' },
-  { icon: 'WHY', text: 'Why is assignment a feature and not a bug? Explain the wheel strategy logic for a beginner.' },
+  {
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`,
+    text: 'Screen high-quality stocks for cash-secured puts with 2–3% monthly ROI and strong fundamentals.',
+  },
+  {
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
+    text: 'I have $25,000. Build a wheel strategy income plan with position sizing and monthly targets.',
+  },
+  {
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>`,
+    text: 'Walk me through the full wheel cycle: selling a put, getting assigned, then selling a covered call.',
+  },
+  {
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    text: 'Why is assignment a feature and not a bug? Explain the wheel strategy logic for a beginner.',
+  },
 ];
 
 const userInput = ref('');
@@ -1098,9 +1110,8 @@ onUnmounted(() => {
 }
 
 .agent-suggestion-icon {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
   color: #38bdf8;
 }
