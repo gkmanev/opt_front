@@ -1043,7 +1043,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 3rem;
+  height: 5rem;
   overflow: hidden;
 }
 
