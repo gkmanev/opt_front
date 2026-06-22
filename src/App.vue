@@ -1160,7 +1160,7 @@
     <PricingModal
       :open="isPricingModalOpen"
       @close="isPricingModalOpen = false"
-      @checkout-success="fetchWeeklyIdeas(buildCurrentFilters())"
+      @checkout-success="handleCheckoutSuccess"
       @login-required="isPricingModalOpen = false; goToLogin()"
     />
 
@@ -2173,6 +2173,7 @@ const dailyBriefError = ref(false);
 const weeklyIdeasLoading = ref(false);
 const weeklyIdeasError = ref(false);
 const weeklyPageSize = 6;
+const weeklyFetchPageSize = 25;
 const weeklyCurrentPage = ref(1);
 
 const weeklyTotalPages = computed(() =>
@@ -2672,13 +2673,54 @@ const buildCurrentFilters = () => {
   };
 };
 
+const ensurePremiumStatusLoaded = async ({ force = false } = {}) => {
+  if (!isAuthenticated.value) return;
+  if (!force && auth.state.premiumSubscriptionLoaded) return;
+
+  try {
+    await auth.fetchPremiumSubscription({ force });
+  } catch {
+    // If subscription lookup fails, keep the last known state and let the screener fetch proceed.
+  }
+};
+
 const fetchWeeklyIdeas = async (filters = {}) => {
   weeklyIdeasLoading.value = true;
   weeklyIdeasError.value = false;
   try {
-    const { results, hasMore } = await getSymbols(filters);
-    weeklyIdeas.value = results;
-    weeklyIdeasHasMore.value = hasMore;
+    await ensurePremiumStatusLoaded();
+
+    const aggregatedResults = [];
+    let page = 1;
+    let hasMore = false;
+    let shouldContinue = true;
+    const canLoadAllPages = isPremium.value;
+
+    while (shouldContinue) {
+      const response = await getSymbols({
+        ...filters,
+        page,
+        pageSize: weeklyFetchPageSize,
+      });
+
+      aggregatedResults.push(...response.results);
+      hasMore = response.hasMore;
+
+      if (!response.results.length || !hasMore) {
+        shouldContinue = false;
+        continue;
+      }
+
+      if (!canLoadAllPages) {
+        shouldContinue = false;
+        continue;
+      }
+
+      page += 1;
+    }
+
+    weeklyIdeas.value = aggregatedResults;
+    weeklyIdeasHasMore.value = !canLoadAllPages && hasMore;
     return true;
   } catch (error) {
     if (error instanceof ApiError && error.status === 403) {
@@ -3107,6 +3149,11 @@ const applyFilters = async () => {
     appliedMinScore.value = minScore.value;
     appliedDeltaRange.value = [...deltaRange.value];
   }
+};
+
+const handleCheckoutSuccess = async () => {
+  await ensurePremiumStatusLoaded({ force: true });
+  await fetchWeeklyIdeas(buildCurrentFilters());
 };
 
 const resetFilters = () => {

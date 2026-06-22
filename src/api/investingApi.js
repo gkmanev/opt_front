@@ -48,6 +48,8 @@ const buildSymbolsParams = ({
   minRsi,
   maxRsi,
   minRoi,
+  page,
+  pageSize,
 } = {}) => {
   const params = {};
 
@@ -66,6 +68,12 @@ const buildSymbolsParams = ({
   if (minRoi !== null && minRoi !== undefined && minRoi !== '') {
     params.min_roi = minRoi;
   }
+  if (page !== null && page !== undefined && page !== '') {
+    params.page = page;
+  }
+  if (pageSize !== null && pageSize !== undefined && pageSize !== '') {
+    params.page_size = pageSize;
+  }
 
   return params;
 };
@@ -76,17 +84,40 @@ export const getSymbols = async ({
   minRsi,
   maxRsi,
   minRoi,
+  page,
+  pageSize,
 } = {}) => {
   const data = await request('symbols', {
-    params: buildSymbolsParams({ minPrice, maxPrice, minRsi, maxRsi, minRoi }),
+    params: buildSymbolsParams({ minPrice, maxPrice, minRsi, maxRsi, minRoi, page, pageSize }),
     auth: true,
   });
 
   if (Array.isArray(data)) {
-    return { results: data, hasMore: false };
+    return {
+      count: data.length,
+      next: null,
+      previous: null,
+      hasMore: false,
+      page: Number(page) || 1,
+      pageSize: Number(pageSize) || data.length || 1,
+      results: data,
+    };
   }
+
+  const results = Array.isArray(data.results) ? data.results : [];
+  const resolvedPage = Number(data.page);
+  const resolvedPageSize = Number(data.page_size);
+  const resolvedCount = Number(data.count);
+
   return {
-    results: Array.isArray(data.results) ? data.results : [],
+    count: Number.isNaN(resolvedCount) ? results.length : resolvedCount,
+    next: data.next ?? null,
+    previous: data.previous ?? null,
     hasMore: data.has_more === true,
+    page: Number.isNaN(resolvedPage) ? (Number(page) || 1) : resolvedPage,
+    pageSize: Number.isNaN(resolvedPageSize) || resolvedPageSize <= 0
+      ? (Number(pageSize) || results.length || 1)
+      : resolvedPageSize,
+    results,
   };
 };
