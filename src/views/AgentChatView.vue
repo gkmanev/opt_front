@@ -195,7 +195,16 @@ const renderMarkdown = (text) => {
     const headers = [...table.querySelectorAll('thead th')].map((th) => th.textContent.trim());
     table.querySelectorAll('tbody tr').forEach((tr) => {
       [...tr.querySelectorAll('td')].forEach((td, index) => {
-        if (headers[index]) td.setAttribute('data-label', headers[index]);
+        const header = headers[index] ?? '';
+        if (header) td.setAttribute('data-label', header);
+
+        if (/ticker|symbol/i.test(header)) {
+          const strong = document.createElement('strong');
+          while (td.firstChild) {
+            strong.appendChild(td.firstChild);
+          }
+          td.appendChild(strong);
+        }
       });
     });
     const wrap = document.createElement('div');
@@ -817,7 +826,7 @@ onUnmounted(() => {
     gap: 0.5rem;
     padding: 0.35rem 0.75rem;
     border-right: none;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+    border-bottom: 2px solid rgba(148, 163, 184, 0.08);
     white-space: normal;
     font-size: 0.83rem;
   }
@@ -1182,8 +1191,91 @@ onUnmounted(() => {
     padding: 1.4rem 0.75rem 2rem;
   }
 
+  .agent-chat-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .agent-clear-btn {
+    align-self: flex-start;
+  }
+
+  .agent-messages {
+    gap: 0.85rem;
+    max-height: none;
+    padding-right: 0;
+  }
+
   .agent-message {
-    max-width: 92%;
+    max-width: 100%;
+  }
+
+  .agent-message--assistant {
+    width: 100%;
+  }
+
+  .agent-message-role {
+    padding-inline: 0.2rem;
+    color: #94a3b8;
+  }
+
+  .agent-message--assistant .agent-bubble {
+    width: 100%;
+    padding: 0.95rem 1rem;
+    background: rgba(248, 250, 252, 0.98);
+    border-color: rgba(203, 213, 225, 0.9);
+    border-bottom-left-radius: 1rem;
+    color: #0f172a;
+    box-shadow: 0 14px 32px rgba(2, 6, 23, 0.18);
+  }
+
+  .agent-message--assistant .agent-bubble--md :deep(h1),
+  .agent-message--assistant .agent-bubble--md :deep(h2),
+  .agent-message--assistant .agent-bubble--md :deep(h3),
+  .agent-message--assistant .agent-bubble--md :deep(h4),
+  .agent-message--assistant .agent-bubble--md :deep(strong) {
+    color: #020617;
+  }
+
+  .agent-message--assistant .agent-bubble--md :deep(em),
+  .agent-message--assistant .agent-bubble--md :deep(blockquote) {
+    color: #475569;
+  }
+
+  .agent-message--assistant .agent-bubble--md :deep(code) {
+    background: rgba(226, 232, 240, 0.9);
+    border-color: rgba(148, 163, 184, 0.35);
+    color: #0f172a;
+  }
+
+  .agent-message--assistant .agent-bubble--md :deep(pre) {
+    background: #0f172a;
+    border-color: rgba(15, 23, 42, 0.92);
+  }
+
+  .agent-message--assistant .agent-bubble--md :deep(pre code) {
+    color: #e2e8f0;
+  }
+
+  .agent-message--assistant .agent-bubble--md :deep(blockquote) {
+    background: rgba(241, 245, 249, 0.9);
+    border-left-color: rgba(14, 165, 233, 0.55);
+    border-radius: 0.75rem;
+    padding: 0.65rem 0.85rem;
+  }
+
+  .agent-message--assistant .agent-bubble--md :deep(th) {
+    background: rgba(226, 232, 240, 0.95);
+    color: #334155;
+  }
+
+  .agent-message--assistant .agent-bubble--md :deep(tr) {
+    background: rgba(241, 245, 249, 0.95);
+    border-color: rgba(203, 213, 225, 0.9);
+  }
+
+  .agent-message--assistant .agent-bubble--md :deep(td::before) {
+    color: #475569;
   }
 
   .agent-composer-toolbar {
