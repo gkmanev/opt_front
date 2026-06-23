@@ -329,6 +329,11 @@ const updateAssistantMessage = async (messageIndex, content) => {
   await scrollToBottom();
 };
 
+const logUsedTools = (data) => {
+  console.log('Agent used_tools:', Array.isArray(data?.used_tools) ? data.used_tools : []);
+  console.log('Agent used_tool:', data?.used_tool ?? null);
+};
+
 const schedulePoll = (jobId, messageIndex, pollToken) => {
   clearPollTimeout();
   pollTimeoutId = window.setTimeout(() => {
@@ -356,6 +361,7 @@ const pollJob = async (jobId, messageIndex, pollToken) => {
 
     if (status === 'completed') {
       jobError.value = '';
+      logUsedTools(data);
       await updateAssistantMessage(messageIndex, answer || 'No response returned.');
       resetJobState();
       return;
@@ -429,6 +435,7 @@ const sendMessage = async () => {
     jobError.value = '';
 
     if (status === 'completed') {
+      logUsedTools(data);
       await updateAssistantMessage(assistantMessageIndex, answer || 'No response returned.');
       resetJobState();
       return;
