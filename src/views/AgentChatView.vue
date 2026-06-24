@@ -199,7 +199,9 @@ const renderMarkdown = (text) => {
         if (header) td.setAttribute('data-label', header);
 
         if (/ticker|symbol/i.test(header)) {
+          td.classList.add('md-ticker-cell');
           const strong = document.createElement('strong');
+          strong.className = 'md-ticker-text';
           while (td.firstChild) {
             strong.appendChild(td.firstChild);
           }
@@ -727,6 +729,8 @@ onUnmounted(() => {
 }
 .agent-bubble--md :deep(li) { margin: 0.15em 0; }
 .agent-bubble--md :deep(strong) { color: #f1f5f9; font-weight: 600; }
+.agent-bubble--md :deep(.md-ticker-cell) { color: #4ade80; }
+.agent-bubble--md :deep(.md-ticker-text) { color: #4ade80; font-weight: 700; }
 .agent-bubble--md :deep(em) { color: #94a3b8; }
 .agent-bubble--md :deep(code) {
   background: rgba(0, 0, 0, 0.35);
