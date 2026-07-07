@@ -1,24 +1,6 @@
 <template>
-  <SignUpView
-    v-if="currentRoute === '/sign-up'"
-    :daily-brief-intent="dailyBriefAuthIntent"
-    @back-home="goHome"
-    @navigate-login="goToLogin({ preserveDailyBriefIntent: dailyBriefAuthIntent })"
-  />
-  <VerifyEmailView
-    v-else-if="currentRoute === '/verify-email'"
-    @back-home="goHome"
-    @navigate-login="goToLogin"
-    @verified="handleAuthenticated"
-  />
-  <LoginView
-    v-else-if="currentRoute === '/login'"
-    :daily-brief-intent="dailyBriefAuthIntent"
-    @authenticated="handleAuthenticated"
-    @back-home="goHome"
-    @navigate-signup="goToSignUp({ preserveDailyBriefIntent: dailyBriefAuthIntent })"
-  />
-  <div v-else class="page">
+  <div class="app-shell">
+    <div class="page" :class="{ 'page--auth-overlay': isAuthOverlayRoute }">
     <header class="site-header">
       <div class="container header-inner">
         <a class="brand brand-button" :href="brandHomePath" @click="handleBrandLinkClick">
@@ -48,7 +30,7 @@
           <nav class="header-nav" aria-label="Strategy pages">
             <a
               class="header-nav-link"
-              :class="{ 'is-active': currentRoute === '/pricing' }"
+              :class="{ 'is-active': displayRoute === '/pricing' }"
               href="/pricing"
               @click="handleRouteLinkClick($event, '/pricing')"
             >
@@ -56,7 +38,7 @@
             </a>
             <a
               class="header-nav-link"
-              :class="{ 'is-active': currentRoute === '/' || currentRoute === '/agent' }"
+              :class="{ 'is-active': displayRoute === '/' || displayRoute === '/agent' }"
               href="/agent"
               @click="handleRouteLinkClick($event, '/agent')"
             >
@@ -69,7 +51,7 @@
             <div ref="accountMenuRef" class="account-menu">
               <button
                 class="account-menu-trigger"
-                :class="{ 'is-active': isAccountMenuOpen || currentRoute === '/profile' || currentRoute === '/settings' }"
+                :class="{ 'is-active': isAccountMenuOpen || displayRoute === '/profile' || displayRoute === '/settings' }"
                 type="button"
                 aria-haspopup="menu"
                 :aria-expanded="isAccountMenuOpen ? 'true' : 'false'"
@@ -125,44 +107,44 @@
     </header>
 
     <ProfileView
-      v-if="currentRoute === '/profile' || currentRoute === '/settings'"
+      v-if="displayRoute === '/profile' || displayRoute === '/settings'"
       :user="auth.state.user"
       :display-name="authDisplayName"
       :is-premium="isPremium"
       :premium-subscription="auth.state.premiumSubscription"
-      :mode="currentRoute === '/settings' ? 'settings' : 'profile'"
+      :mode="displayRoute === '/settings' ? 'settings' : 'profile'"
       @back-dashboard="goToDashboard"
       @logout="handleLogout"
       @open-pricing="openPricingModal"
     />
 
     <AboutView
-      v-else-if="currentRoute === '/about'"
+      v-else-if="displayRoute === '/about'"
       @navigate-route="handleRouteLinkClick"
     />
 
     <CashSecuredPutsView
-      v-else-if="currentRoute === '/cash-secured-puts'"
+      v-else-if="displayRoute === '/cash-secured-puts'"
       @navigate-route="handleRouteLinkClick"
     />
 
     <ContactView
-      v-else-if="currentRoute === '/contact'"
+      v-else-if="displayRoute === '/contact'"
       @navigate-route="handleRouteLinkClick"
     />
 
     <CoveredCallsView
-      v-else-if="currentRoute === '/covered-calls'"
+      v-else-if="displayRoute === '/covered-calls'"
       @navigate-route="handleRouteLinkClick"
     />
 
     <MethodologyView
-      v-else-if="currentRoute === '/methodology'"
+      v-else-if="displayRoute === '/methodology'"
       @navigate-route="handleRouteLinkClick"
     />
 
     <PricingView
-      v-else-if="currentRoute === '/pricing'"
+      v-else-if="displayRoute === '/pricing'"
       :is-authenticated="isAuthenticated"
       :is-premium="isPremium"
       @open-pricing="openPricingModal"
@@ -170,36 +152,37 @@
     />
 
     <TermsView
-      v-else-if="currentRoute === '/terms'"
+      v-else-if="displayRoute === '/terms'"
       @navigate-route="handleRouteLinkClick"
     />
 
     <PrivacyView
-      v-else-if="currentRoute === '/privacy'"
+      v-else-if="displayRoute === '/privacy'"
       @navigate-route="handleRouteLinkClick"
     />
 
     <RefundView
-      v-else-if="currentRoute === '/refund-policy'"
+      v-else-if="displayRoute === '/refund-policy'"
       @navigate-route="handleRouteLinkClick"
     />
 
     <PaymentSuccessView
-      v-else-if="currentRoute === '/payment-success'"
+      v-else-if="displayRoute === '/payment-success'"
       @go-home="goHome"
     />
 
     <AgentChatView
-      v-else-if="currentRoute === '/' || currentRoute === '/agent'"
+      v-else-if="displayRoute === '/' || displayRoute === '/agent'"
+      @login-required="goToLogin"
     />
 
     <WheelStrategyView
-      v-else-if="currentRoute === '/wheel-strategy'"
+      v-else-if="displayRoute === '/wheel-strategy'"
       :candidates="dailyBriefRows"
       @navigate-route="handleRouteLinkClick"
     />
 
-    <template v-else-if="currentRoute === '/dashboard' && currentPage === 'home'">
+    <template v-else-if="displayRoute === '/dashboard' && currentPage === 'home'">
     <section class="container hero">
       <div class="hero-grid">
         <div class="hero-copy">
@@ -1245,6 +1228,29 @@
     </teleport>
 
     <CookieBanner @navigate-route="handleRouteLinkClick" />
+    </div>
+
+    <transition name="auth-overlay-fade" appear mode="out-in">
+      <SignUpView
+        v-if="currentRoute === '/sign-up'"
+        :daily-brief-intent="dailyBriefAuthIntent"
+        @back-home="dismissAuthOverlay"
+        @navigate-login="goToLogin({ preserveDailyBriefIntent: dailyBriefAuthIntent })"
+      />
+      <VerifyEmailView
+        v-else-if="currentRoute === '/verify-email'"
+        @back-home="dismissAuthOverlay"
+        @navigate-login="goToLogin"
+        @verified="handleAuthenticated"
+      />
+      <LoginView
+        v-else-if="currentRoute === '/login'"
+        :daily-brief-intent="dailyBriefAuthIntent"
+        @authenticated="handleAuthenticated"
+        @back-home="dismissAuthOverlay"
+        @navigate-signup="goToSignUp({ preserveDailyBriefIntent: dailyBriefAuthIntent })"
+      />
+    </transition>
   </div>
 </template>
 
@@ -1306,6 +1312,9 @@ const knownRoutes = new Set([
   '/wheel-strategy',
 ]);
 const authRoutes = new Set(['/login', '/sign-up', '/verify-email']);
+const authBackdropRoute = ref('/');
+let authOverlayScrollY = 0;
+let isAuthOverlayScrollLocked = false;
 const marketingRoutes = new Set([
   '/about',
   '/pricing',
@@ -1358,6 +1367,13 @@ const navigateTo = (path, { replace = false } = {}) => {
 const PRO_INTENT_KEY = 'putpulse.pending.pro';
 
 const currentRoute = computed(() => (knownRoutes.has(routePath.value) ? routePath.value : '/'));
+const sanitizeAuthBackdropRoute = (route) => {
+  if (!route || !knownRoutes.has(route) || authRoutes.has(route)) return '/';
+  if (route === '/profile' || route === '/settings' || route === '/payment-success') return '/';
+  return route;
+};
+const isAuthOverlayRoute = computed(() => authRoutes.has(currentRoute.value));
+const displayRoute = computed(() => (isAuthOverlayRoute.value ? authBackdropRoute.value : currentRoute.value));
 const isAuthenticated = auth.isAuthenticated;
 const isPremium = auth.isPremium;
 const isFreeUser = computed(() => isAuthenticated.value && !isPremium.value);
@@ -1425,6 +1441,33 @@ const resetDailyBriefCtaFeedback = () => {
   setDailyBriefCtaFeedback('', 'neutral');
 };
 
+const lockAuthOverlayScroll = () => {
+  if (typeof document === 'undefined') return;
+  if (isAuthOverlayScrollLocked) return;
+  authOverlayScrollY = window.scrollY || window.pageYOffset || 0;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${authOverlayScrollY}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.width = '100%';
+  document.body.style.overflow = 'hidden';
+  isAuthOverlayScrollLocked = true;
+};
+
+const unlockAuthOverlayScroll = () => {
+  if (typeof document === 'undefined') return;
+  if (!isAuthOverlayScrollLocked) return;
+  const scrollY = authOverlayScrollY;
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+  document.body.style.overflow = '';
+  isAuthOverlayScrollLocked = false;
+  window.scrollTo({ top: scrollY, behavior: 'auto' });
+};
+
 const closeAccountMenu = () => {
   isAccountMenuOpen.value = false;
 };
@@ -1452,6 +1495,14 @@ const goToLogin = ({ preserveDailyBriefIntent = false } = {}) => {
   if (!preserveDailyBriefIntent) clearDailyBriefAuthIntent();
   if (!preserveDailyBriefIntent) resetDailyBriefCtaFeedback();
   navigateTo('/login');
+};
+const dismissAuthOverlay = () => {
+  isMobileMenuOpen.value = false;
+  closeAccountMenu();
+  clearDailyBriefAuthIntent();
+  resetDailyBriefCtaFeedback();
+  const targetRoute = sanitizeAuthBackdropRoute(authBackdropRoute.value);
+  navigateTo(targetRoute, { replace: true });
 };
 const goToProfile = () => {
   isMobileMenuOpen.value = false;
@@ -3004,7 +3055,7 @@ onUnmounted(() => {
   window.removeEventListener('resize', syncMobileMenu);
   document.removeEventListener('pointerdown', handleDocumentPointerDown);
   document.removeEventListener('keydown', handleDocumentKeydown);
-  document.body.style.overflow = '';
+  unlockAuthOverlayScroll();
 });
 
 watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authResolved]) => {
@@ -3036,6 +3087,34 @@ watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authRe
     navigateTo('/login', { replace: true });
   }
 }, { immediate: true });
+
+watch(
+  currentRoute,
+  (route, previousRoute) => {
+    if (authRoutes.has(route)) {
+      if (!authRoutes.has(previousRoute)) {
+        authBackdropRoute.value = sanitizeAuthBackdropRoute(previousRoute);
+      }
+      return;
+    }
+
+    authBackdropRoute.value = sanitizeAuthBackdropRoute(route);
+  },
+  { immediate: true },
+);
+
+watch(
+  isAuthOverlayRoute,
+  (isOpen) => {
+    if (isOpen) {
+      lockAuthOverlayScroll();
+      return;
+    }
+
+    unlockAuthOverlayScroll();
+  },
+  { immediate: true },
+);
 
 watch([currentRoute, currentPage], () => {
   applySeoMetadata();
@@ -3359,4 +3438,32 @@ watch(
 );
 </script>
 
+<style scoped>
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+}
+
+.page {
+  transition: filter 220ms ease, transform 220ms ease;
+  transform-origin: center top;
+}
+
+.page--auth-overlay {
+  filter: blur(18px);
+  transform: scale(1.01);
+  pointer-events: none;
+  user-select: none;
+}
+
+.auth-overlay-fade-enter-active,
+.auth-overlay-fade-leave-active {
+  transition: opacity 180ms ease;
+}
+
+.auth-overlay-fade-enter-from,
+.auth-overlay-fade-leave-to {
+  opacity: 0;
+}
+</style>
 

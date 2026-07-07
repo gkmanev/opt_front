@@ -235,45 +235,74 @@ const handleSubmit = async () => {
 
 <style scoped>
 .auth-shell {
-  position: relative;
-  min-height: 100vh;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at top left, rgba(34, 211, 238, 0.18), transparent 32%),
-    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.2), transparent 28%),
-    #020617;
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  overflow-y: auto;
+  padding: 1rem;
+  background: transparent;
   color: #f8fafc;
 }
 
 .auth-backdrop {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(135deg, rgba(15, 23, 42, 0.28), rgba(2, 6, 23, 0.82)),
-    linear-gradient(180deg, rgba(2, 6, 23, 0.16), transparent 48%);
+  z-index: 0;
+  background: rgba(2, 6, 23, 0.32);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: auth-backdrop-in 700ms ease-out both;
 }
 
 .auth-layout {
   position: relative;
   z-index: 1;
-  width: min(1100px, calc(100% - 2rem));
+  width: min(1100px, 100%);
   margin: 0 auto;
-  min-height: 100vh;
+  min-height: calc(100vh - 2rem);
   display: grid;
   grid-template-columns: minmax(280px, 440px) minmax(320px, 520px);
   justify-content: center;
   gap: 1.5rem;
   align-items: center;
-  padding: 2rem 0;
+  padding: 0;
+  animation: auth-layout-enter 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .auth-panel {
+  position: relative;
+  overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 1.4rem;
-  background: rgba(9, 14, 28, 0.88);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 22px 60px rgba(2, 6, 23, 0.45);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02) 32%, rgba(9, 14, 28, 0.92) 70%),
+    rgba(9, 14, 28, 0.88);
+  backdrop-filter: blur(18px) saturate(155%);
+  -webkit-backdrop-filter: blur(18px) saturate(155%);
+  box-shadow:
+    0 22px 60px rgba(2, 6, 23, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
   padding: 2rem;
+  animation: auth-panel-enter 760ms cubic-bezier(0.16, 1, 0.3, 1) 40ms both;
+}
+
+.auth-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(125, 211, 252, 0.18), transparent 32%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 28%, transparent 72%, rgba(255, 255, 255, 0.04));
+  pointer-events: none;
+}
+
+.auth-panel::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: calc(1.4rem - 1px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  pointer-events: none;
 }
 
 .auth-panel--plans {
@@ -602,6 +631,42 @@ const handleSubmit = async () => {
 .btn-block {
   width: 100%;
   justify-content: center;
+}
+
+@keyframes auth-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes auth-layout-enter {
+  from {
+    opacity: 0;
+    transform: translateY(1.1rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(1.6rem) scale(0.985);
+    filter: blur(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 
 @media (max-width: 900px) {

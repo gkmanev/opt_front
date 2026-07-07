@@ -183,6 +183,8 @@ import { requestJson } from '../api/client';
 
 marked.use({ breaks: true, gfm: true });
 
+const emit = defineEmits(['login-required']);
+
 const POLL_INTERVAL_MS = 1500;
 const QUEUED_LABEL = 'Queued...';
 const THINKING_LABEL = 'Thinking...';
@@ -310,6 +312,12 @@ const clearPollTimeout = () => {
   }
 };
 
+const handleUnauthorized = () => {
+  cancelActiveJob();
+  jobError.value = '';
+  emit('login-required');
+};
+
 const resetJobState = () => {
   clearPollTimeout();
   currentJobId.value = null;
@@ -381,6 +389,10 @@ const pollJob = async (jobId, messageIndex, pollToken) => {
     schedulePoll(jobId, messageIndex, pollToken);
   } catch (err) {
     if (pollToken !== activePollToken.value) return;
+    if (err?.status === 401) {
+      handleUnauthorized();
+      return;
+    }
 
     const message = err.message || 'Failed to check agent status. Please try again.';
     jobError.value = message;
@@ -458,6 +470,16 @@ const sendMessage = async () => {
     schedulePoll(jobId, assistantMessageIndex, pollToken);
   } catch (err) {
     if (pollToken !== activePollToken.value) return;
+    if (err?.status === 401) {
+      conversationHistory.value = historyBeforeQuery;
+      userInput.value = query;
+      if (inputEl.value) {
+        inputEl.value.style.height = 'auto';
+        autoResize();
+      }
+      handleUnauthorized();
+      return;
+    }
 
     const message = err.message || 'Something went wrong. Please try again.';
     jobError.value = message;
@@ -1246,6 +1268,11 @@ onUnmounted(() => {
   .agent-message--assistant .agent-bubble--md :deep(h4),
   .agent-message--assistant .agent-bubble--md :deep(strong) {
     color: #020617;
+  }
+
+  .agent-message--assistant .agent-bubble--md :deep(.md-ticker-cell),
+  .agent-message--assistant .agent-bubble--md :deep(.md-ticker-text) {
+    color: #16a34a;
   }
 
   .agent-message--assistant .agent-bubble--md :deep(em),
