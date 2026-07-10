@@ -5,6 +5,11 @@
 
       <!-- Left: plan selector -->
       <aside class="auth-panel auth-panel--plans">
+        <button class="auth-close" type="button" aria-label="Close" @click="emit('back-home')">
+          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+            <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
         <button class="auth-home-link" type="button" @click="emit('back-home')">Back to app</button>
         <p class="auth-eyebrow">Choose your plan</p>
         <h1>Start building your edge</h1>
@@ -19,7 +24,7 @@
           >
             <div class="plan-card-top">
               <div class="plan-card-title-row">
-                <span class="plan-card-name">Basic</span>
+                <span class="plan-card-name">Free</span>
                 <span class="plan-card-selector" aria-hidden="true"></span>
               </div>
               <div class="plan-card-price">
@@ -27,12 +32,10 @@
               </div>
             </div>
             <ul class="plan-features">
-              <li><span class="plan-feat-dot plan-feat-dot--on"></span>5 screener results / day</li>
-              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Strategy guides</li>
-              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Basic filters</li>
-              <li><span class="plan-feat-dot plan-feat-dot--off"></span>Full screener access</li>
-              <li><span class="plan-feat-dot plan-feat-dot--off"></span>Daily Top 3 briefing</li>
-              <li><span class="plan-feat-dot plan-feat-dot--off"></span>Wheel setup details</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>10 chats/day</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>1 full stock analysis/day</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>5 screener results per scan</li>
+              <li><span class="plan-feat-dot plan-feat-dot--off"></span>No additional scan pages</li>
             </ul>
           </button>
 
@@ -56,12 +59,10 @@
               </div>
             </div>
             <ul class="plan-features">
-              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Everything in Basic</li>
-              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Unlimited screener results</li>
-              <li><span class="plan-feat-dot plan-feat-dot--on"></span>All filters + sorting</li>
-              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Daily Top 3 email briefing</li>
-              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Wheel setup details</li>
-              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Full data access</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Unlimited chats</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Unlimited stock analysis</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Unlimited screener access</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>Full history / no memory cap</li>
             </ul>
           </button>
         </div>
@@ -94,7 +95,10 @@
             <div class="auth-form-title-row">
               <h2>Create account</h2>
               <span class="selected-plan-badge" :class="`selected-plan-badge--${selectedPlan}`">
-                {{ selectedPlan === 'pro' ? 'Pro · $20/mo' : 'Basic · Free' }}
+                {{ selectedPlan === 'pro' ? 'Pro · $20/mo' : 'Free · $0' }}
+              </span>
+              <span v-if="false" class="selected-plan-badge" :class="`selected-plan-badge--${selectedPlan}`">
+                {{ selectedPlan === 'pro' ? 'Pro · $20/mo' : 'Free · $0' }}
               </span>
             </div>
             <button class="link-button" type="button" @click="emit('navigate-login')">Already have an account?</button>
@@ -284,6 +288,26 @@ const handleSubmit = async () => {
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
   padding: 2rem;
   animation: auth-panel-enter 760ms cubic-bezier(0.16, 1, 0.3, 1) 40ms both;
+}
+
+.auth-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0.4rem;
+  border-radius: 0.5rem;
+  line-height: 0;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.auth-close:hover {
+  color: #cbd5e1;
+  background: rgba(148, 163, 184, 0.08);
 }
 
 .auth-panel::before {

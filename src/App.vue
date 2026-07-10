@@ -28,6 +28,14 @@
           :class="{ 'is-open': isMobileMenuOpen }"
         >
           <nav class="header-nav" aria-label="Strategy pages">
+            <button
+              class="header-nav-link header-nav-link--button"
+              :class="{ 'is-active': isWheelGuideOpen }"
+              type="button"
+              @click="openWheelGuideFromNav"
+            >
+              How It Works
+            </button>
             <a
               class="header-nav-link"
               :class="{ 'is-active': displayRoute === '/pricing' }"
@@ -85,7 +93,7 @@
                     type="button"
                     @click="openPricingFromMenu"
                   >
-                    Upgrade to Premium
+                    Upgrade to Pro
                   </button>
                   <button
                     class="account-menu-item account-menu-item--danger"
@@ -174,6 +182,7 @@
     <AgentChatView
       v-else-if="displayRoute === '/' || displayRoute === '/agent'"
       @login-required="goToLogin"
+      @open-wheel-guide="openWheelGuide"
     />
 
     <WheelStrategyView
@@ -1017,7 +1026,7 @@
                     <div class="locked-rows-overlay">
                       <p class="locked-rows-label">More ideas are hidden on the free plan.</p>
                       <button class="btn btn-primary" type="button" @click="openPricingModal">
-                        Upgrade to Premium
+                        Upgrade to Pro
                       </button>
                     </div>
                   </td>
@@ -1529,6 +1538,12 @@ const openPricingFromMenu = () => {
   closeAccountMenu();
   openPricingModal();
 };
+
+const openWheelGuideFromNav = () => {
+  isMobileMenuOpen.value = false;
+  closeAccountMenu();
+  openWheelGuide();
+};
 const goToProfileFromMenu = () => {
   goToProfile();
 };
@@ -1693,7 +1708,7 @@ const seoConfig = computed(() => {
     return {
       title: 'Pricing | PutPulse',
       description:
-        'PutPulse pricing — free Basic plan with 5 screener results, or Pro at $20/month for unlimited access, daily briefings, and full wheel setup details.',
+        'PutPulse pricing — Free includes 10 chats per day, 1 full stock analysis per day, and 5 screener results per scan; Pro unlocks unlimited AI research and full history.',
       robots: 'index,follow',
       canonicalPath: '/pricing',
     };

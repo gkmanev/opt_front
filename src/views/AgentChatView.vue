@@ -172,6 +172,24 @@
       </form>
     </div>
 
+    <section
+      class="agent-wheel-section"
+      :class="[
+        isHeroMode ? 'agent-wheel-section--hero-shell' : 'container',
+        { 'agent-wheel-section--hero': isHeroMode },
+      ]"
+    >
+      <div class="agent-wheel-section__header">
+        <span class="section-eyebrow">How It Works</span>
+        <h2 class="agent-wheel-section__title">See the Wheel process from ask to allocation to repeat income.</h2>
+        <p class="agent-wheel-section__copy">
+          This slider walks through how PutPulse turns one prompt into a quality screen,
+          a cash-secured put plan, and a repeatable Wheel workflow.
+        </p>
+      </div>
+      <WheelAnimationSlider />
+    </section>
+
   </section>
 </template>
 
@@ -180,14 +198,18 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { requestJson } from '../api/client';
+import WheelAnimationSlider from '../components/WheelAnimationSlider.vue';
 
 marked.use({ breaks: true, gfm: true });
 
-const emit = defineEmits(['login-required']);
+const emit = defineEmits(['login-required', 'open-wheel-guide']);
 
 const POLL_INTERVAL_MS = 1500;
+const POLL_TIMEOUT_MS = 120000;
 const QUEUED_LABEL = 'Queued...';
 const THINKING_LABEL = 'Thinking...';
+
+const isQueuedStatus = (status) => ['pending', 'queued'].includes(String(status ?? '').toLowerCase());
 
 const renderMarkdown = (text) => {
   const html = DOMPurify.sanitize(marked.parse(text ?? ''));
@@ -220,10 +242,13 @@ const renderMarkdown = (text) => {
 };
 
 const quickPromptChips = [
+  'How It Works',  
   'Find income-generating put ideas under 200$',
   'Build a monthly income plan',
   'What makes a stock worth selling puts on?',
 ];
+
+const wheelGuidePrompts = new Set(['How It Works']);
 
 const suggestions = [
   {
@@ -256,7 +281,7 @@ const activePollToken = ref(0);
 let pollTimeoutId = null;
 
 const isHeroMode = computed(() => !conversationHistory.value.length);
-const sendButtonLabel = computed(() => (jobStatus.value === 'pending' ? QUEUED_LABEL : THINKING_LABEL));
+const sendButtonLabel = computed(() => (isQueuedStatus(jobStatus.value) ? QUEUED_LABEL : THINKING_LABEL));
 
 const currentSuggestionIndex = ref(0);
 const carouselTransition = ref('carousel-next');
@@ -344,19 +369,28 @@ const logUsedTools = (data) => {
   console.log('Agent used_tool:', data?.used_tool ?? null);
 };
 
-const schedulePoll = (jobId, messageIndex, pollToken) => {
+const schedulePoll = (jobId, messageIndex, pollToken, pollStartedAt) => {
   clearPollTimeout();
   pollTimeoutId = window.setTimeout(() => {
-    void pollJob(jobId, messageIndex, pollToken);
+    void pollJob(jobId, messageIndex, pollToken, pollStartedAt);
   }, POLL_INTERVAL_MS);
 };
 
-const pollJob = async (jobId, messageIndex, pollToken) => {
+const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
   if (!jobId || pollToken !== activePollToken.value) return;
+
+  if (Date.now() - pollStartedAt >= POLL_TIMEOUT_MS) {
+    const message = 'The agent stayed queued for too long. This usually means the backend worker did not pick up the job.';
+    jobError.value = message;
+    await updateAssistantMessage(messageIndex, `Error: ${message}`);
+    resetJobState();
+    return;
+  }
 
   try {
     const data = await requestJson(`/api/agent/${jobId}/`, {
       method: 'GET',
+      params: { _ts: Date.now() },
       auth: true,
     });
 
@@ -365,6 +399,7 @@ const pollJob = async (jobId, messageIndex, pollToken) => {
     const status = String(data?.status ?? '').toLowerCase();
     const answer = typeof data?.answer === 'string' ? data.answer : '';
     const error = typeof data?.error === 'string' ? data.error : '';
+    console.debug('Agent job status', { jobId, status });
 
     currentJobId.value = jobId;
     jobStatus.value = status;
@@ -385,8 +420,8 @@ const pollJob = async (jobId, messageIndex, pollToken) => {
       return;
     }
 
-    await updateAssistantMessage(messageIndex, status === 'pending' ? QUEUED_LABEL : THINKING_LABEL);
-    schedulePoll(jobId, messageIndex, pollToken);
+    await updateAssistantMessage(messageIndex, isQueuedStatus(status) ? QUEUED_LABEL : THINKING_LABEL);
+    schedulePoll(jobId, messageIndex, pollToken, pollStartedAt);
   } catch (err) {
     if (pollToken !== activePollToken.value) return;
     if (err?.status === 401) {
@@ -424,6 +459,7 @@ const sendMessage = async () => {
   jobStatus.value = 'pending';
 
   const pollToken = activePollToken.value + 1;
+  const pollStartedAt = Date.now();
   activePollToken.value = pollToken;
 
   try {
@@ -465,9 +501,9 @@ const sendMessage = async () => {
 
     await updateAssistantMessage(
       assistantMessageIndex,
-      status === 'running' ? THINKING_LABEL : QUEUED_LABEL,
+      isQueuedStatus(status) ? QUEUED_LABEL : THINKING_LABEL,
     );
-    schedulePoll(jobId, assistantMessageIndex, pollToken);
+    schedulePoll(jobId, assistantMessageIndex, pollToken, pollStartedAt);
   } catch (err) {
     if (pollToken !== activePollToken.value) return;
     if (err?.status === 401) {
@@ -492,6 +528,10 @@ const sendMessage = async () => {
 };
 
 const useSuggestion = (text) => {
+  if (wheelGuidePrompts.has(text)) {
+    emit('open-wheel-guide');
+    return;
+  }
   userInput.value = text;
   void sendMessage();
 };
@@ -525,6 +565,46 @@ onUnmounted(() => {
   justify-content: flex-start;
   align-items: center;
   padding: 2.25rem 1rem 3rem;
+}
+
+.agent-wheel-section {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 2.2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.agent-wheel-section--hero-shell {
+  width: min(1120px, calc(100% - 3rem));
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.agent-wheel-section--hero {
+  margin-top: 2.8rem;
+}
+
+.agent-wheel-section__header {
+  display: grid;
+  gap: 0.45rem;
+  max-width: 52rem;
+}
+
+.agent-wheel-section__title {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.4vw, 1.9rem);
+  line-height: 1.15;
+  color: #f8fafc;
+}
+
+.agent-wheel-section__copy {
+  margin: 0;
+  color: #94a3b8;
+  line-height: 1.65;
+  font-size: 0.95rem;
 }
 
 /* ── Ambient glow ──────────────────────────────────────────────────────── */
@@ -831,6 +911,11 @@ onUnmounted(() => {
 }
 
 @media (max-width: 640px) {
+  .agent-wheel-section {
+    margin-top: 1.8rem;
+    gap: 0.85rem;
+  }
+
   .agent-bubble--md :deep(.md-table-wrap) {
     overflow-x: visible;
     border: none;

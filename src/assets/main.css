@@ -272,6 +272,13 @@ body {
   transition: color 0.2s ease, background-color 0.2s ease;
 }
 
+.header-nav-link--button {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
 .header-nav-link:hover,
 .header-nav-link.is-active {
   color: #f8fafc;

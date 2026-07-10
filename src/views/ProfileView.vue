@@ -75,19 +75,27 @@
                   class="subscription-tier-badge"
                   :class="isPremium ? 'subscription-tier-badge--premium' : 'subscription-tier-badge--free'"
                 >
-                  {{ isPremium ? 'Premium' : 'Free' }}
+                  {{ isPremium ? 'Pro' : 'Free' }}
                 </span>
               </dd>
+            </div>
+            <div class="profile-detail-row">
+              <dt>Status</dt>
+              <dd>{{ subscriptionStatusLabel }}</dd>
             </div>
             <div v-if="isPremium && currentPeriodEnd" class="profile-detail-row">
               <dt>Renews</dt>
               <dd>{{ currentPeriodEnd }}</dd>
             </div>
+            <div v-for="row in entitlementRows" :key="row.label" class="profile-detail-row">
+              <dt>{{ row.label }}</dt>
+              <dd>{{ row.value }}</dd>
+            </div>
           </dl>
 
           <div v-if="!isPremium" class="profile-actions">
             <button class="btn btn-primary" type="button" @click="emit('open-pricing')">
-              Upgrade to Premium
+              Upgrade to Pro
             </button>
           </div>
         </article>
@@ -125,6 +133,13 @@ const props = defineProps({
 const emit = defineEmits(['back-dashboard', 'logout', 'open-pricing']);
 
 const fallbackValue = 'Not provided';
+const freeEntitlementFallback = {
+  daily_queries: 10,
+  max_scan_limit: 5,
+  max_extra_pages: 0,
+  daily_analyze_stock: 1,
+  max_history_items: 8,
+};
 
 const fullNameValue = computed(() => {
   const fullName = [props.user?.first_name, props.user?.last_name].filter(Boolean).join(' ').trim();
@@ -152,6 +167,45 @@ const currentPeriodEnd = computed(() => {
   } catch {
     return null;
   }
+});
+
+const subscriptionStatusLabel = computed(() => {
+  if (props.isPremium) return 'Active';
+  return 'Free plan';
+});
+
+const entitlementRows = computed(() => {
+  const entitlements = props.premiumSubscription?.entitlements ?? freeEntitlementFallback;
+  const planIsPro = props.isPremium || props.premiumSubscription?.plan === 'pro';
+
+  return [
+    {
+      label: 'AI chats',
+      value: planIsPro ? 'Unlimited' : `${entitlements.daily_queries ?? freeEntitlementFallback.daily_queries} / day`,
+    },
+    {
+      label: 'Stock analysis',
+      value: planIsPro ? 'Unlimited' : `${entitlements.daily_analyze_stock ?? freeEntitlementFallback.daily_analyze_stock} / day`,
+    },
+    {
+      label: 'Scan results',
+      value: planIsPro ? 'Unlimited' : `${entitlements.max_scan_limit ?? freeEntitlementFallback.max_scan_limit} per scan`,
+    },
+    {
+      label: 'Extra scan pages',
+      value: planIsPro
+        ? 'Unlimited'
+        : Number(entitlements.max_extra_pages ?? freeEntitlementFallback.max_extra_pages) > 0
+          ? `${entitlements.max_extra_pages ?? freeEntitlementFallback.max_extra_pages} pages`
+          : 'None',
+    },
+    {
+      label: 'History',
+      value: planIsPro
+        ? 'Full history'
+        : `Last ${entitlements.max_history_items ?? freeEntitlementFallback.max_history_items} items`,
+    },
+  ];
 });
 </script>
 

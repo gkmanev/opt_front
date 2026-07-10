@@ -127,16 +127,81 @@ const extractDailyBriefSubscription = (value) => {
   return null;
 };
 
+const normalizePremiumSubscriptionRecord = (value) => {
+  if (!value || typeof value !== 'object') {
+    return {
+      status: null,
+      is_active: false,
+      current_period_end: null,
+      created_at: null,
+      cancel_at_period_end: false,
+    };
+  }
+
+  const status = typeof value.status === 'string' && value.status.trim()
+    ? value.status.trim().toLowerCase()
+    : null;
+  const isActive = Boolean(
+    value.is_active
+    ?? value.is_premium
+    ?? (status === 'active' || status === 'trialing'),
+  );
+
+  return {
+    status,
+    is_active: isActive,
+    current_period_end: value.current_period_end ?? null,
+    created_at: value.created_at ?? null,
+    cancel_at_period_end: Boolean(value.cancel_at_period_end),
+  };
+};
+
+const normalizePremiumEntitlements = (value) => {
+  if (!value || typeof value !== 'object') return null;
+
+  const normalized = {
+    daily_queries: value.daily_queries ?? null,
+    max_scan_limit: value.max_scan_limit ?? null,
+    max_extra_pages: value.max_extra_pages ?? null,
+    daily_analyze_stock: value.daily_analyze_stock ?? null,
+    max_history_items: value.max_history_items ?? null,
+  };
+
+  return Object.values(normalized).some((entryValue) => entryValue !== null && entryValue !== undefined)
+    ? normalized
+    : null;
+};
+
 const normalizePremiumSubscription = (value) => {
   if (!value || typeof value !== 'object') return null;
-  // Backend exposes is_active (True when status is active/trialing); accept is_premium too for forward compat
-  const isPremiumValue = Boolean(value.is_premium ?? value.is_active);
+
+  const hasEndpointShape = 'subscription' in value
+    || 'plan' in value
+    || 'entitlements' in value
+    || 'trial_days_left' in value
+    || 'trial_expired' in value
+    || 'has_full_access' in value;
+  const subscription = normalizePremiumSubscriptionRecord(hasEndpointShape ? value.subscription : value);
+  const normalizedPlan = typeof value.plan === 'string' && value.plan.trim()
+    ? value.plan.trim().toLowerCase()
+    : null;
+  const isPremiumValue = normalizedPlan === 'pro' || subscription.is_active === true;
+  const plan = normalizedPlan ?? (isPremiumValue ? 'pro' : 'free');
+
   return {
+    plan,
     tier: isPremiumValue ? 'premium' : 'free',
-    status: value.status ?? null,
+    status: subscription.status,
     is_premium: isPremiumValue,
-    current_period_end: value.current_period_end ?? null,
-    cancel_at_period_end: Boolean(value.cancel_at_period_end),
+    is_active: subscription.is_active,
+    subscription,
+    current_period_end: subscription.current_period_end,
+    created_at: subscription.created_at,
+    cancel_at_period_end: subscription.cancel_at_period_end,
+    entitlements: normalizePremiumEntitlements(value.entitlements),
+    trial_days_left: value.trial_days_left ?? null,
+    trial_expired: value.trial_expired === true,
+    has_full_access: value.has_full_access ?? null,
   };
 };
 
@@ -412,7 +477,33 @@ const fetchPremiumSubscription = async ({ force = false } = {}) => {
     return state.premiumSubscription;
   } catch (error) {
     if (error?.status === 404) {
-      state.premiumSubscription = { tier: 'free', status: null, is_premium: false, current_period_end: null, cancel_at_period_end: false };
+      state.premiumSubscription = {
+        plan: 'free',
+        tier: 'free',
+        status: null,
+        is_premium: false,
+        is_active: false,
+        subscription: {
+          status: null,
+          is_active: false,
+          current_period_end: null,
+          created_at: null,
+          cancel_at_period_end: false,
+        },
+        current_period_end: null,
+        created_at: null,
+        cancel_at_period_end: false,
+        entitlements: {
+          daily_queries: 10,
+          max_scan_limit: 5,
+          max_extra_pages: 0,
+          daily_analyze_stock: 1,
+          max_history_items: 8,
+        },
+        trial_days_left: null,
+        trial_expired: false,
+        has_full_access: false,
+      };
       state.premiumSubscriptionLoaded = true;
       return state.premiumSubscription;
     }

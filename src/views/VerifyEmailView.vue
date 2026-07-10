@@ -3,6 +3,11 @@
     <div class="auth-backdrop"></div>
     <div class="auth-layout auth-layout--narrow">
       <section class="auth-panel">
+        <button class="auth-close" type="button" aria-label="Close" @click="emit('back-home')">
+          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+            <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
         <button class="auth-home-link" type="button" @click="emit('back-home')">Back to app</button>
 
         <p class="auth-eyebrow">Verify email</p>
@@ -119,6 +124,26 @@ onUnmounted(() => {
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
   padding: 2rem;
   animation: auth-panel-enter 760ms cubic-bezier(0.16, 1, 0.3, 1) 40ms both;
+}
+
+.auth-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0.4rem;
+  border-radius: 0.5rem;
+  line-height: 0;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.auth-close:hover {
+  color: #cbd5e1;
+  background: rgba(148, 163, 184, 0.08);
 }
 
 .auth-panel::before {

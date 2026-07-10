@@ -17,11 +17,11 @@
           </button>
 
           <div class="pricing-header">
-            <p class="pricing-eyebrow">Premium</p>
-            <h2 id="pricing-title">Unlock all screener ideas</h2>
+            <p class="pricing-eyebrow">Pro</p>
+            <h2 id="pricing-title">Unlock unlimited AI research</h2>
             <p class="pricing-subtitle">
-              Free accounts see the top 5 results. Premium gives you the full list — every
-              opportunity the screener finds, updated daily.
+              Free includes daily AI limits. Pro removes the caps on chats, stock analysis,
+              screener access, and conversation history.
             </p>
           </div>
 
@@ -70,19 +70,19 @@
           <ul class="pricing-features">
             <li>
               <span class="pricing-check" aria-hidden="true"></span>
-              Full screener — all weekly ideas, no row limit
+              Unlimited chats
             </li>
             <li>
               <span class="pricing-check" aria-hidden="true"></span>
-              All filters: price, RSI, ROI, delta, score
+              Unlimited stock analysis
             </li>
             <li>
               <span class="pricing-check" aria-hidden="true"></span>
-              Daily Top 3 email briefing
+              Unlimited screener access
             </li>
             <li>
               <span class="pricing-check" aria-hidden="true"></span>
-              Wheel setup details for every ticker
+              Full history / no memory cap
             </li>
           </ul>
 

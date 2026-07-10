@@ -6,7 +6,7 @@
       <p class="pricing-eyebrow">Pricing</p>
       <h1>Simple, transparent pricing</h1>
       <p class="pricing-hero-sub">
-        Start free and upgrade when you need the full screener.
+        Start free and upgrade when you want unlimited AI research.
         No surprises — cancel any time.
       </p>
     </section>
@@ -15,23 +15,19 @@
     <section class="pricing-plans-section container">
       <div class="pricing-plan-grid">
 
-        <!-- Basic -->
+        <!-- Free -->
         <article class="pp-card">
           <div class="pp-card-header">
-            <p class="pp-plan-name">Basic</p>
+            <p class="pp-plan-name">Free</p>
             <div class="pp-price-row">
               <span class="pp-price-amount">Free</span>
             </div>
-            <p class="pp-plan-tagline">Great for getting started with options income</p>
+            <p class="pp-plan-tagline">Daily-limited access for trying the AI workflow</p>
           </div>
           <ul class="pp-features">
-            <li v-for="f in basicFeatures" :key="f.label" class="pp-feature-row">
+            <li v-for="feature in freeFeatures" :key="feature" class="pp-feature-row">
               <span class="pp-check pp-check--on" aria-hidden="true"></span>
-              {{ f.label }}
-            </li>
-            <li v-for="f in proOnlyFeatures" :key="f.label" class="pp-feature-row pp-feature-row--locked">
-              <span class="pp-check pp-check--off" aria-hidden="true"></span>
-              {{ f.label }}
+              {{ feature }}
             </li>
           </ul>
           <div class="pp-card-cta">
@@ -41,7 +37,7 @@
               type="button"
               disabled
             >
-              Your current plan
+              Included in Pro
             </button>
             <button
               v-else-if="isAuthenticated"
@@ -72,16 +68,12 @@
               <span class="pp-price-amount">20</span>
               <span class="pp-price-period">/ month</span>
             </div>
-            <p class="pp-plan-tagline">Full access for serious options income traders</p>
+            <p class="pp-plan-tagline">Unlimited access for active research and screening</p>
           </div>
           <ul class="pp-features">
-            <li v-for="f in basicFeatures" :key="f.label" class="pp-feature-row">
+            <li v-for="feature in proFeatures" :key="feature" class="pp-feature-row">
               <span class="pp-check pp-check--on" aria-hidden="true"></span>
-              {{ f.label }}
-            </li>
-            <li v-for="f in proOnlyFeatures" :key="f.label" class="pp-feature-row">
-              <span class="pp-check pp-check--on" aria-hidden="true"></span>
-              {{ f.label }}
+              {{ feature }}
             </li>
           </ul>
           <div class="pp-card-cta">
@@ -123,7 +115,7 @@
           <thead>
             <tr>
               <th class="compare-col-feature">Feature</th>
-              <th class="compare-col-plan">Basic</th>
+              <th class="compare-col-plan">Free</th>
               <th class="compare-col-plan compare-col-plan--pro">Pro</th>
             </tr>
           </thead>
@@ -167,8 +159,8 @@
 
     <!-- Bottom CTA -->
     <section class="pricing-bottom-cta container">
-      <h2>Ready to see every opportunity?</h2>
-      <p>Start free and upgrade when you need the full list.</p>
+      <h2>Ready to remove the limits?</h2>
+      <p>Start free and upgrade when you want unlimited chats, scans, and history.</p>
       <div class="pricing-bottom-actions">
         <a
           v-if="!isAuthenticated"
@@ -216,30 +208,26 @@ const props = defineProps({
 
 const emit = defineEmits(['open-pricing', 'navigate-route']);
 
-const basicFeatures = [
-  { label: '5 screener results per day' },
-  { label: 'Strategy guides (CSP, CC, Wheel)' },
-  { label: 'Price & RSI filters' },
-  { label: 'Score & technicals column' },
+const freeFeatures = [
+  '10 chats/day',
+  '1 full stock analysis/day',
+  '5 screener results per scan',
+  'No additional scan pages',
 ];
 
-const proOnlyFeatures = [
-  { label: 'Unlimited screener results' },
-  { label: 'All filters + ROI / delta targeting' },
-  { label: 'Daily Top 3 email briefing' },
-  { label: 'Wheel setup details per ticker' },
+const proFeatures = [
+  'Unlimited chats',
+  'Unlimited stock analysis',
+  'Unlimited screener access',
+  'Full history / no memory cap',
 ];
 
 const comparisonRows = [
-  { feature: 'Screener results', basic: '5 / day', pro: 'Unlimited' },
-  { feature: 'Strategy guides', basic: true, pro: true },
-  { feature: 'Price & RSI filters', basic: true, pro: true },
-  { feature: 'Score & technicals', basic: true, pro: true },
-  { feature: 'ROI & delta filter targeting', basic: false, pro: true },
-  { feature: 'All filters + sorting', basic: false, pro: true },
-  { feature: 'Wheel setup details', basic: false, pro: true },
-  { feature: 'Daily Top 3 email briefing', basic: false, pro: true },
-  { feature: 'Priority support', basic: false, pro: true },
+  { feature: 'AI chats', basic: '10 / day', pro: 'Unlimited' },
+  { feature: 'Full stock analysis', basic: '1 / day', pro: 'Unlimited' },
+  { feature: 'Screener results per scan', basic: '5', pro: 'Unlimited' },
+  { feature: 'Additional scan pages', basic: 'None', pro: 'Unlimited' },
+  { feature: 'Conversation history', basic: 'Last 8 items', pro: 'Full history' },
 ];
 
 const faqs = [
@@ -253,11 +241,11 @@ const faqs = [
   },
   {
     q: 'Is there a free trial for Pro?',
-    a: 'There is no time-limited free trial, but the Basic plan is free forever and gives you a genuine feel for the screener before you decide to upgrade.',
+    a: 'There is no active trial system right now. The Free plan is available without an expiring trial period.',
   },
   {
     q: 'What happens to my data if I downgrade?',
-    a: 'Nothing is deleted. Your account stays active on the Basic plan and you keep access to all strategy guides. Only the screener row limit is re-applied.',
+    a: 'Your account stays active on the Free plan. Daily AI, analysis, scan, and history limits are re-applied based on the current free entitlements.',
   },
 ];
 
