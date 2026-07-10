@@ -1,5 +1,6 @@
 <template>
-  <section class="agent-page" :class="{ 'agent-page--hero': isHeroMode }">
+  <div class="agent-page-shell">
+    <section class="agent-page" :class="{ 'agent-page--hero': isHeroMode }">
 
     <!-- Ambient glow (hero only) -->
     <div v-if="isHeroMode" class="agent-glow-bg" aria-hidden="true">
@@ -172,25 +173,39 @@
       </form>
     </div>
 
-    <section
-      class="agent-wheel-section"
-      :class="[
-        isHeroMode ? 'agent-wheel-section--hero-shell' : 'container',
-        { 'agent-wheel-section--hero': isHeroMode },
-      ]"
-    >
-      <div class="agent-wheel-section__header">
-        <span class="section-eyebrow">How It Works</span>
-        <h2 class="agent-wheel-section__title">See the Wheel process from ask to allocation to repeat income.</h2>
-        <p class="agent-wheel-section__copy">
-          This slider walks through how PutPulse turns one prompt into a quality screen,
-          a cash-secured put plan, and a repeatable Wheel workflow.
-        </p>
-      </div>
-      <WheelAnimationSlider />
     </section>
 
-  </section>
+    <section class="agent-wheel-surface">
+      <section
+        class="agent-wheel-section"
+        :class="[
+          isHeroMode ? 'agent-wheel-section--hero-shell' : 'container',
+          { 'agent-wheel-section--hero': isHeroMode },
+        ]"
+      >
+        <div class="agent-wheel-section__header">
+          <span class="section-eyebrow">How It Works</span>
+          <h2 class="agent-wheel-section__title">See the Wheel process from ask to allocation to repeat income.</h2>
+          <p class="agent-wheel-section__copy">
+            This slider walks through how PutPulse turns one prompt into a quality screen,
+            a cash-secured put plan, and a repeatable Wheel workflow.
+          </p>
+        </div>
+        <WheelAnimationSlider />
+        <div class="agent-wheel-cta">
+          <h3 class="agent-wheel-cta__title">Ready to start generating income?</h3>
+          <p class="agent-wheel-cta__copy">
+            Join thousands of investors using data-driven strategies to sell puts on
+            <span class="agent-wheel-cta__accent">quality companies</span>
+          </p>
+          <div class="agent-wheel-cta__actions">
+            <a class="btn btn-primary" href="/sign-up">Start For Free</a>
+            <button class="btn btn-outline" type="button" @click="emit('open-wheel-guide')">See How It Works</button>
+          </div>
+        </div>
+      </section>
+    </section>
+  </div>
 </template>
 
 <script setup>
@@ -552,12 +567,21 @@ onUnmounted(() => {
 
 <style scoped>
 /* ── Page shell ─────────────────────────────────────────────────────────── */
+.agent-page-shell {
+  display: flex;
+  flex-direction: column;
+}
+
 .agent-page {
   position: relative;
   display: flex;
   flex-direction: column;
   padding: 2rem 0 3rem;
   overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(56, 189, 248, 0.16), transparent 34%),
+    radial-gradient(circle at 85% 20%, rgba(59, 130, 246, 0.14), transparent 28%),
+    linear-gradient(180deg, #020617 0%, #08111f 52%, #0f172a 100%);
 }
 
 .agent-page--hero {
@@ -567,11 +591,37 @@ onUnmounted(() => {
   padding: 2.25rem 1rem 3rem;
 }
 
+.agent-wheel-surface {
+  position: relative;
+  padding: 3.1rem 0 3.5rem;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(45, 212, 191, 0.14), transparent 24%),
+    radial-gradient(circle at 82% 18%, rgba(125, 211, 252, 0.1), transparent 26%),
+    linear-gradient(180deg, #111827 0%, #172033 42%, #0f172a 100%);
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.agent-wheel-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(148, 163, 184, 0.05), transparent 22%),
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.018) 0,
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px,
+      transparent 18px
+    );
+  pointer-events: none;
+}
+
 .agent-wheel-section {
   display: grid;
   gap: 1rem;
   width: 100%;
-  margin-top: 2.2rem;
+  margin-top: 0;
   position: relative;
   z-index: 1;
 }
@@ -584,7 +634,7 @@ onUnmounted(() => {
 }
 
 .agent-wheel-section--hero {
-  margin-top: 2.8rem;
+  margin-top: 0;
 }
 
 .agent-wheel-section__header {
@@ -605,6 +655,46 @@ onUnmounted(() => {
   color: #94a3b8;
   line-height: 1.65;
   font-size: 0.95rem;
+}
+
+.agent-wheel-cta {
+  display: grid;
+  gap: 0.95rem;
+  margin-top: 1.1rem;
+  padding: 1.5rem;
+  border-radius: 1.4rem;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background:
+    radial-gradient(circle at top, rgba(34, 211, 238, 0.08), transparent 48%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.76));
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.24);
+}
+
+.agent-wheel-cta__title {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.3vw, 2rem);
+  line-height: 1.12;
+  color: #f8fafc;
+}
+
+.agent-wheel-cta__copy {
+  margin: 0;
+  max-width: 40rem;
+  color: #cbd5e1;
+  line-height: 1.7;
+  font-size: 0.98rem;
+}
+
+.agent-wheel-cta__accent {
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+.agent-wheel-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: center;
 }
 
 /* ── Ambient glow ──────────────────────────────────────────────────────── */
@@ -912,7 +1002,6 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
   .agent-wheel-section {
-    margin-top: 1.8rem;
     gap: 0.85rem;
   }
 
@@ -1307,6 +1396,19 @@ onUnmounted(() => {
 @media (max-width: 600px) {
   .agent-page--hero {
     padding: 1.4rem 0.75rem 2rem;
+  }
+
+  .agent-wheel-surface {
+    padding: 2.35rem 0 2.75rem;
+  }
+
+  .agent-wheel-cta {
+    padding: 1.2rem;
+  }
+
+  .agent-wheel-cta__actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .agent-chat-header {
