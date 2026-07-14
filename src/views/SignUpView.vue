@@ -159,6 +159,20 @@ const auth = useAuthStore();
 
 const selectedPlan = ref('basic');
 
+const buildRegistrationIdentity = (email) => {
+  const normalizedEmail = String(email ?? '').trim().toLowerCase();
+  const localPart = normalizedEmail.split('@')[0] || 'member';
+  const safeLocalPart = localPart.replace(/[^a-z0-9._-]+/gi, '-').replace(/-+/g, '-').replace(/^[-._]+|[-._]+$/g, '') || 'member';
+  const username = normalizedEmail.slice(0, 150) || safeLocalPart;
+  const baseName = safeLocalPart.slice(0, 150);
+
+  return {
+    username,
+    first_name: baseName,
+    last_name: 'User',
+  };
+};
+
 const form = reactive({
   email: '',
   password: '',
@@ -190,7 +204,9 @@ const handleSubmit = async () => {
   errorMessage.value = '';
 
   try {
+    const identity = buildRegistrationIdentity(form.email);
     await auth.register({
+      ...identity,
       email: form.email,
       password: form.password,
       daily_brief_opt_in: form.daily_brief_opt_in,
