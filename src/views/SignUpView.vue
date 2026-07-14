@@ -86,7 +86,6 @@
           </p>
           <div class="auth-actions">
             <button class="btn btn-primary" type="button" @click="emit('navigate-login')">Go to login</button>
-            <button class="btn btn-outline" type="button" @click="resetForm">Register another account</button>
           </div>
         </div>
 
@@ -107,22 +106,6 @@
           <p v-if="props.dailyBriefIntent" class="auth-feedback auth-feedback--info">
             This account will be used for the Daily Top 3 email subscription.
           </p>
-
-          <label class="auth-field">
-            <span>Username</span>
-            <input v-model.trim="form.username" type="text" autocomplete="username" required />
-          </label>
-
-          <div class="auth-grid">
-            <label class="auth-field">
-              <span>First name</span>
-              <input v-model.trim="form.first_name" type="text" autocomplete="given-name" required />
-            </label>
-            <label class="auth-field">
-              <span>Last name</span>
-              <input v-model.trim="form.last_name" type="text" autocomplete="family-name" required />
-            </label>
-          </div>
 
           <label class="auth-field">
             <span>Email</span>
@@ -177,11 +160,8 @@ const auth = useAuthStore();
 const selectedPlan = ref('basic');
 
 const form = reactive({
-  username: '',
   email: '',
   password: '',
-  first_name: '',
-  last_name: '',
   daily_brief_opt_in: props.dailyBriefIntent,
 });
 
@@ -205,22 +185,16 @@ onMounted(() => {
   } catch { /* ignore */ }
 });
 
-const resetForm = () => {
-  registrationComplete.value = false;
-  form.username = '';
-  form.email = '';
-  form.password = '';
-  form.first_name = '';
-  form.last_name = '';
-  form.daily_brief_opt_in = props.dailyBriefIntent;
-};
-
 const handleSubmit = async () => {
   submitting.value = true;
   errorMessage.value = '';
 
   try {
-    await auth.register({ ...form });
+    await auth.register({
+      email: form.email,
+      password: form.password,
+      daily_brief_opt_in: form.daily_brief_opt_in,
+    });
     submittedEmail.value = form.email;
     submittedPlan.value = selectedPlan.value;
 
