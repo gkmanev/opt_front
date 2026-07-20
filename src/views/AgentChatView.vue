@@ -179,7 +179,7 @@
       <section
         class="agent-wheel-section"
         :class="[
-          isHeroMode ? 'agent-wheel-section--hero-shell' : 'container',
+          'agent-wheel-section--shell',
           { 'agent-wheel-section--hero': isHeroMode },
         ]"
       >
@@ -626,7 +626,7 @@ onUnmounted(() => {
   z-index: 1;
 }
 
-.agent-wheel-section--hero-shell {
+.agent-wheel-section--shell {
   width: min(1120px, calc(100% - 3rem));
   max-width: 720px;
   margin-left: auto;
@@ -1396,6 +1396,10 @@ onUnmounted(() => {
 @media (max-width: 600px) {
   .agent-page--hero {
     padding: 1.4rem 0.75rem 2rem;
+  }
+
+  .agent-wheel-section--shell {
+    width: min(1120px, calc(100% - 1.25rem));
   }
 
   .agent-wheel-surface {
