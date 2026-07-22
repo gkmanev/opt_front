@@ -46,7 +46,7 @@
             <template v-if="msg.role === 'assistant'">
               <div
                 class="agent-bubble agent-bubble--md"
-                v-html="renderMarkdown(msg.content)"
+                v-html="renderMarkdown(msg.content, messageBlocks(msg).length > 0)"
               ></div>
               <StructuredTable
                 v-for="(block, blockIndex) in messageBlocks(msg)"
@@ -233,10 +233,13 @@ const THINKING_LABEL = 'Thinking...';
 
 const isQueuedStatus = (status) => ['pending', 'queued'].includes(String(status ?? '').toLowerCase());
 
-const renderMarkdown = (text) => {
+const renderMarkdown = (text, omitTables = false) => {
   const html = DOMPurify.sanitize(marked.parse(text ?? ''));
   const el = document.createElement('div');
   el.innerHTML = html;
+  if (omitTables) {
+    el.querySelectorAll('table').forEach((table) => table.remove());
+  }
   el.querySelectorAll('table').forEach((table) => {
     const headers = [...table.querySelectorAll('thead th')].map((th) => th.textContent.trim());
     table.querySelectorAll('tbody tr').forEach((tr) => {
