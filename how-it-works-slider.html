@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PutPulse — How It Works</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: #07101e;
+      color: #f3f7fc;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+    .how-it-works {
+      width: min(680px, 100%);
+      padding: 32px;
+      border: 1px solid #1d2a44;
+      border-radius: 18px;
+      background: #0d1526;
+    }
+    .eyebrow { margin: 0 0 8px; color: #38bdf8; font-size: .75rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 0 0 28px; font-size: clamp(1.8rem, 5vw, 2.5rem); }
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 32px; }
+    .step-tab {
+      padding: 10px 6px;
+      border: 1px solid #1d2a44;
+      border-radius: 8px;
+      background: transparent;
+      color: #8fa3bf;
+      font: inherit;
+      font-size: .8rem;
+      cursor: pointer;
+    }
+    .step-tab[aria-selected="true"] { border-color: #38bdf8; background: #12304a; color: #f3f7fc; }
+    .slide { min-height: 180px; }
+    .slide.with-chat { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 28px; }
+    .slide-number { color: #38bdf8; font-size: .9rem; font-weight: 700; }
+    h2 { margin: 10px 0 12px; font-size: clamp(1.4rem, 4vw, 2rem); }
+    .slide p { max-width: 52ch; margin: 0; color: #b6c5d8; line-height: 1.65; }
+    .chat { display: grid; gap: 10px; width: 100%; padding: 16px; border: 1px solid #1d2a44; border-radius: 14px; background: #0a1120; box-shadow: 0 12px 28px rgb(0 0 0 / .16); }
+    .chat-header { display: flex; align-items: center; gap: 8px; color: #d9e5f3; font-size: .78rem; font-weight: 700; }
+    .agent-avatar { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #12304a; color: #38bdf8; font-size: .72rem; }
+    .agent-status { color: #8fa3bf; font-size: .68rem; font-weight: 500; }
+    .bubble { width: fit-content; max-width: 92%; padding: 10px 12px; border: 1px solid #1d2a44; border-radius: 13px; color: #c8d5e5; font-size: .85rem; line-height: 1.45; }
+    .bubble.prompt { justify-self: end; border-color: #38bdf8; border-bottom-right-radius: 4px; background: #38bdf8; color: #06283d; font-weight: 600; }
+    .assistant-message { display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: end; gap: 8px; }
+    .assistant-message .agent-avatar { margin-bottom: 2px; }
+    .bubble.response { border-bottom-left-radius: 4px; background: #101a2e; }
+    .bubble.response b { color: #38bdf8; }
+    .typing { display: flex; gap: 5px; width: fit-content; margin-left: 30px; padding: 11px 13px; border: 1px solid #1d2a44; border-radius: 13px; border-bottom-left-radius: 4px; background: #101a2e; }
+    .typing i { width: 5px; height: 5px; border-radius: 50%; background: #8fa3bf; }
+    .controls { display: flex; justify-content: space-between; gap: 12px; margin-top: 32px; }
+    .control {
+      padding: 10px 16px;
+      border: 1px solid #2b3b59;
+      border-radius: 8px;
+      background: transparent;
+      color: #f3f7fc;
+      font: inherit;
+      cursor: pointer;
+    }
+    .control.primary { border-color: #38bdf8; background: #38bdf8; color: #06283d; font-weight: 700; }
+    .control:focus-visible, .step-tab:focus-visible { outline: 3px solid #f5c05a; outline-offset: 3px; }
+    @media (max-width: 560px) { body { padding: 16px; } .how-it-works { padding: 24px; } .step-tab { font-size: .7rem; } .slide.with-chat { grid-template-columns: 1fr; gap: 20px; } }
+  </style>
+</head>
+<body>
+  <main class="how-it-works" aria-labelledby="title">
+    <p class="eyebrow">PutPulse</p>
+    <h1 id="title">How it works</h1>
+
+    <div class="steps" role="tablist" aria-label="How it works steps">
+      <button class="step-tab" role="tab" aria-selected="true" aria-controls="slide" data-step="0">1. Ask</button>
+      <button class="step-tab" role="tab" aria-selected="false" aria-controls="slide" data-step="1">2. Review</button>
+      <button class="step-tab" role="tab" aria-selected="false" aria-controls="slide" data-step="2">3. Sell</button>
+      <button class="step-tab" role="tab" aria-selected="false" aria-controls="slide" data-step="3">4. Repeat</button>
+    </div>
+
+    <section class="slide" id="slide" role="tabpanel" aria-live="polite">
+      <div class="slide-copy">
+        <span class="slide-number"></span>
+        <h2></h2>
+        <p></p>
+      </div>
+      <div class="chat" hidden aria-label="Example conversation">
+        <div class="chat-header"><span class="agent-avatar">P</span><span>PutPulse AI</span><span class="agent-status">• online</span></div>
+        <div class="bubble prompt">I have $10,000. I want $300–$500 a month.</div>
+        <div class="typing" aria-label="Agent is typing"><i></i><i></i><i></i></div>
+        <div class="assistant-message"><span class="agent-avatar">P</span><div class="bubble response">I’ll build a <b>wheel-style plan</b> that fits your budget.</div></div>
+      </div>
+    </section>
+
+    <div class="controls">
+      <button class="control" type="button" id="previous">Previous</button>
+      <button class="control primary" type="button" id="next">Next</button>
+    </div>
+  </main>
+
+  <script>
+    const steps = [
+      ['Step 1', 'Tell us your goal.', 'Share your budget and income target. PutPulse turns it into a plan.'],
+      ['Step 2', 'Review quality stocks.', 'See a short list of stocks selected to be worth owning if assigned.'],
+      ['Step 3', 'Sell cash-secured puts.', 'Choose contracts that fit your available cash and collect premium.'],
+      ['Step 4', 'Keep the wheel moving.', 'If shares are assigned, sell covered calls. If not, sell the next put.']
+    ];
+    const tabs = [...document.querySelectorAll('.step-tab')];
+    const number = document.querySelector('.slide-number');
+    const heading = document.querySelector('.slide h2');
+    const copy = document.querySelector('.slide p');
+    const chat = document.querySelector('.chat');
+    const slide = document.querySelector('.slide');
+    const previous = document.querySelector('#previous');
+    const next = document.querySelector('#next');
+    let activeStep = 0;
+
+    function showStep(index) {
+      activeStep = (index + steps.length) % steps.length;
+      const [label, title, text] = steps[activeStep];
+      number.textContent = label;
+      heading.textContent = title;
+      copy.textContent = text;
+      const isFirstStep = activeStep === 0;
+      chat.hidden = !isFirstStep;
+      slide.classList.toggle('with-chat', isFirstStep);
+      tabs.forEach((tab, i) => tab.setAttribute('aria-selected', i === activeStep));
+      previous.disabled = activeStep === 0;
+      next.textContent = activeStep === steps.length - 1 ? 'Start again' : 'Next';
+    }
+
+    tabs.forEach((tab, index) => tab.addEventListener('click', () => showStep(index)));
+    previous.addEventListener('click', () => showStep(activeStep - 1));
+    next.addEventListener('click', () => showStep(activeStep === steps.length - 1 ? 0 : activeStep + 1));
+    showStep(0);
+  </script>
+</body>
+</html>

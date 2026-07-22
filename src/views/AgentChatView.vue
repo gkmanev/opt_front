@@ -43,11 +43,17 @@
             :class="msg.role === 'user' ? 'agent-message--user' : 'agent-message--assistant'"
           >
             <span class="agent-message-role">{{ msg.role === 'user' ? 'You' : 'AI' }}</span>
-            <div
-              v-if="msg.role === 'assistant'"
-              class="agent-bubble agent-bubble--md"
-              v-html="renderMarkdown(msg.content)"
-            ></div>
+            <template v-if="msg.role === 'assistant'">
+              <div
+                class="agent-bubble agent-bubble--md"
+                v-html="renderMarkdown(msg.content)"
+              ></div>
+              <StructuredTable
+                v-for="(block, blockIndex) in messageBlocks(msg)"
+                :key="`${block.type}-${blockIndex}`"
+                :block="block"
+              />
+            </template>
             <div v-else class="agent-bubble">{{ msg.content }}</div>
           </div>
         </template>
@@ -214,6 +220,7 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { requestJson } from '../api/client';
 import WheelAnimationSlider from '../components/WheelAnimationSlider.vue';
+import StructuredTable from '../components/StructuredTable.vue';
 
 marked.use({ breaks: true, gfm: true });
 
@@ -255,6 +262,9 @@ const renderMarkdown = (text) => {
   });
   return el.innerHTML;
 };
+
+const responseBlocks = (result) => Array.isArray(result?.blocks) ? result.blocks : [];
+const messageBlocks = (message) => Array.isArray(message?.blocks) ? message.blocks : [];
 
 const quickPromptChips = [
   'How It Works',  
@@ -370,11 +380,12 @@ const cancelActiveJob = () => {
   resetJobState();
 };
 
-const updateAssistantMessage = async (messageIndex, content) => {
+const updateAssistantMessage = async (messageIndex, content, blocks = undefined) => {
   if (!conversationHistory.value[messageIndex]) return;
   conversationHistory.value[messageIndex] = {
     ...conversationHistory.value[messageIndex],
     content,
+    ...(blocks === undefined ? {} : { blocks }),
   };
   await scrollToBottom();
 };
@@ -413,6 +424,7 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
 
     const status = String(data?.status ?? '').toLowerCase();
     const answer = typeof data?.answer === 'string' ? data.answer : '';
+    const blocks = responseBlocks(data);
     const error = typeof data?.error === 'string' ? data.error : '';
     console.debug('Agent job status', { jobId, status });
 
@@ -422,7 +434,7 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
     if (status === 'completed') {
       jobError.value = '';
       logUsedTools(data);
-      await updateAssistantMessage(messageIndex, answer || 'No response returned.');
+      await updateAssistantMessage(messageIndex, answer || 'No response returned.', blocks);
       resetJobState();
       return;
     }
@@ -460,7 +472,7 @@ const sendMessage = async () => {
   userInput.value = '';
   if (inputEl.value) inputEl.value.style.height = 'auto';
 
-  const historyBeforeQuery = [...conversationHistory.value];
+    const historyBeforeQuery = [...conversationHistory.value];
   const nextHistory = [
     ...historyBeforeQuery,
     { role: 'user', content: query },
@@ -480,7 +492,7 @@ const sendMessage = async () => {
   try {
     const data = await requestJson('/api/agent/', {
       method: 'POST',
-      body: { query, history: historyBeforeQuery },
+      body: { query, history: historyBeforeQuery.map(({ role, content }) => ({ role, content })) },
       auth: true,
     });
 
@@ -489,6 +501,7 @@ const sendMessage = async () => {
     const jobId = data?.job_id;
     const status = String(data?.status ?? '').toLowerCase();
     const answer = typeof data?.answer === 'string' ? data.answer : '';
+    const blocks = responseBlocks(data);
     const error = typeof data?.error === 'string' ? data.error : '';
 
     if (!jobId) {
@@ -501,7 +514,7 @@ const sendMessage = async () => {
 
     if (status === 'completed') {
       logUsedTools(data);
-      await updateAssistantMessage(assistantMessageIndex, answer || 'No response returned.');
+      await updateAssistantMessage(assistantMessageIndex, answer || 'No response returned.', blocks);
       resetJobState();
       return;
     }
