@@ -44,15 +44,15 @@
           >
             <span class="agent-message-role">{{ msg.role === 'user' ? 'You' : 'AI' }}</span>
             <template v-if="msg.role === 'assistant'">
-              <div
-                class="agent-bubble agent-bubble--md"
-                v-html="renderMarkdown(msg.content, messageBlocks(msg).length > 0)"
-              ></div>
               <StructuredTable
-                v-for="(block, blockIndex) in messageBlocks(msg)"
+                v-for="(block, blockIndex) in structuredTableBlocks(msg)"
                 :key="`${block.type}-${blockIndex}`"
                 :block="block"
               />
+              <div
+                class="agent-bubble agent-bubble--md"
+                v-html="renderMarkdown(msg.content, structuredTableBlocks(msg).length > 0)"
+              ></div>
             </template>
             <div v-else class="agent-bubble">{{ msg.content }}</div>
           </div>
@@ -219,12 +219,14 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { requestJson } from '../api/client';
+import { useAuthStore } from '../stores/auth';
 import WheelAnimationSlider from '../components/WheelAnimationSlider.vue';
 import StructuredTable from '../components/StructuredTable.vue';
 
 marked.use({ breaks: true, gfm: true });
 
-const emit = defineEmits(['login-required', 'open-wheel-guide']);
+const emit = defineEmits(['login-required', 'sign-up-required', 'open-wheel-guide']);
+const auth = useAuthStore();
 
 const POLL_INTERVAL_MS = 1500;
 const POLL_TIMEOUT_MS = 120000;
@@ -232,6 +234,20 @@ const QUEUED_LABEL = 'Queued...';
 const THINKING_LABEL = 'Thinking...';
 
 const isQueuedStatus = (status) => ['pending', 'queued'].includes(String(status ?? '').toLowerCase());
+
+const isDailyLimitReached = (value) => {
+  if (typeof value === 'string') return value.toLowerCase().includes('daily_limit_reached');
+  if (Array.isArray(value)) return value.some(isDailyLimitReached);
+  if (value && typeof value === 'object') return Object.values(value).some(isDailyLimitReached);
+  return false;
+};
+
+const redirectGuestToSignUpForDailyLimit = (value) => {
+  if (auth.isAuthenticated.value || !isDailyLimitReached(value)) return false;
+  cancelActiveJob();
+  emit('sign-up-required');
+  return true;
+};
 
 const renderMarkdown = (text, omitTables = false) => {
   const html = DOMPurify.sanitize(marked.parse(text ?? ''));
@@ -268,6 +284,22 @@ const renderMarkdown = (text, omitTables = false) => {
 
 const responseBlocks = (result) => Array.isArray(result?.blocks) ? result.blocks : [];
 const messageBlocks = (message) => Array.isArray(message?.blocks) ? message.blocks : [];
+const isRenderableStructuredTable = (block) => (
+  Array.isArray(block?.columns)
+  && block.columns.some((column) => column?.key && column?.label)
+  && Array.isArray(block?.rows)
+  && block.rows.length > 0
+);
+const structuredTableBlocks = (message) => messageBlocks(message).filter(isRenderableStructuredTable);
+
+const logCompletedResponse = (data, answer, blocks) => {
+  console.groupCollapsed('Agent completed response');
+  console.log('Raw backend response:', data);
+  console.log('Answer:', answer);
+  console.log('Blocks:', blocks);
+  console.log('Renderable structured tables:', blocks.filter(isRenderableStructuredTable));
+  console.groupEnd();
+};
 
 const quickPromptChips = [
   'How It Works',  
@@ -437,12 +469,14 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
     if (status === 'completed') {
       jobError.value = '';
       logUsedTools(data);
+      logCompletedResponse(data, answer, blocks);
       await updateAssistantMessage(messageIndex, answer || 'No response returned.', blocks);
       resetJobState();
       return;
     }
 
     if (status === 'failed') {
+      if (redirectGuestToSignUpForDailyLimit(data)) return;
       const message = error || 'The agent request failed. Please try again.';
       jobError.value = message;
       await updateAssistantMessage(messageIndex, `Error: ${message}`);
@@ -454,6 +488,7 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
     schedulePoll(jobId, messageIndex, pollToken, pollStartedAt);
   } catch (err) {
     if (pollToken !== activePollToken.value) return;
+    if (redirectGuestToSignUpForDailyLimit(err?.data ?? err?.message)) return;
     if (err?.status === 401) {
       handleUnauthorized();
       return;
@@ -517,12 +552,14 @@ const sendMessage = async () => {
 
     if (status === 'completed') {
       logUsedTools(data);
+      logCompletedResponse(data, answer, blocks);
       await updateAssistantMessage(assistantMessageIndex, answer || 'No response returned.', blocks);
       resetJobState();
       return;
     }
 
     if (status === 'failed') {
+      if (redirectGuestToSignUpForDailyLimit(data)) return;
       const message = error || 'The agent request failed. Please try again.';
       jobError.value = message;
       await updateAssistantMessage(assistantMessageIndex, `Error: ${message}`);
@@ -537,6 +574,7 @@ const sendMessage = async () => {
     schedulePoll(jobId, assistantMessageIndex, pollToken, pollStartedAt);
   } catch (err) {
     if (pollToken !== activePollToken.value) return;
+    if (redirectGuestToSignUpForDailyLimit(err?.data ?? err?.message)) return;
     if (err?.status === 401) {
       conversationHistory.value = historyBeforeQuery;
       userInput.value = query;
@@ -853,7 +891,7 @@ onUnmounted(() => {
   min-height: 240px;
   max-height: 52vh;
   overflow-y: auto;
-  padding-right: 0.25rem;
+  padding: 0 0.25rem 2rem 0;
   scrollbar-width: thin;
   scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
 }

@@ -134,7 +134,7 @@ const emit = defineEmits(['back-dashboard', 'logout', 'open-pricing']);
 
 const fallbackValue = 'Not provided';
 const freeEntitlementFallback = {
-  daily_queries: 10,
+  daily_queries: 5,
   max_scan_limit: 5,
   max_extra_pages: 0,
   daily_analyze_stock: 1,

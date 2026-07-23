@@ -209,7 +209,7 @@ const props = defineProps({
 const emit = defineEmits(['open-pricing', 'navigate-route']);
 
 const freeFeatures = [
-  '10 chats/day',
+  '5 chats/day',
   '1 full stock analysis/day',
   '5 screener results per scan',
   'No additional scan pages',
@@ -223,7 +223,7 @@ const proFeatures = [
 ];
 
 const comparisonRows = [
-  { feature: 'AI chats', basic: '10 / day', pro: 'Unlimited' },
+  { feature: 'AI chats', basic: '5 / day', pro: 'Unlimited' },
   { feature: 'Full stock analysis', basic: '1 / day', pro: 'Unlimited' },
   { feature: 'Screener results per scan', basic: '5', pro: 'Unlimited' },
   { feature: 'Additional scan pages', basic: 'None', pro: 'Unlimited' },

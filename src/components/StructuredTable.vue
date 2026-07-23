@@ -121,7 +121,7 @@ const sortedRows = computed(() => {
 </script>
 
 <style scoped>
-.structured-table { margin-top: 0.75rem; max-width: 100%; }
+.structured-table { margin: 0.75rem 0 1rem; max-width: 100%; }
 .structured-table__title { margin: 0 0 0.45rem; color: #f1f5f9; font-size: 0.95rem; }
 .structured-table__scroll { overflow-x: auto; border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 0.55rem; -webkit-overflow-scrolling: touch; }
 table { width: 100%; min-width: max-content; border-collapse: collapse; font-size: 0.82rem; }

@@ -494,7 +494,7 @@ const fetchPremiumSubscription = async ({ force = false } = {}) => {
         created_at: null,
         cancel_at_period_end: false,
         entitlements: {
-          daily_queries: 10,
+          daily_queries: 5,
           max_scan_limit: 5,
           max_extra_pages: 0,
           daily_analyze_stock: 1,

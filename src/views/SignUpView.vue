@@ -32,7 +32,7 @@
               </div>
             </div>
             <ul class="plan-features">
-              <li><span class="plan-feat-dot plan-feat-dot--on"></span>10 chats/day</li>
+              <li><span class="plan-feat-dot plan-feat-dot--on"></span>5 chats/day</li>
               <li><span class="plan-feat-dot plan-feat-dot--on"></span>1 full stock analysis/day</li>
               <li><span class="plan-feat-dot plan-feat-dot--on"></span>5 screener results per scan</li>
               <li><span class="plan-feat-dot plan-feat-dot--off"></span>No additional scan pages</li>
@@ -105,6 +105,9 @@
 
           <p v-if="props.dailyBriefIntent" class="auth-feedback auth-feedback--info">
             This account will be used for the Daily Top 3 email subscription.
+          </p>
+          <p v-if="queryLimitReached" class="auth-feedback auth-feedback--info">
+            You've reached the guest query limit. Create a free account to continue chatting.
           </p>
 
           <label class="auth-field">
@@ -184,8 +187,10 @@ const errorMessage = ref('');
 const registrationComplete = ref(false);
 const submittedEmail = ref('');
 const submittedPlan = ref('basic');
+const queryLimitReached = ref(false);
 
 onMounted(() => {
+  queryLimitReached.value = new URLSearchParams(window.location.search).get('reason') === 'query-limit';
   const urlPlan = new URLSearchParams(window.location.search).get('plan');
   if (urlPlan === 'pro') {
     selectedPlan.value = 'pro';

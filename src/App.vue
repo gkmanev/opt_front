@@ -182,6 +182,7 @@
     <AgentChatView
       v-else-if="displayRoute === '/' || displayRoute === '/agent'"
       @login-required="goToLogin"
+      @sign-up-required="goToQueryLimitSignUp"
       @open-wheel-guide="openWheelGuide"
     />
 
@@ -1534,6 +1535,13 @@ const goToSignUp = ({ preserveDailyBriefIntent = false } = {}) => {
   if (!preserveDailyBriefIntent) resetDailyBriefCtaFeedback();
   navigateTo('/sign-up');
 };
+const goToQueryLimitSignUp = () => {
+  isMobileMenuOpen.value = false;
+  closeAccountMenu();
+  clearDailyBriefAuthIntent();
+  resetDailyBriefCtaFeedback();
+  navigateTo('/sign-up?reason=query-limit');
+};
 const openPricingFromMenu = () => {
   closeAccountMenu();
   openPricingModal();
@@ -1708,7 +1716,7 @@ const seoConfig = computed(() => {
     return {
       title: 'Pricing | PutPulse',
       description:
-        'PutPulse pricing — Free includes 10 chats per day, 1 full stock analysis per day, and 5 screener results per scan; Pro unlocks unlimited AI research and full history.',
+        'PutPulse pricing — Free includes 5 chats per day, 1 full stock analysis per day, and 5 screener results per scan; Pro unlocks unlimited AI research and full history.',
       robots: 'index,follow',
       canonicalPath: '/pricing',
     };
