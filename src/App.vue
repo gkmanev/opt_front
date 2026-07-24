@@ -183,6 +183,7 @@
       v-else-if="displayRoute === '/' || displayRoute === '/agent'"
       @login-required="goToLogin"
       @sign-up-required="goToQueryLimitSignUp"
+      @open-pricing="openPricingModal"
       @open-wheel-guide="openWheelGuide"
     />
 

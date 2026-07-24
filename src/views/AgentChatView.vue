@@ -59,7 +59,7 @@
         </template>
       </div>
 
-      <section v-if="guestLimitReached" class="agent-limit-card" role="status" aria-live="polite">
+      <section v-if="usageLimitReached" class="agent-limit-card" role="status" aria-live="polite">
         <div class="agent-limit-card__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 8v4l2.5 2.5" />
@@ -67,11 +67,16 @@
           </svg>
         </div>
         <div class="agent-limit-card__content">
-          <h2>You’ve reached this week’s free AI questions</h2>
-          <p>Create a free PutPulse account to keep exploring strategies, save your chats, and get more AI access.</p>
+          <h2>{{ usageLimitTitle }}</h2>
+          <p>{{ usageLimitDescription }}</p>
           <div class="agent-limit-card__actions">
-            <button class="btn btn-primary" type="button" @click="requestSignUp">Create free account</button>
-            <button class="agent-limit-card__login" type="button" @click="requestLogin">Already have an account? Log in</button>
+            <template v-if="auth.isAuthenticated.value">
+              <button class="btn btn-primary" type="button" @click="requestUpgrade">Explore plans</button>
+            </template>
+            <template v-else>
+              <button class="btn btn-primary" type="button" @click="requestSignUp">Create free account</button>
+              <button class="agent-limit-card__login" type="button" @click="requestLogin">Already have an account? Log in</button>
+            </template>
           </div>
         </div>
       </section>
@@ -85,7 +90,7 @@
           class="agent-input"
           :placeholder="composerPlaceholder"
           rows="1"
-          :disabled="isSending || guestLimitReached"
+          :disabled="isSending || usageLimitReached"
           @input="autoResize"
         ></textarea>
         <div class="agent-composer-toolbar">
@@ -93,9 +98,9 @@
           <span v-else class="agent-composer-hint">Try a prompt or type your own question</span>
           <button
             class="agent-send-btn"
-            :class="{ 'agent-send-btn--ready': userInput.trim() && !isSending && !guestLimitReached }"
+            :class="{ 'agent-send-btn--ready': userInput.trim() && !isSending && !usageLimitReached }"
             type="submit"
-            :disabled="isSending || guestLimitReached || !userInput.trim()"
+            :disabled="isSending || usageLimitReached || !userInput.trim()"
             aria-label="Send"
           >
             <svg v-if="!isSending" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
@@ -173,7 +178,7 @@
           class="agent-input"
           :placeholder="composerPlaceholder"
           rows="1"
-          :disabled="isSending || guestLimitReached"
+          :disabled="isSending || usageLimitReached"
           @input="autoResize"
         ></textarea>
         <div class="agent-composer-toolbar">
@@ -181,9 +186,9 @@
           <span v-else class="agent-composer-hint">Try a prompt or type your own question</span>
           <button
             class="agent-send-btn"
-            :class="{ 'agent-send-btn--ready': userInput.trim() && !isSending && !guestLimitReached }"
+            :class="{ 'agent-send-btn--ready': userInput.trim() && !isSending && !usageLimitReached }"
             type="submit"
-            :disabled="isSending || guestLimitReached || !userInput.trim()"
+            :disabled="isSending || usageLimitReached || !userInput.trim()"
             aria-label="Send"
           >
             <svg v-if="!isSending" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
@@ -243,7 +248,7 @@ import StructuredTable from '../components/StructuredTable.vue';
 
 marked.use({ breaks: true, gfm: true });
 
-const emit = defineEmits(['login-required', 'sign-up-required', 'open-wheel-guide']);
+const emit = defineEmits(['login-required', 'sign-up-required', 'open-pricing', 'open-wheel-guide']);
 const auth = useAuthStore();
 
 const POLL_INTERVAL_MS = 1500;
@@ -260,11 +265,22 @@ const isUsageLimitReached = (value) => {
   return false;
 };
 
-const showGuestUsageLimit = (value, assistantMessageIndex) => {
-  if (auth.isAuthenticated.value || !isUsageLimitReached(value)) return false;
+const usageLimitPeriod = (value) => {
+  if (typeof value === 'string') return /weekly_limit_reached/i.test(value) ? 'weekly' : 'daily';
+  if (Array.isArray(value)) return value.find(isUsageLimitReached) ? usageLimitPeriod(value.find(isUsageLimitReached)) : 'daily';
+  if (value && typeof value === 'object') {
+    const limitValue = Object.values(value).find(isUsageLimitReached);
+    return limitValue ? usageLimitPeriod(limitValue) : 'daily';
+  }
+  return 'daily';
+};
+
+const showUsageLimit = (value, assistantMessageIndex) => {
+  if (!isUsageLimitReached(value)) return false;
   cancelActiveJob();
   jobError.value = '';
-  guestLimitReached.value = true;
+  reachedUsageLimitPeriod.value = usageLimitPeriod(value);
+  usageLimitReached.value = true;
   if (Number.isInteger(assistantMessageIndex)) {
     conversationHistory.value.splice(assistantMessageIndex, 1);
   }
@@ -358,7 +374,8 @@ const isSending = ref(false);
 const currentJobId = ref(null);
 const jobStatus = ref('');
 const jobError = ref('');
-const guestLimitReached = ref(false);
+const usageLimitReached = ref(false);
+const reachedUsageLimitPeriod = ref('daily');
 const messagesEl = ref(null);
 const inputEl = ref(null);
 const activePollToken = ref(0);
@@ -367,9 +384,21 @@ let pollTimeoutId = null;
 const isHeroMode = computed(() => !conversationHistory.value.length);
 const sendButtonLabel = computed(() => (isQueuedStatus(jobStatus.value) ? QUEUED_LABEL : THINKING_LABEL));
 const composerPlaceholder = computed(() => (
-  guestLimitReached.value
-    ? 'Create a free account to continue asking the AI.'
+  usageLimitReached.value
+    ? auth.isAuthenticated.value
+      ? 'Your AI question limit has been reached. Upgrade to continue.'
+      : 'Create a free account to continue asking the AI.'
     : 'Ask the AI to screen puts, build an income plan, or explain the wheel strategy...'
+));
+const usageLimitTitle = computed(() => (
+  auth.isAuthenticated.value
+    ? `You’ve reached your ${reachedUsageLimitPeriod.value} AI question limit`
+    : `You’ve reached this ${reachedUsageLimitPeriod.value === 'daily' ? 'day’s' : 'week’s'} free AI questions`
+));
+const usageLimitDescription = computed(() => (
+  auth.isAuthenticated.value
+    ? 'Upgrade your plan for more AI research, full chat history, and uninterrupted strategy analysis.'
+    : 'Create a free PutPulse account to keep exploring strategies, save your chats, and get more AI access.'
 ));
 
 const currentSuggestionIndex = ref(0);
@@ -507,7 +536,7 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
     }
 
     if (status === 'failed') {
-      if (showGuestUsageLimit(data, messageIndex)) return;
+      if (showUsageLimit(data, messageIndex)) return;
       const message = error || 'The agent request failed. Please try again.';
       jobError.value = message;
       await updateAssistantMessage(messageIndex, `Error: ${message}`);
@@ -519,7 +548,7 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
     schedulePoll(jobId, messageIndex, pollToken, pollStartedAt);
   } catch (err) {
     if (pollToken !== activePollToken.value) return;
-    if (showGuestUsageLimit(err?.data ?? err?.message, messageIndex)) return;
+    if (showUsageLimit(err?.data ?? err?.message, messageIndex)) return;
     if (err?.status === 401) {
       handleUnauthorized();
       return;
@@ -534,7 +563,7 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
 
 const sendMessage = async () => {
   const query = userInput.value.trim();
-  if (!query || isSending.value || guestLimitReached.value) return;
+  if (!query || isSending.value || usageLimitReached.value) return;
 
   cancelActiveJob();
   jobError.value = '';
@@ -595,7 +624,7 @@ const sendMessage = async () => {
     }
 
     if (status === 'failed') {
-      if (showGuestUsageLimit(data, assistantMessageIndex)) return;
+      if (showUsageLimit(data, assistantMessageIndex)) return;
       const message = error || 'The agent request failed. Please try again.';
       jobError.value = message;
       await updateAssistantMessage(assistantMessageIndex, `Error: ${message}`);
@@ -610,7 +639,7 @@ const sendMessage = async () => {
     schedulePoll(jobId, assistantMessageIndex, pollToken, pollStartedAt);
   } catch (err) {
     if (pollToken !== activePollToken.value) return;
-    if (showGuestUsageLimit(err?.data ?? err?.message, assistantMessageIndex)) return;
+    if (showUsageLimit(err?.data ?? err?.message, assistantMessageIndex)) return;
     if (err?.status === 401) {
       conversationHistory.value = historyBeforeQuery;
       userInput.value = query;
@@ -643,12 +672,14 @@ const useSuggestion = (text) => {
 
 const requestSignUp = () => emit('sign-up-required');
 const requestLogin = () => emit('login-required');
+const requestUpgrade = () => emit('open-pricing');
 
 const clearConversation = () => {
   cancelActiveJob();
   conversationHistory.value = [];
   jobError.value = '';
-  guestLimitReached.value = false;
+  usageLimitReached.value = false;
+  reachedUsageLimitPeriod.value = 'daily';
   userInput.value = '';
   if (inputEl.value) inputEl.value.style.height = 'auto';
 };
