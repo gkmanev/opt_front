@@ -132,9 +132,14 @@ const normalizePremiumSubscriptionRecord = (value) => {
     return {
       status: null,
       is_active: false,
+      start_date: null,
+      current_period_start: null,
       current_period_end: null,
       created_at: null,
       cancel_at_period_end: false,
+      cancel_at: null,
+      canceled_at: null,
+      ended_at: null,
     };
   }
 
@@ -150,9 +155,14 @@ const normalizePremiumSubscriptionRecord = (value) => {
   return {
     status,
     is_active: isActive,
+    start_date: value.start_date ?? null,
+    current_period_start: value.current_period_start ?? null,
     current_period_end: value.current_period_end ?? null,
     created_at: value.created_at ?? null,
     cancel_at_period_end: Boolean(value.cancel_at_period_end),
+    cancel_at: value.cancel_at ?? null,
+    canceled_at: value.canceled_at ?? null,
+    ended_at: value.ended_at ?? null,
   };
 };
 
@@ -181,7 +191,7 @@ const normalizePremiumSubscription = (value) => {
     || 'trial_days_left' in value
     || 'trial_expired' in value
     || 'has_full_access' in value;
-  const subscription = normalizePremiumSubscriptionRecord(hasEndpointShape ? value.subscription : value);
+  const subscription = normalizePremiumSubscriptionRecord(hasEndpointShape ? (value.subscription ?? value) : value);
   const normalizedPlan = typeof value.plan === 'string' && value.plan.trim()
     ? value.plan.trim().toLowerCase()
     : null;
@@ -195,9 +205,14 @@ const normalizePremiumSubscription = (value) => {
     is_premium: isPremiumValue,
     is_active: subscription.is_active,
     subscription,
+    start_date: subscription.start_date,
+    current_period_start: subscription.current_period_start,
     current_period_end: subscription.current_period_end,
     created_at: subscription.created_at,
     cancel_at_period_end: subscription.cancel_at_period_end,
+    cancel_at: subscription.cancel_at,
+    canceled_at: subscription.canceled_at,
+    ended_at: subscription.ended_at,
     entitlements: normalizePremiumEntitlements(value.entitlements),
     trial_days_left: value.trial_days_left ?? null,
     trial_expired: value.trial_expired === true,

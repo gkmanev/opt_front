@@ -29,10 +29,9 @@
           <li><a href="#free-plan">1. Free Basic Plan</a></li>
           <li><a href="#cancellation">2. Cancellation</a></li>
           <li><a href="#monthly">3. Monthly Plan Refunds</a></li>
-          <li><a href="#annual">4. Annual Plan Refunds</a></li>
-          <li><a href="#promotions">5. Promotions &amp; Discounts</a></li>
-          <li><a href="#disputes">6. Disputes</a></li>
-          <li><a href="#contact">7. Contact Us</a></li>
+          <li><a href="#promotions">4. Promotions &amp; Discounts</a></li>
+          <li><a href="#disputes">5. Disputes</a></li>
+          <li><a href="#contact">6. Contact Us</a></li>
         </ol>
       </nav>
 
@@ -82,34 +81,8 @@
           </p>
         </article>
 
-        <article id="annual" class="terms-section">
-          <h2>4. Annual Plan Refunds</h2>
-          <p>
-            Annual Pro subscriptions follow these rules:
-          </p>
-          <ul>
-            <li>
-              <strong>First year</strong> — Annual plans are <strong>non-refundable</strong> during
-              the first year's billing period. If you cancel during the first year, your subscription
-              remains active until the end of that annual period.
-            </li>
-            <li>
-              <strong>Subsequent renewals</strong> — If your annual plan auto-renews and you decide
-              PutPulse is no longer right for you, you may request a full refund within
-              <strong>7 calendar days</strong> of the renewal charge. Requests outside that window
-              are not eligible for a refund.
-            </li>
-          </ul>
-          <p>
-            To request a refund on an annual renewal, contact us within the 7-day window via our
-            <a href="/contact" @click="navigateRoute($event, '/contact')">contact page</a> and
-            include the email address on your account. We process refunds through Paddle and they
-            typically appear on your statement within 5–10 business days.
-          </p>
-        </article>
-
         <article id="promotions" class="terms-section">
-          <h2>5. Promotions &amp; Discounts</h2>
+          <h2>4. Promotions &amp; Discounts</h2>
           <p>
             Subscriptions purchased under a promotional price (for example, a seasonal discount or
             limited-time offer) are <strong>non-refundable</strong> and all sales are final.
@@ -117,14 +90,14 @@
           <p>
             Promotional pricing locks in the discounted rate for the duration of the promotion's
             stated terms. Your plan will renew automatically at the promotional or regularly
-            discounted rate as specified at the time of purchase. You can always change plans or
-            cancel to avoid auto-renewal; your access will remain active until the end of the
+            discounted rate as specified at the time of purchase. You can cancel to avoid
+            auto-renewal; your access will remain active until the end of the
             current billing cycle.
           </p>
         </article>
 
         <article id="disputes" class="terms-section">
-          <h2>6. Disputes</h2>
+          <h2>5. Disputes</h2>
           <p>
             If you believe you have been charged in error, please contact us <strong>before</strong>
             filing a dispute or chargeback with your bank or card issuer. We are happy to investigate
@@ -137,7 +110,7 @@
         </article>
 
         <article id="contact" class="terms-section">
-          <h2>7. Contact Us</h2>
+          <h2>6. Contact Us</h2>
           <p>
             We are proud of PutPulse and the support we provide, and we want every interaction to
             be straightforward and fair. If you have any questions about this policy before

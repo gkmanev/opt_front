@@ -39,32 +39,12 @@
                 class="btn btn-outline pricing-plan-cta"
                 type="button"
                 :disabled="checkoutLoading"
-                @click="checkout('monthly')"
+                @click="checkout"
               >
-                Get Monthly
+                Get Pro
               </button>
             </div>
 
-            <div class="pricing-plan pricing-plan--featured">
-              <span class="pricing-badge">Best value</span>
-              <div class="pricing-plan-header">
-                <h3>Annual</h3>
-                <div class="pricing-amount">
-                  <span class="pricing-currency">€</span>
-                  <span class="pricing-price">{{ annualPrice }}</span>
-                  <span class="pricing-period">/ yr</span>
-                </div>
-                <p class="pricing-save">Save {{ annualSavePct }}% vs monthly</p>
-              </div>
-              <button
-                class="btn btn-primary pricing-plan-cta"
-                type="button"
-                :disabled="checkoutLoading"
-                @click="checkout('annual')"
-              >
-                Get Annual
-              </button>
-            </div>
           </div>
 
           <ul class="pricing-features">
@@ -120,13 +100,7 @@ const auth = useAuthStore();
 const { openCheckout } = useStripe();
 
 const monthlyPrice = import.meta.env.VITE_STRIPE_PRICE_MONTHLY_DISPLAY ?? '—';
-const annualPrice = import.meta.env.VITE_STRIPE_PRICE_ANNUAL_DISPLAY ?? '—';
-const annualSavePct = import.meta.env.VITE_STRIPE_ANNUAL_SAVE_PCT ?? '—';
-
-const PRICE_IDS = {
-  monthly: import.meta.env.VITE_STRIPE_PRICE_ID_MONTHLY,
-  annual: import.meta.env.VITE_STRIPE_PRICE_ID_ANNUAL,
-};
+const monthlyPriceId = import.meta.env.VITE_STRIPE_PRICE_ID_MONTHLY;
 
 watch(() => props.open, (isOpen) => {
   document.body.style.overflow = isOpen ? 'hidden' : '';
@@ -139,15 +113,14 @@ onUnmounted(() => {
 const checkoutLoading = ref(false);
 const checkoutError = ref(null);
 
-const checkout = async (plan) => {
+const checkout = async () => {
   if (!auth.isAuthenticated.value) {
     emit('login-required');
     return;
   }
 
   checkoutError.value = null;
-  const priceId = PRICE_IDS[plan];
-  if (!priceId) {
+  if (!monthlyPriceId) {
     checkoutError.value = 'Checkout is not configured yet. Please try again later.';
     return;
   }
@@ -155,7 +128,7 @@ const checkout = async (plan) => {
   checkoutLoading.value = true;
   try {
     await openCheckout({
-      priceId,
+      priceId: monthlyPriceId,
       userId: auth.state.user?.id,
       userEmail: auth.state.user?.email,
       successUrl: `${window.location.origin}/payment-success`,
@@ -240,7 +213,7 @@ const checkout = async (plan) => {
 
 .pricing-plans {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 1rem;
   margin-bottom: 1.75rem;
 }
@@ -261,22 +234,6 @@ const checkout = async (plan) => {
   background:
     radial-gradient(circle at top left, rgba(34, 211, 238, 0.1), transparent 50%),
     rgba(15, 23, 42, 0.7);
-}
-
-.pricing-badge {
-  position: absolute;
-  top: -0.6rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(90deg, #22d3ee, #60a5fa);
-  color: #082f49;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 0.2rem 0.65rem;
-  border-radius: 99px;
-  white-space: nowrap;
 }
 
 .pricing-plan-header h3 {
@@ -309,13 +266,6 @@ const checkout = async (plan) => {
   font-size: 0.85rem;
   color: #64748b;
   margin-left: 0.1rem;
-}
-
-.pricing-save {
-  margin: 0.4rem 0 0;
-  font-size: 0.78rem;
-  color: #34d399;
-  font-weight: 600;
 }
 
 .pricing-plan-cta {
@@ -422,10 +372,6 @@ const checkout = async (plan) => {
 }
 
 @media (max-width: 480px) {
-  .pricing-plans {
-    grid-template-columns: 1fr;
-  }
-
   .pricing-modal {
     padding: 1.5rem;
   }

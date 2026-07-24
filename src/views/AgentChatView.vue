@@ -59,6 +59,23 @@
         </template>
       </div>
 
+      <section v-if="guestLimitReached" class="agent-limit-card" role="status" aria-live="polite">
+        <div class="agent-limit-card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 8v4l2.5 2.5" />
+            <circle cx="12" cy="12" r="9" />
+          </svg>
+        </div>
+        <div class="agent-limit-card__content">
+          <h2>You’ve reached this week’s free AI questions</h2>
+          <p>Create a free PutPulse account to keep exploring strategies, save your chats, and get more AI access.</p>
+          <div class="agent-limit-card__actions">
+            <button class="btn btn-primary" type="button" @click="requestSignUp">Create free account</button>
+            <button class="agent-limit-card__login" type="button" @click="requestLogin">Already have an account? Log in</button>
+          </div>
+        </div>
+      </section>
+
       <div v-if="jobError" class="agent-error" role="alert">{{ jobError }}</div>
 
       <form class="agent-composer agent-composer--chat" @submit.prevent="sendMessage">
@@ -66,9 +83,9 @@
           ref="inputEl"
           v-model="userInput"
           class="agent-input"
-          placeholder="Ask the AI to screen puts, build an income plan, or explain the wheel strategy..."
+          :placeholder="composerPlaceholder"
           rows="1"
-          :disabled="isSending"
+          :disabled="isSending || guestLimitReached"
           @input="autoResize"
         ></textarea>
         <div class="agent-composer-toolbar">
@@ -76,9 +93,9 @@
           <span v-else class="agent-composer-hint">Try a prompt or type your own question</span>
           <button
             class="agent-send-btn"
-            :class="{ 'agent-send-btn--ready': userInput.trim() && !isSending }"
+            :class="{ 'agent-send-btn--ready': userInput.trim() && !isSending && !guestLimitReached }"
             type="submit"
-            :disabled="isSending || !userInput.trim()"
+            :disabled="isSending || guestLimitReached || !userInput.trim()"
             aria-label="Send"
           >
             <svg v-if="!isSending" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
@@ -154,9 +171,9 @@
           ref="inputEl"
           v-model="userInput"
           class="agent-input"
-          placeholder="Ask the AI to screen puts, build an income plan, or explain the wheel strategy..."
+          :placeholder="composerPlaceholder"
           rows="1"
-          :disabled="isSending"
+          :disabled="isSending || guestLimitReached"
           @input="autoResize"
         ></textarea>
         <div class="agent-composer-toolbar">
@@ -164,9 +181,9 @@
           <span v-else class="agent-composer-hint">Try a prompt or type your own question</span>
           <button
             class="agent-send-btn"
-            :class="{ 'agent-send-btn--ready': userInput.trim() && !isSending }"
+            :class="{ 'agent-send-btn--ready': userInput.trim() && !isSending && !guestLimitReached }"
             type="submit"
-            :disabled="isSending || !userInput.trim()"
+            :disabled="isSending || guestLimitReached || !userInput.trim()"
             aria-label="Send"
           >
             <svg v-if="!isSending" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
@@ -219,6 +236,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { requestJson } from '../api/client';
+import { getDeviceFingerprint } from '../api/deviceFingerprint';
 import { useAuthStore } from '../stores/auth';
 import WheelAnimationSlider from '../components/WheelAnimationSlider.vue';
 import StructuredTable from '../components/StructuredTable.vue';
@@ -235,17 +253,22 @@ const THINKING_LABEL = 'Thinking...';
 
 const isQueuedStatus = (status) => ['pending', 'queued'].includes(String(status ?? '').toLowerCase());
 
-const isDailyLimitReached = (value) => {
-  if (typeof value === 'string') return value.toLowerCase().includes('daily_limit_reached');
-  if (Array.isArray(value)) return value.some(isDailyLimitReached);
-  if (value && typeof value === 'object') return Object.values(value).some(isDailyLimitReached);
+const isUsageLimitReached = (value) => {
+  if (typeof value === 'string') return /(?:daily|weekly)_limit_reached/i.test(value);
+  if (Array.isArray(value)) return value.some(isUsageLimitReached);
+  if (value && typeof value === 'object') return Object.values(value).some(isUsageLimitReached);
   return false;
 };
 
-const redirectGuestToSignUpForDailyLimit = (value) => {
-  if (auth.isAuthenticated.value || !isDailyLimitReached(value)) return false;
+const showGuestUsageLimit = (value, assistantMessageIndex) => {
+  if (auth.isAuthenticated.value || !isUsageLimitReached(value)) return false;
   cancelActiveJob();
-  emit('sign-up-required');
+  jobError.value = '';
+  guestLimitReached.value = true;
+  if (Number.isInteger(assistantMessageIndex)) {
+    conversationHistory.value.splice(assistantMessageIndex, 1);
+  }
+  void scrollToBottom();
   return true;
 };
 
@@ -335,6 +358,7 @@ const isSending = ref(false);
 const currentJobId = ref(null);
 const jobStatus = ref('');
 const jobError = ref('');
+const guestLimitReached = ref(false);
 const messagesEl = ref(null);
 const inputEl = ref(null);
 const activePollToken = ref(0);
@@ -342,6 +366,11 @@ let pollTimeoutId = null;
 
 const isHeroMode = computed(() => !conversationHistory.value.length);
 const sendButtonLabel = computed(() => (isQueuedStatus(jobStatus.value) ? QUEUED_LABEL : THINKING_LABEL));
+const composerPlaceholder = computed(() => (
+  guestLimitReached.value
+    ? 'Create a free account to continue asking the AI.'
+    : 'Ask the AI to screen puts, build an income plan, or explain the wheel strategy...'
+));
 
 const currentSuggestionIndex = ref(0);
 const carouselTransition = ref('carousel-next');
@@ -449,9 +478,11 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
   }
 
   try {
+    const deviceFingerprint = getDeviceFingerprint();
     const data = await requestJson(`/api/agent/${jobId}/`, {
       method: 'GET',
       params: { _ts: Date.now() },
+      headers: deviceFingerprint ? { 'X-Device-Fingerprint': deviceFingerprint } : undefined,
       auth: true,
     });
 
@@ -476,7 +507,7 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
     }
 
     if (status === 'failed') {
-      if (redirectGuestToSignUpForDailyLimit(data)) return;
+      if (showGuestUsageLimit(data, messageIndex)) return;
       const message = error || 'The agent request failed. Please try again.';
       jobError.value = message;
       await updateAssistantMessage(messageIndex, `Error: ${message}`);
@@ -488,7 +519,7 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
     schedulePoll(jobId, messageIndex, pollToken, pollStartedAt);
   } catch (err) {
     if (pollToken !== activePollToken.value) return;
-    if (redirectGuestToSignUpForDailyLimit(err?.data ?? err?.message)) return;
+    if (showGuestUsageLimit(err?.data ?? err?.message, messageIndex)) return;
     if (err?.status === 401) {
       handleUnauthorized();
       return;
@@ -503,7 +534,7 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
 
 const sendMessage = async () => {
   const query = userInput.value.trim();
-  if (!query || isSending.value) return;
+  if (!query || isSending.value || guestLimitReached.value) return;
 
   cancelActiveJob();
   jobError.value = '';
@@ -528,9 +559,14 @@ const sendMessage = async () => {
   activePollToken.value = pollToken;
 
   try {
+    const deviceFingerprint = getDeviceFingerprint();
     const data = await requestJson('/api/agent/', {
       method: 'POST',
-      body: { query, history: historyBeforeQuery.map(({ role, content }) => ({ role, content })) },
+      body: {
+        query,
+        history: historyBeforeQuery.map(({ role, content }) => ({ role, content })),
+      },
+      headers: deviceFingerprint ? { 'X-Device-Fingerprint': deviceFingerprint } : undefined,
       auth: true,
     });
 
@@ -559,7 +595,7 @@ const sendMessage = async () => {
     }
 
     if (status === 'failed') {
-      if (redirectGuestToSignUpForDailyLimit(data)) return;
+      if (showGuestUsageLimit(data, assistantMessageIndex)) return;
       const message = error || 'The agent request failed. Please try again.';
       jobError.value = message;
       await updateAssistantMessage(assistantMessageIndex, `Error: ${message}`);
@@ -574,7 +610,7 @@ const sendMessage = async () => {
     schedulePoll(jobId, assistantMessageIndex, pollToken, pollStartedAt);
   } catch (err) {
     if (pollToken !== activePollToken.value) return;
-    if (redirectGuestToSignUpForDailyLimit(err?.data ?? err?.message)) return;
+    if (showGuestUsageLimit(err?.data ?? err?.message, assistantMessageIndex)) return;
     if (err?.status === 401) {
       conversationHistory.value = historyBeforeQuery;
       userInput.value = query;
@@ -605,10 +641,14 @@ const useSuggestion = (text) => {
   void sendMessage();
 };
 
+const requestSignUp = () => emit('sign-up-required');
+const requestLogin = () => emit('login-required');
+
 const clearConversation = () => {
   cancelActiveJob();
   conversationHistory.value = [];
   jobError.value = '';
+  guestLimitReached.value = false;
   userInput.value = '';
   if (inputEl.value) inputEl.value.style.height = 'auto';
 };
@@ -1105,6 +1145,77 @@ onUnmounted(() => {
 }
 
 /* ── Error ─────────────────────────────────────────────────────────────── */
+.agent-limit-card {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.2), rgba(30, 64, 175, 0.16));
+  box-shadow: 0 12px 28px rgba(2, 6, 23, 0.18);
+}
+
+.agent-limit-card__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: rgba(34, 211, 238, 0.14);
+  color: #67e8f9;
+}
+
+.agent-limit-card__icon svg {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.agent-limit-card__content h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.agent-limit-card__content p {
+  margin: 0.35rem 0 0;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.agent-limit-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem 1rem;
+  margin-top: 0.9rem;
+}
+
+.agent-limit-card__actions .btn {
+  min-height: 2.4rem;
+  padding: 0.5rem 0.95rem;
+  font-size: 0.82rem;
+}
+
+.agent-limit-card__login {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #7dd3fc;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.agent-limit-card__login:hover {
+  color: #e0f2fe;
+  text-decoration: underline;
+}
+
 .agent-error {
   padding: 0.75rem 1rem;
   background: rgba(239, 68, 68, 0.1);
@@ -1476,6 +1587,17 @@ onUnmounted(() => {
 
   .agent-clear-btn {
     align-self: flex-start;
+  }
+
+  .agent-limit-card {
+    gap: 0.8rem;
+    padding: 1rem;
+  }
+
+  .agent-limit-card__actions {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.7rem;
   }
 
   .agent-messages {

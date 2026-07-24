@@ -1746,7 +1746,7 @@ const seoConfig = computed(() => {
     return {
       title: 'Refund Policy | PutPulse',
       description:
-        'PutPulse refund policy — free Basic plan, no-contract Pro subscriptions, monthly and annual refund terms, and how to request a refund.',
+        'PutPulse refund policy — free Basic plan, no-contract monthly Pro subscriptions, and how to request a refund.',
       robots: 'index,follow',
       canonicalPath: '/refund-policy',
     };

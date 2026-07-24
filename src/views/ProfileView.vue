@@ -83,9 +83,9 @@
               <dt>Status</dt>
               <dd>{{ subscriptionStatusLabel }}</dd>
             </div>
-            <div v-if="isPremium && currentPeriodEnd" class="profile-detail-row">
-              <dt>Renews</dt>
-              <dd>{{ currentPeriodEnd }}</dd>
+            <div v-if="subscriptionDate" class="profile-detail-row">
+              <dt>{{ subscriptionDate.label }}</dt>
+              <dd>{{ subscriptionDate.value }}</dd>
             </div>
             <div v-for="row in entitlementRows" :key="row.label" class="profile-detail-row">
               <dt>{{ row.label }}</dt>
@@ -93,11 +93,23 @@
             </div>
           </dl>
 
-          <div v-if="!isPremium" class="profile-actions">
-            <button class="btn btn-primary" type="button" @click="emit('open-pricing')">
+          <div class="profile-actions">
+            <button
+              v-if="isPremium"
+              class="btn btn-outline"
+              type="button"
+              :disabled="isOpeningCustomerPortal"
+              @click="manageSubscription"
+            >
+              {{ isOpeningCustomerPortal ? 'Opening billing portal…' : 'Manage or cancel subscription' }}
+            </button>
+            <button v-if="!isPremium" class="btn btn-primary" type="button" @click="emit('open-pricing')">
               Upgrade to Pro
             </button>
           </div>
+          <p v-if="customerPortalError" class="profile-billing-error" role="alert">
+            {{ customerPortalError }}
+          </p>
         </article>
       </div>
     </div>
@@ -105,7 +117,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import { useStripe } from '../composables/useStripe';
 
 const props = defineProps({
   user: {
@@ -131,6 +144,22 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['back-dashboard', 'logout', 'open-pricing']);
+const { openCustomerPortal } = useStripe();
+const isOpeningCustomerPortal = ref(false);
+const customerPortalError = ref('');
+
+const manageSubscription = async () => {
+  customerPortalError.value = '';
+  isOpeningCustomerPortal.value = true;
+
+  try {
+    await openCustomerPortal();
+  } catch (error) {
+    customerPortalError.value = error?.message || 'Unable to open the subscription management portal.';
+  } finally {
+    isOpeningCustomerPortal.value = false;
+  }
+};
 
 const fallbackValue = 'Not provided';
 const freeEntitlementFallback = {
@@ -159,17 +188,47 @@ const initials = computed(() => {
     .join('') || 'OF';
 });
 
-const currentPeriodEnd = computed(() => {
-  const raw = props.premiumSubscription?.current_period_end;
+const formatSubscriptionDate = (raw) => {
   if (!raw) return null;
   try {
     return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(raw));
   } catch {
     return null;
   }
+};
+
+const subscriptionDate = computed(() => {
+  const subscription = props.premiumSubscription;
+  if (!subscription) return null;
+
+  const withDate = (label, rawDate) => {
+    const value = formatSubscriptionDate(rawDate);
+    return value ? { label, value } : null;
+  };
+
+  if (subscription.ended_at) {
+    return withDate('Ended', subscription.ended_at);
+  }
+  if (subscription.cancel_at_period_end) {
+    return withDate('Ends', subscription.current_period_end);
+  }
+  if (subscription.status === 'active') {
+    return withDate('Renews', subscription.current_period_end);
+  }
+  if (subscription.status === 'trialing') {
+    return withDate('Trial ends', subscription.current_period_end);
+  }
+
+  return null;
 });
 
 const subscriptionStatusLabel = computed(() => {
+  const subscription = props.premiumSubscription;
+  if (subscription?.ended_at) return 'Ended';
+  if (subscription?.status === 'past_due') return 'Payment issue';
+  if (subscription?.status === 'trialing') return 'Trial';
+  if (subscription?.status === 'active') return 'Active';
+  if (subscription?.status) return subscription.status;
   if (props.isPremium) return 'Active';
   return 'Free plan';
 });
@@ -341,6 +400,13 @@ const entitlementRows = computed(() => {
   background:
     radial-gradient(circle at top right, rgba(34, 211, 238, 0.1), transparent 40%),
     rgba(15, 23, 42, 0.82);
+}
+
+.profile-billing-error {
+  margin: 0.9rem 0 0;
+  color: #fca5a5;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 .subscription-tier-badge {
