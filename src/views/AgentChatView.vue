@@ -48,10 +48,15 @@
                 v-for="(block, blockIndex) in structuredTableBlocks(msg)"
                 :key="`${block.type}-${blockIndex}`"
                 :block="block"
+                :watchlist-tickers="watchlistTickers"
+                :watchlist-pending-tickers="watchlistPendingTickers"
+                @select-ticker="requestTickerDetails"
+                @toggle-watchlist="requestWatchlistToggle"
               />
               <div
                 class="agent-bubble agent-bubble--md"
                 v-html="renderMarkdown(msg.content, structuredTableBlocks(msg).length > 0)"
+                @click="handleMarkdownTickerClick"
               ></div>
             </template>
             <div v-else class="agent-bubble">{{ msg.content }}</div>
@@ -248,7 +253,17 @@ import StructuredTable from '../components/StructuredTable.vue';
 
 marked.use({ breaks: true, gfm: true });
 
-const emit = defineEmits(['login-required', 'sign-up-required', 'open-pricing', 'open-wheel-guide']);
+const props = defineProps({
+  watchlistTickers: {
+    type: Array,
+    default: () => [],
+  },
+  watchlistPendingTickers: {
+    type: Array,
+    default: () => [],
+  },
+});
+const emit = defineEmits(['login-required', 'sign-up-required', 'open-pricing', 'open-ticker', 'toggle-watchlist', 'open-wheel-guide']);
 const auth = useAuthStore();
 
 const POLL_INTERVAL_MS = 1500;
@@ -304,12 +319,23 @@ const renderMarkdown = (text, omitTables = false) => {
 
         if (/ticker|symbol/i.test(header)) {
           td.classList.add('md-ticker-cell');
-          const strong = document.createElement('strong');
-          strong.className = 'md-ticker-text';
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'md-ticker-text md-ticker-button';
+          button.dataset.ticker = td.textContent.trim().toUpperCase();
           while (td.firstChild) {
-            strong.appendChild(td.firstChild);
+            button.appendChild(td.firstChild);
           }
-          td.appendChild(strong);
+          td.appendChild(button);
+          const watchlistButton = document.createElement('button');
+          watchlistButton.type = 'button';
+          watchlistButton.className = 'md-watchlist-button';
+          watchlistButton.dataset.ticker = button.dataset.ticker;
+          const isWatched = props.watchlistTickers.includes(button.dataset.ticker);
+          watchlistButton.classList.toggle('is-saved', isWatched);
+          watchlistButton.setAttribute('aria-label', `${isWatched ? 'Remove' : 'Add'} ${button.dataset.ticker} ${isWatched ? 'from' : 'to'} watchlist`);
+          watchlistButton.textContent = isWatched ? '★' : '☆';
+          td.appendChild(watchlistButton);
         }
       });
     });
@@ -673,6 +699,21 @@ const useSuggestion = (text) => {
 const requestSignUp = () => emit('sign-up-required');
 const requestLogin = () => emit('login-required');
 const requestUpgrade = () => emit('open-pricing');
+const requestTickerDetails = (ticker) => {
+  if (ticker) emit('open-ticker', ticker);
+};
+const requestWatchlistToggle = (ticker) => {
+  if (ticker) emit('toggle-watchlist', ticker);
+};
+const handleMarkdownTickerClick = (event) => {
+  const watchlistButton = event.target.closest('.md-watchlist-button');
+  if (watchlistButton?.dataset.ticker) {
+    requestWatchlistToggle(watchlistButton.dataset.ticker);
+    return;
+  }
+  const tickerButton = event.target.closest('.md-ticker-button');
+  if (tickerButton?.dataset.ticker) requestTickerDetails(tickerButton.dataset.ticker);
+};
 
 const clearConversation = () => {
   cancelActiveJob();
@@ -1048,6 +1089,13 @@ onUnmounted(() => {
 .agent-bubble--md :deep(strong) { color: #f1f5f9; font-weight: 600; }
 .agent-bubble--md :deep(.md-ticker-cell) { color: #4ade80; }
 .agent-bubble--md :deep(.md-ticker-text) { color: #4ade80; font-weight: 700; }
+.agent-bubble--md :deep(.md-ticker-button) { padding: 0; border: 0; background: transparent; cursor: pointer; font: inherit; }
+.agent-bubble--md :deep(.md-ticker-button:hover),
+.agent-bubble--md :deep(.md-ticker-button:focus-visible) { color: #67e8f9; text-decoration: underline; }
+.agent-bubble--md :deep(.md-watchlist-button) { margin-left: 0.3rem; border: 0; padding: 0; background: transparent; color: #94a3b8; font: inherit; cursor: pointer; }
+.agent-bubble--md :deep(.md-watchlist-button:hover),
+.agent-bubble--md :deep(.md-watchlist-button:focus-visible),
+.agent-bubble--md :deep(.md-watchlist-button.is-saved) { color: #fbbf24; }
 .agent-bubble--md :deep(em) { color: #94a3b8; }
 .agent-bubble--md :deep(code) {
   background: rgba(0, 0, 0, 0.35);

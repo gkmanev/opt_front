@@ -22,13 +22,21 @@
         <tbody>
           <tr v-for="(row, rowIndex) in sortedRows" :key="rowIndex">
             <td v-for="column in columns" :key="column.key">
-              <a
-                v-if="column.type === 'ticker' && tickerValue(row[column.key])"
-                class="structured-table__ticker"
-                :href="tickerHref(row[column.key])"
-                target="_blank"
-                rel="noopener noreferrer"
-              >{{ tickerValue(row[column.key]) }}</a>
+              <div v-if="column.type === 'ticker' && tickerValue(row[column.key])" class="structured-table__ticker-actions">
+                <a
+                  class="structured-table__ticker"
+                  href="#"
+                  @click.prevent="emit('select-ticker', tickerValue(row[column.key]))"
+                >{{ tickerValue(row[column.key]) }}</a>
+                <button
+                  class="structured-table__watchlist-toggle"
+                  :class="{ 'is-saved': isTickerWatched(row[column.key]) }"
+                  type="button"
+                  :disabled="isTickerPending(row[column.key])"
+                  :aria-label="isTickerWatched(row[column.key]) ? `Remove ${tickerValue(row[column.key])} from watchlist` : `Add ${tickerValue(row[column.key])} to watchlist`"
+                  @click="emit('toggle-watchlist', tickerValue(row[column.key]))"
+                >{{ isTickerWatched(row[column.key]) ? '★' : '☆' }}</button>
+              </div>
               <template v-else>{{ formatValue(row[column.key], column.type) }}</template>
             </td>
           </tr>
@@ -46,7 +54,16 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  watchlistTickers: {
+    type: Array,
+    default: () => [],
+  },
+  watchlistPendingTickers: {
+    type: Array,
+    default: () => [],
+  },
 });
+const emit = defineEmits(['select-ticker', 'toggle-watchlist']);
 
 const sortColumn = ref('');
 const sortDirection = ref('asc');
@@ -90,7 +107,8 @@ const formatValue = (value, type) => {
 };
 
 const tickerValue = (value) => typeof value === 'string' || typeof value === 'number' ? String(value).trim().toUpperCase() : '';
-const tickerHref = (value) => `https://finance.yahoo.com/quote/${encodeURIComponent(tickerValue(value))}`;
+const isTickerWatched = (value) => props.watchlistTickers.includes(tickerValue(value));
+const isTickerPending = (value) => props.watchlistPendingTickers.includes(tickerValue(value));
 
 const toggleSort = (key) => {
   if (sortColumn.value === key) {
@@ -133,5 +151,9 @@ tbody tr:nth-child(even) { background: rgba(15, 23, 42, 0.35); }
 tbody tr:last-child td { border-bottom: 0; }
 .structured-table__ticker { color: #4ade80; font-weight: 700; text-decoration: none; }
 .structured-table__ticker:hover { text-decoration: underline; }
+.structured-table__ticker-actions { display: inline-flex; align-items: center; gap: 0.3rem; }
+.structured-table__watchlist-toggle { border: 0; padding: 0; background: transparent; color: #94a3b8; font: inherit; cursor: pointer; }
+.structured-table__watchlist-toggle:hover, .structured-table__watchlist-toggle:focus-visible, .structured-table__watchlist-toggle.is-saved { color: #fbbf24; }
+.structured-table__watchlist-toggle:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; border-radius: 0.2rem; }
 @media (max-width: 600px) { .structured-table__title { color: #020617; } th { background: #e2e8f0; color: #334155; } }
 </style>

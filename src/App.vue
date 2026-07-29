@@ -87,6 +87,7 @@
                   </div>
                   <button class="account-menu-item" type="button" @click="goToProfileFromMenu">Profile</button>
                   <button class="account-menu-item" type="button" @click="goToSettingsFromMenu">Settings</button>
+                  <button class="account-menu-item" type="button" @click="goToWatchlistFromMenu">My Watchlist</button>
                   <button
                     v-if="isFreeUser"
                     class="account-menu-item account-menu-item--accent"
@@ -181,11 +182,49 @@
 
     <AgentChatView
       v-else-if="displayRoute === '/' || displayRoute === '/agent'"
+      :watchlist-tickers="watchlistTickers"
+      :watchlist-pending-tickers="[...watchlistPendingTickers]"
       @login-required="goToLogin"
       @sign-up-required="goToQueryLimitSignUp"
       @open-pricing="openPricingModal"
+      @open-ticker="openTicker"
+      @toggle-watchlist="toggleWatchlistTicker"
       @open-wheel-guide="openWheelGuide"
     />
+
+    <section v-else-if="displayRoute === '/watchlist'" class="container watchlist-page">
+      <div class="watchlist-page__header">
+        <div>
+          <span class="section-eyebrow">My Watchlist</span>
+          <h1>Track your put-selling candidates</h1>
+          <p class="muted">Save tickers to revisit their latest score, technical signal, and options setup.</p>
+        </div>
+        <button class="btn btn-muted" type="button" @click="navigateTo('/')">Browse opportunities</button>
+      </div>
+
+      <div v-if="watchlistLoading" class="watchlist-empty card">Loading your watchlist...</div>
+      <div v-else-if="watchlistError" class="watchlist-error" role="alert">
+        {{ watchlistError }}
+        <button class="watchlist-error__retry" type="button" @click="fetchWatchlist">Try again</button>
+      </div>
+
+      <div v-else-if="!watchlistTickers.length" class="watchlist-empty card">
+        <h2>Your watchlist is empty</h2>
+        <p class="muted">Use the star next to any ticker to save it here.</p>
+        <button class="btn btn-primary" type="button" @click="navigateTo('/')">Find tickers</button>
+      </div>
+
+      <div v-else class="watchlist-grid">
+        <article v-for="ticker in watchlistTickers" :key="ticker" class="watchlist-card card">
+          <button class="watchlist-card__ticker" type="button" @click="openTicker(ticker)">{{ ticker }}</button>
+          <p class="watchlist-card__meta">{{ watchlistTickerSummary(ticker) }}</p>
+          <div class="watchlist-card__actions">
+            <button class="btn btn-muted" type="button" @click="openTicker(ticker)">View details</button>
+            <button class="watchlist-remove" type="button" :disabled="isWatchlistTickerPending(ticker)" :aria-label="`Remove ${ticker} from watchlist`" @click="toggleWatchlistTicker(ticker)">Remove</button>
+          </div>
+        </article>
+      </div>
+    </section>
 
     <WheelStrategyView
       v-else-if="displayRoute === '/wheel-strategy'"
@@ -902,7 +941,23 @@
                     :class="{ 'ticker-group-row--expanded': isWheelSetupExpanded(group.id) }"
                   >
                     <td class="weekly-col-ticker" data-label="Ticker">
-                      <span class="ticker-symbol">{{ group.ticker }}</span>
+                      <div v-if="group.hasTicker" class="ticker-symbol-actions">
+                        <button
+                          class="ticker-symbol ticker-symbol--button"
+                          type="button"
+                          :aria-label="`View ${group.ticker} details`"
+                          @click="openTicker(group.ticker)"
+                        >{{ group.ticker }}</button>
+                        <button
+                          class="watchlist-toggle"
+                          :class="{ 'is-saved': isTickerWatched(group.ticker) }"
+                          type="button"
+                          :disabled="isWatchlistTickerPending(group.ticker)"
+                          :aria-label="isTickerWatched(group.ticker) ? `Remove ${group.ticker} from watchlist` : `Add ${group.ticker} to watchlist`"
+                          @click="toggleWatchlistTicker(group.ticker)"
+                        >{{ isTickerWatched(group.ticker) ? '★' : '☆' }}</button>
+                      </div>
+                      <span v-else class="ticker-symbol">{{ group.ticker }}</span>
                     </td>
                     <td class="weekly-col-contracts" data-label="Expiration">
                       <span class="contracts-summary-date">{{ group.bestContract.date }}</span>
@@ -1170,6 +1225,14 @@
               <div class="ticker-panel-title-row">
                 <span class="ticker-panel-symbol">{{ activeTicker }}</span>
                 <span class="ticker-panel-company">{{ activeTickerCompany }}</span>
+                <button
+                  class="watchlist-toggle watchlist-toggle--panel"
+                  :class="{ 'is-saved': isTickerWatched(activeTicker) }"
+                  type="button"
+                  :disabled="isWatchlistTickerPending(activeTicker)"
+                  :aria-label="isTickerWatched(activeTicker) ? `Remove ${activeTicker} from watchlist` : `Add ${activeTicker} to watchlist`"
+                  @click="toggleWatchlistTicker(activeTicker)"
+                >{{ isTickerWatched(activeTicker) ? '★ Saved' : '☆ Watch' }}</button>
               </div>
               <div class="ticker-panel-price-row">
                 <span class="ticker-panel-price">{{ activeTickerDisplayPrice }}</span>
@@ -1267,7 +1330,7 @@
 
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
-import { ApiError } from './api/client';
+import { ApiError, requestJson } from './api/client';
 import { getApiBaseUrl, getDailyBriefs, getSymbols, setApiBaseUrl } from './api/investingApi';
 import DailyBrief from './components/DailyBrief.vue';
 import CookieBanner from './components/CookieBanner.vue';
@@ -1320,6 +1383,7 @@ const knownRoutes = new Set([
   '/settings',
   '/sign-up',
   '/verify-email',
+  '/watchlist',
   '/wheel-strategy',
 ]);
 const authRoutes = new Set(['/login', '/sign-up', '/verify-email']);
@@ -1388,6 +1452,77 @@ const displayRoute = computed(() => (isAuthOverlayRoute.value ? authBackdropRout
 const isAuthenticated = auth.isAuthenticated;
 const isPremium = auth.isPremium;
 const isFreeUser = computed(() => isAuthenticated.value && !isPremium.value);
+const watchlistItems = ref([]);
+const watchlistLoading = ref(false);
+const watchlistError = ref('');
+const watchlistPendingTickers = ref(new Set());
+const watchlistTickers = computed(() => watchlistItems.value.map((item) => item.ticker));
+const normalizeWatchlistTicker = (ticker) => String(ticker ?? '').trim().toUpperCase();
+const setWatchlistTickerPending = (ticker, pending) => {
+  const nextPendingTickers = new Set(watchlistPendingTickers.value);
+  if (pending) nextPendingTickers.add(ticker);
+  else nextPendingTickers.delete(ticker);
+  watchlistPendingTickers.value = nextPendingTickers;
+};
+const isWatchlistTickerPending = (ticker) => watchlistPendingTickers.value.has(normalizeWatchlistTicker(ticker));
+const fetchWatchlist = async () => {
+  if (!isAuthenticated.value) {
+    watchlistItems.value = [];
+    return;
+  }
+
+  watchlistLoading.value = true;
+  watchlistError.value = '';
+  try {
+    const data = await requestJson('/api/watchlist/');
+    const items = Array.isArray(data) ? data : data?.results;
+    watchlistItems.value = Array.isArray(items)
+      ? items.map((item) => ({ ...item, ticker: normalizeWatchlistTicker(item?.ticker) })).filter((item) => item.ticker)
+      : [];
+  } catch (error) {
+    watchlistError.value = error.message || 'Unable to load your watchlist.';
+    if (error?.status === 401) goToLogin();
+  } finally {
+    watchlistLoading.value = false;
+  }
+};
+const isTickerWatched = (ticker) => watchlistTickers.value.includes(normalizeWatchlistTicker(ticker));
+const toggleWatchlistTicker = async (ticker) => {
+  const normalizedTicker = normalizeWatchlistTicker(ticker);
+  if (!normalizedTicker || isWatchlistTickerPending(normalizedTicker)) return;
+  if (!isAuthenticated.value) {
+    goToLogin();
+    return;
+  }
+
+  setWatchlistTickerPending(normalizedTicker, true);
+  watchlistError.value = '';
+  try {
+    if (isTickerWatched(normalizedTicker)) {
+      await requestJson(`/api/watchlist/${encodeURIComponent(normalizedTicker)}/`, { method: 'DELETE' });
+      watchlistItems.value = watchlistItems.value.filter((item) => item.ticker !== normalizedTicker);
+    } else {
+      const item = await requestJson('/api/watchlist/', {
+        method: 'POST',
+        body: { ticker: normalizedTicker },
+      });
+      const savedItem = { ...item, ticker: normalizeWatchlistTicker(item?.ticker ?? normalizedTicker) };
+      if (!isTickerWatched(savedItem.ticker)) watchlistItems.value.unshift(savedItem);
+    }
+  } catch (error) {
+    watchlistError.value = error.message || `Unable to update ${normalizedTicker} in your watchlist.`;
+    if (error?.status === 401) goToLogin();
+  } finally {
+    setWatchlistTickerPending(normalizedTicker, false);
+  }
+};
+watch(isAuthenticated, (authenticated) => {
+  if (authenticated) void fetchWatchlist();
+  else {
+    watchlistItems.value = [];
+    watchlistError.value = '';
+  }
+}, { immediate: true });
 const isStaffUser = computed(() => auth.state.user?.is_staff === true || auth.state.user?.is_superuser === true);
 const brandHomePath = computed(() => (isStaffUser.value ? '/dashboard' : '/'));
 const authDisplayName = auth.displayName;
@@ -1558,6 +1693,11 @@ const goToProfileFromMenu = () => {
 };
 const goToSettingsFromMenu = () => {
   goToSettings();
+};
+const goToWatchlistFromMenu = () => {
+  isMobileMenuOpen.value = false;
+  closeAccountMenu();
+  navigateTo('/watchlist');
 };
 const completeDailyBriefIntent = async () => {
   dailyBriefCtaPending.value = true;
@@ -3107,7 +3247,7 @@ watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authRe
     return;
   }
 
-  if (!signedIn && (route === '/profile' || route === '/settings')) {
+  if (!signedIn && (route === '/profile' || route === '/settings' || route === '/watchlist')) {
     navigateTo('/login', { replace: true });
   }
 }, { immediate: true });
@@ -3423,6 +3563,15 @@ const renderSymbolProfileWidget = () => {
 const renderModalCharts = () => {
   renderSymbolOverviewWidget();
   renderSymbolProfileWidget();
+};
+
+const watchlistTickerSummary = (ticker) => {
+  const symbol = weeklyIdeas.value.find((item) => normalizeTickerSymbol(item?.ticker) === ticker);
+  if (!symbol) return 'No current qualifying setup. We’ll keep it on your radar.';
+  const price = formatNumber(symbol.price);
+  const score = scoreSignalValue(symbol.score ?? symbol.fundamental_score);
+  const technical = symbol.tv_technicals ?? symbol.tvTechnicals ?? symbol.technical_rating;
+  return [price !== '—' ? price : null, score !== '--' ? `Score ${score}/100` : null, technical].filter(Boolean).join(' · ') || 'Latest data is unavailable.';
 };
 
 const openTicker = (ticker) => {
