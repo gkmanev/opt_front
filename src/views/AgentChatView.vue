@@ -9,6 +9,29 @@
       <div class="agent-glow agent-glow--3"></div>
     </div>
 
+    <aside v-if="auth.isAuthenticated.value" class="agent-history-sidebar" aria-label="Chat history">
+      <button class="agent-new-chat-btn" type="button" @click="startNewConversation">
+        <span aria-hidden="true">+</span> New chat
+      </button>
+      <div class="agent-history-sidebar__heading">Recent chats</div>
+      <div v-if="isLoadingConversations" class="agent-history-sidebar__empty">Loading chats…</div>
+      <div v-else-if="conversations.length" class="agent-history-sidebar__list">
+        <button
+          v-for="conversation in conversations"
+          :key="conversation.id"
+          class="agent-history-item"
+          :class="{ 'is-active': conversation.id === activeConversationId }"
+          type="button"
+          :disabled="isLoadingConversation"
+          @click="selectConversation(conversation)"
+        >
+          <span class="agent-history-item__title">{{ conversation.title }}</span>
+          <span v-if="conversation.preview" class="agent-history-item__preview">{{ conversation.preview }}</span>
+        </button>
+      </div>
+      <div v-else class="agent-history-sidebar__empty">Your saved chats will appear here.</div>
+    </aside>
+
     <!-- Hero heading -->
     <Transition name="hero-fade">
       <div v-if="isHeroMode" class="agent-hero-content">
@@ -30,9 +53,9 @@
           v-if="conversationHistory.length"
           class="btn btn-muted agent-clear-btn"
           type="button"
-          @click="clearConversation"
+          @click="startNewConversation"
         >
-          Clear
+          New chat
         </button>
       </div>
 
@@ -242,7 +265,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { requestJson } from '../api/client';
@@ -396,6 +419,10 @@ const suggestions = [
 
 const userInput = ref('');
 const conversationHistory = ref([]);
+const conversations = ref([]);
+const activeConversationId = ref(null);
+const isLoadingConversations = ref(false);
+const isLoadingConversation = ref(false);
 const isSending = ref(false);
 const currentJobId = ref(null);
 const jobStatus = ref('');
@@ -459,6 +486,7 @@ const goToSuggestion = (i) => {
 
 onMounted(() => {
   resetSuggestionInterval();
+  void loadConversations();
 });
 
 const scrollToBottom = async () => {
@@ -467,6 +495,112 @@ const scrollToBottom = async () => {
     messagesEl.value.scrollTop = messagesEl.value.scrollHeight;
   }
 };
+
+const extractHistoryItems = (data) => {
+  if (Array.isArray(data)) return data;
+  if (!data || typeof data !== 'object') return [];
+
+  return [data.results, data.history, data.items, data.data]
+    .find((value) => Array.isArray(value)) ?? [];
+};
+
+const normalizeHistoryMessage = (message) => {
+  if (!message || typeof message !== 'object') return null;
+  const role = message.role === 'assistant' ? 'assistant' : message.role === 'user' ? 'user' : null;
+  const content = typeof message.content === 'string' ? message.content.trim() : '';
+  return role && content ? { role, content, ...(role === 'assistant' && responseBlocks(message).length ? { blocks: responseBlocks(message) } : {}) } : null;
+};
+
+const normalizeHistoryItem = (item) => {
+  const message = normalizeHistoryMessage(item);
+  if (message) return [message];
+  if (!item || typeof item !== 'object') return [];
+
+  const query = [item.query, item.question, item.prompt].find((value) => typeof value === 'string' && value.trim());
+  const answer = [item.answer, item.response].find((value) => typeof value === 'string' && value.trim());
+  const messages = [];
+  if (query) messages.push({ role: 'user', content: query.trim() });
+  if (answer) {
+    messages.push({
+      role: 'assistant',
+      content: answer.trim(),
+      ...(responseBlocks(item).length ? { blocks: responseBlocks(item) } : {}),
+    });
+  }
+  return messages;
+};
+
+const normalizeConversation = (item) => {
+  if (!item || typeof item !== 'object') return null;
+  const id = item.conversation_id ?? item.conversationId ?? item.id;
+  if (id === null || id === undefined || id === '') return null;
+  const title = [item.title, item.query, item.question, item.prompt]
+    .find((value) => typeof value === 'string' && value.trim())?.trim() ?? 'New conversation';
+  const preview = [item.preview, item.answer, item.response]
+    .find((value) => typeof value === 'string' && value.trim())?.trim() ?? '';
+  return { id: String(id), title, preview };
+};
+
+const loadConversations = async () => {
+  if (!auth.isAuthenticated.value || isLoadingConversations.value) return;
+
+  isLoadingConversations.value = true;
+  try {
+    const data = await requestJson('/api/agent/', {
+      method: 'GET',
+      params: { limit: 5 },
+      auth: true,
+    });
+    conversations.value = extractHistoryItems(data).map(normalizeConversation).filter(Boolean);
+  } catch (err) {
+    if (err?.status === 401) handleUnauthorized();
+    else console.warn('Failed to load agent conversations.', err);
+  } finally {
+    isLoadingConversations.value = false;
+  }
+};
+
+const startNewConversation = () => {
+  cancelActiveJob();
+  activeConversationId.value = null;
+  conversationHistory.value = [];
+  jobError.value = '';
+  usageLimitReached.value = false;
+  reachedUsageLimitPeriod.value = 'daily';
+  userInput.value = '';
+  if (inputEl.value) inputEl.value.style.height = 'auto';
+  void nextTick(() => inputEl.value?.focus());
+};
+
+const selectConversation = async (conversation) => {
+  if (!conversation?.id || isLoadingConversation.value || isSending.value) return;
+
+  cancelActiveJob();
+  isLoadingConversation.value = true;
+  jobError.value = '';
+  try {
+    const data = await requestJson('/api/agent/', {
+      method: 'GET',
+      params: { conversation_id: conversation.id },
+      auth: true,
+    });
+    const messages = extractHistoryItems(data).flatMap(normalizeHistoryItem);
+    conversationHistory.value = messages;
+    activeConversationId.value = conversation.id;
+    usageLimitReached.value = false;
+    await scrollToBottom();
+  } catch (err) {
+    if (err?.status === 401) handleUnauthorized();
+    else jobError.value = err.message || 'Failed to load this conversation. Please try again.';
+  } finally {
+    isLoadingConversation.value = false;
+  }
+};
+
+watch(auth.isAuthenticated, (isAuthenticated, wasAuthenticated) => {
+  if (isAuthenticated && !wasAuthenticated) void loadConversations();
+  if (!isAuthenticated && wasAuthenticated) startNewConversation();
+});
 
 const autoResize = () => {
   if (!inputEl.value) return;
@@ -558,6 +692,7 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
       logCompletedResponse(data, answer, blocks);
       await updateAssistantMessage(messageIndex, answer || 'No response returned.', blocks);
       resetJobState();
+      void loadConversations();
       return;
     }
 
@@ -620,6 +755,7 @@ const sendMessage = async () => {
       body: {
         query,
         history: historyBeforeQuery.map(({ role, content }) => ({ role, content })),
+        ...(activeConversationId.value ? { conversation_id: activeConversationId.value } : {}),
       },
       headers: deviceFingerprint ? { 'X-Device-Fingerprint': deviceFingerprint } : undefined,
       auth: true,
@@ -632,6 +768,9 @@ const sendMessage = async () => {
     const answer = typeof data?.answer === 'string' ? data.answer : '';
     const blocks = responseBlocks(data);
     const error = typeof data?.error === 'string' ? data.error : '';
+    if (data?.conversation_id ?? data?.conversationId) {
+      activeConversationId.value = String(data.conversation_id ?? data.conversationId);
+    }
 
     if (!jobId) {
       throw new Error('The server did not return a job ID.');
@@ -646,6 +785,7 @@ const sendMessage = async () => {
       logCompletedResponse(data, answer, blocks);
       await updateAssistantMessage(assistantMessageIndex, answer || 'No response returned.', blocks);
       resetJobState();
+      void loadConversations();
       return;
     }
 
@@ -715,16 +855,6 @@ const handleMarkdownTickerClick = (event) => {
   if (tickerButton?.dataset.ticker) requestTickerDetails(tickerButton.dataset.ticker);
 };
 
-const clearConversation = () => {
-  cancelActiveJob();
-  conversationHistory.value = [];
-  jobError.value = '';
-  usageLimitReached.value = false;
-  reachedUsageLimitPeriod.value = 'daily';
-  userInput.value = '';
-  if (inputEl.value) inputEl.value.style.height = 'auto';
-};
-
 onUnmounted(() => {
   cancelActiveJob();
   if (suggestionIntervalId !== null) clearInterval(suggestionIntervalId);
@@ -756,6 +886,49 @@ onUnmounted(() => {
   align-items: center;
   padding: 2.25rem 1rem 3rem;
 }
+
+.agent-history-sidebar {
+  position: absolute;
+  z-index: 2;
+  top: 2rem;
+  left: max(1rem, calc(50% - 620px));
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  width: 13.5rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 0.9rem;
+  background: rgba(15, 23, 42, 0.72);
+  box-shadow: 0 18px 40px rgba(2, 6, 23, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.agent-new-chat-btn {
+  width: 100%;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 0.6rem;
+  padding: 0.58rem 0.7rem;
+  background: rgba(14, 116, 144, 0.25);
+  color: #e0f2fe;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+.agent-new-chat-btn:hover { background: rgba(14, 116, 144, 0.42); }
+.agent-new-chat-btn span { margin-right: 0.35rem; font-size: 1.1rem; line-height: 0; }
+.agent-history-sidebar__heading { padding: 0.1rem 0.25rem; color: #94a3b8; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.agent-history-sidebar__list { display: grid; gap: 0.3rem; max-height: 19rem; overflow-y: auto; }
+.agent-history-item { display: grid; gap: 0.2rem; width: 100%; padding: 0.55rem 0.6rem; border: 1px solid transparent; border-radius: 0.55rem; background: transparent; color: #cbd5e1; font: inherit; text-align: left; cursor: pointer; }
+.agent-history-item:hover, .agent-history-item.is-active { border-color: rgba(56, 189, 248, 0.25); background: rgba(30, 41, 59, 0.75); }
+.agent-history-item:disabled { cursor: wait; opacity: 0.6; }
+.agent-history-item__title, .agent-history-item__preview { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agent-history-item__title { color: #e2e8f0; font-size: 0.78rem; font-weight: 600; }
+.agent-history-item__preview { color: #94a3b8; font-size: 0.7rem; }
+.agent-history-sidebar__empty { padding: 0.25rem; color: #64748b; font-size: 0.75rem; line-height: 1.45; }
 
 .agent-wheel-surface {
   position: relative;
@@ -1174,6 +1347,22 @@ onUnmounted(() => {
 }
 
 @media (max-width: 640px) {
+  .agent-history-sidebar {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: calc(100% - 2rem);
+    margin: 0 1rem 1rem;
+  }
+
+  .agent-history-sidebar__list {
+    display: flex;
+    max-height: none;
+    overflow-x: auto;
+  }
+
+  .agent-history-item { flex: 0 0 10.5rem; }
+
   .agent-wheel-section {
     gap: 0.85rem;
   }
