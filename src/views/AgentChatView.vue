@@ -1136,6 +1136,12 @@ onUnmounted(() => {
   min-width: 0;
 }
 
+/* The history panel is absolutely positioned on larger screens. Reserve its
+   column in an active chat so expanding messages never slide beneath it. */
+.agent-page:not(.agent-page--hero) .agent-chat-wrap {
+  padding-left: 15.5rem;
+}
+
 .agent-chat-header {
   display: flex;
   align-items: flex-start;
@@ -1346,13 +1352,17 @@ onUnmounted(() => {
   text-decoration-color: rgba(56, 189, 248, 0.4);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .agent-history-sidebar {
     position: relative;
     top: auto;
     left: auto;
     width: calc(100% - 2rem);
     margin: 0 1rem 1rem;
+  }
+
+  .agent-page:not(.agent-page--hero) .agent-chat-wrap {
+    padding-left: 0;
   }
 
   .agent-history-sidebar__list {
