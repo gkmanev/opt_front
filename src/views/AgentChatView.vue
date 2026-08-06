@@ -13,7 +13,7 @@
       <button class="agent-new-chat-btn" type="button" @click="startNewConversation">
         <span aria-hidden="true">+</span> New chat
       </button>
-      <div class="agent-history-sidebar__heading">Recent chats</div>
+      <div class="agent-history-sidebar__heading">Historical queries</div>
       <div v-if="isLoadingConversations" class="agent-history-sidebar__empty">Loading chats…</div>
       <div v-else-if="conversations.length" class="agent-history-sidebar__list">
         <button
@@ -25,11 +25,13 @@
           :disabled="isLoadingConversation"
           @click="selectConversation(conversation)"
         >
-          <span class="agent-history-item__title">{{ conversation.title }}</span>
+          <span class="agent-history-item__title-row">
+            <span class="agent-history-item__title">{{ conversation.title }}</span>
+          </span>
           <span v-if="conversation.preview" class="agent-history-item__preview">{{ conversation.preview }}</span>
         </button>
       </div>
-      <div v-else class="agent-history-sidebar__empty">Your saved chats will appear here.</div>
+      <div v-else class="agent-history-sidebar__empty">Your historical queries will appear here.</div>
     </aside>
 
     <!-- Hero heading -->
@@ -65,7 +67,10 @@
             class="agent-message"
             :class="msg.role === 'user' ? 'agent-message--user' : 'agent-message--assistant'"
           >
-            <span class="agent-message-role">{{ msg.role === 'user' ? 'You' : 'AI' }}</span>
+            <span class="agent-message-role">
+              {{ msg.role === 'user' ? 'You' : 'PutPulse AI' }}
+              <span v-if="msg.role === 'assistant' && formatAnswerTimestamp(msg.finishedAt)" class="agent-message-timestamp">· {{ formatAnswerTimestamp(msg.finishedAt) }}</span>
+            </span>
             <template v-if="msg.role === 'assistant'">
               <StructuredTable
                 v-for="(block, blockIndex) in structuredTableBlocks(msg)"
@@ -85,6 +90,7 @@
             <div v-else class="agent-bubble">{{ msg.content }}</div>
           </div>
         </template>
+
       </div>
 
       <section v-if="usageLimitReached" class="agent-limit-card" role="status" aria-live="polite">
@@ -255,12 +261,31 @@
             <span class="agent-wheel-cta__accent">quality companies</span>
           </p>
           <div class="agent-wheel-cta__actions">
-            <a class="btn btn-primary" href="/sign-up">Start For Free</a>
+            <a class="btn btn-primary" href="/sign-up" @click="navigateRoute($event, '/sign-up')">Start For Free</a>
             <button class="btn btn-outline" type="button" @click="emit('open-wheel-guide')">See How It Works</button>
           </div>
         </div>
       </section>
     </section>
+
+    <footer class="agent-site-footer">
+      <div class="agent-site-footer__links" aria-label="Site links">
+        <a href="/" @click="navigateRoute($event, '/')">Home</a>
+        <a href="/about" @click="navigateRoute($event, '/about')">About</a>
+        <a href="/contact" @click="navigateRoute($event, '/contact')">Contact</a>
+        <a href="/pricing" @click="navigateRoute($event, '/pricing')">Pricing</a>
+        <a href="/terms" @click="navigateRoute($event, '/terms')">Terms of Service</a>
+        <a href="/privacy" @click="navigateRoute($event, '/privacy')">Privacy Policy</a>
+        <a href="/refund-policy" @click="navigateRoute($event, '/refund-policy')">Refund Policy</a>
+        <a href="/sign-up" @click="navigateRoute($event, '/sign-up')">Start For Free</a>
+      </div>
+      <p class="agent-site-footer__disclaimer">
+        This application is for informational and educational purposes only and does not constitute
+        financial, investment, or trading advice. Options trading involves significant risk and may not
+        be suitable for all investors. Past performance is not indicative of future results. You are
+        solely responsible for your investment decisions.
+      </p>
+    </footer>
   </div>
 </template>
 
@@ -286,8 +311,10 @@ const props = defineProps({
     default: () => [],
   },
 });
-const emit = defineEmits(['login-required', 'sign-up-required', 'open-pricing', 'open-ticker', 'toggle-watchlist', 'open-wheel-guide']);
+const emit = defineEmits(['login-required', 'sign-up-required', 'open-pricing', 'open-ticker', 'toggle-watchlist', 'open-wheel-guide', 'navigate-route']);
 const auth = useAuthStore();
+
+const navigateRoute = (event, path) => emit('navigate-route', event, path);
 
 const POLL_INTERVAL_MS = 1500;
 const POLL_TIMEOUT_MS = 120000;
@@ -420,6 +447,7 @@ const suggestions = [
 const userInput = ref('');
 const conversationHistory = ref([]);
 const conversations = ref([]);
+const screeningRuns = ref([]);
 const activeConversationId = ref(null);
 const isLoadingConversations = ref(false);
 const isLoadingConversation = ref(false);
@@ -433,6 +461,7 @@ const messagesEl = ref(null);
 const inputEl = ref(null);
 const activePollToken = ref(0);
 let pollTimeoutId = null;
+const runElements = new Map();
 
 const isHeroMode = computed(() => !conversationHistory.value.length);
 const sendButtonLabel = computed(() => (isQueuedStatus(jobStatus.value) ? QUEUED_LABEL : THINKING_LABEL));
@@ -491,9 +520,12 @@ onMounted(() => {
 
 const scrollToBottom = async () => {
   await nextTick();
-  if (messagesEl.value) {
-    messagesEl.value.scrollTop = messagesEl.value.scrollHeight;
-  }
+  messagesEl.value?.lastElementChild?.scrollIntoView({ block: 'nearest' });
+};
+
+const scrollToConversationStart = async () => {
+  await nextTick();
+  messagesEl.value?.firstElementChild?.scrollIntoView({ block: 'start' });
 };
 
 const extractHistoryItems = (data) => {
@@ -508,7 +540,12 @@ const normalizeHistoryMessage = (message) => {
   if (!message || typeof message !== 'object') return null;
   const role = message.role === 'assistant' ? 'assistant' : message.role === 'user' ? 'user' : null;
   const content = typeof message.content === 'string' ? message.content.trim() : '';
-  return role && content ? { role, content, ...(role === 'assistant' && responseBlocks(message).length ? { blocks: responseBlocks(message) } : {}) } : null;
+  return role && content ? {
+    role,
+    content,
+    ...(role === 'assistant' && responseBlocks(message).length ? { blocks: responseBlocks(message) } : {}),
+    ...(role === 'assistant' && (message.finished_at ?? message.finishedAt ?? message.completed_at) ? { finishedAt: message.finished_at ?? message.finishedAt ?? message.completed_at } : {}),
+  } : null;
 };
 
 const normalizeHistoryItem = (item) => {
@@ -525,6 +562,7 @@ const normalizeHistoryItem = (item) => {
       role: 'assistant',
       content: answer.trim(),
       ...(responseBlocks(item).length ? { blocks: responseBlocks(item) } : {}),
+      ...(item.finished_at ?? item.finishedAt ?? item.completed_at ? { finishedAt: item.finished_at ?? item.finishedAt ?? item.completed_at } : {}),
     });
   }
   return messages;
@@ -538,8 +576,78 @@ const normalizeConversation = (item) => {
     .find((value) => typeof value === 'string' && value.trim())?.trim() ?? 'New conversation';
   const preview = [item.preview, item.answer, item.response]
     .find((value) => typeof value === 'string' && value.trim())?.trim() ?? '';
-  return { id: String(id), title, preview };
+  return { id: String(id), title, preview, freshness: item.freshness };
 };
+
+const normalizeScreeningRun = (run) => {
+  if (!run || typeof run !== 'object') return null;
+  const jobId = run.job_id ?? run.jobId ?? run.id;
+  if (jobId === null || jobId === undefined) return null;
+  return {
+    jobId: String(jobId),
+    query: typeof run.query === 'string' ? run.query : '',
+    answer: typeof run.answer === 'string' ? run.answer : '',
+    blocks: responseBlocks(run),
+    dataAsOf: run.data_as_of ?? run.dataAsOf ?? null,
+    finishedAt: run.finished_at ?? run.finishedAt ?? run.completed_at ?? null,
+    dataStatus: run.data_status ?? run.dataStatus ?? '',
+    snapshotNotice: run.snapshot_notice ?? run.snapshotNotice ?? '',
+    refreshOfRunId: run.refresh_of_run_id ?? run.refreshOfRunId ?? null,
+    refreshAction: run.refresh_action ?? run.refreshAction ?? null,
+  };
+};
+
+const extractScreeningRuns = (data) => Array.isArray(data?.screening_runs)
+  ? data.screening_runs.map(normalizeScreeningRun).filter(Boolean)
+  : [];
+
+const attachRunTimestamps = (messages, runs) => messages.map((message) => {
+  if (message.role !== 'assistant') return message;
+  const matchingRun = runs.find((run) => run.answer.trim() === message.content.trim());
+  if (!matchingRun) return message;
+  return {
+    ...message,
+    ...(message.finishedAt || !matchingRun.finishedAt ? {} : { finishedAt: matchingRun.finishedAt }),
+    isHistoricalMarketData: true,
+  };
+});
+
+const formatDataStatus = (status) => String(status ?? '')
+  .replace(/_/g, ' ')
+  .replace(/\b\w/g, (letter) => letter.toUpperCase()) || 'Not screened';
+
+const formatRunDate = (date) => {
+  if (!date) return 'Screening run';
+  const parsed = new Date(date);
+  return Number.isNaN(parsed.getTime()) ? 'Screening run' : new Intl.DateTimeFormat('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric', timeZone: 'America/New_York',
+  }).format(parsed);
+};
+
+const formatDataAsOf = (date) => {
+  if (!date) return 'Not available';
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return 'Not available';
+  return `${new Intl.DateTimeFormat('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: 'America/New_York',
+  }).format(parsed)} ET`;
+};
+
+const formatAnswerTimestamp = (finishedAt) => {
+  if (!finishedAt || Number.isNaN(new Date(finishedAt).getTime())) return null;
+  return `${new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'America/New_York',
+  }).format(new Date(finishedAt))} ET`;
+};
+
+const runLabel = (run) => run.refreshOfRunId ? 'Refreshed screen' : 'Original screen';
+const setRunElement = (jobId, element) => {
+  if (element) runElements.set(String(jobId), element);
+  else runElements.delete(String(jobId));
+};
+const scrollToRun = (jobId) => runElements.get(String(jobId))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
 const loadConversations = async () => {
   if (!auth.isAuthenticated.value || isLoadingConversations.value) return;
@@ -548,10 +656,13 @@ const loadConversations = async () => {
   try {
     const data = await requestJson('/api/agent/', {
       method: 'GET',
-      params: { limit: 5 },
+      params: { limit: 50 },
       auth: true,
     });
-    conversations.value = extractHistoryItems(data).map(normalizeConversation).filter(Boolean);
+    conversations.value = extractHistoryItems(data)
+      .map(normalizeConversation)
+      .filter((conversation) => conversation?.freshness === 'historical')
+      .slice(0, 5);
   } catch (err) {
     if (err?.status === 401) handleUnauthorized();
     else console.warn('Failed to load agent conversations.', err);
@@ -564,6 +675,7 @@ const startNewConversation = () => {
   cancelActiveJob();
   activeConversationId.value = null;
   conversationHistory.value = [];
+  screeningRuns.value = [];
   jobError.value = '';
   usageLimitReached.value = false;
   reachedUsageLimitPeriod.value = 'daily';
@@ -584,16 +696,94 @@ const selectConversation = async (conversation) => {
       params: { conversation_id: conversation.id },
       auth: true,
     });
-    const messages = extractHistoryItems(data).flatMap(normalizeHistoryItem);
+    const runs = extractScreeningRuns(data);
+    const messages = attachRunTimestamps(extractHistoryItems(data)
+      .flatMap(normalizeHistoryItem), runs);
     conversationHistory.value = messages;
+    screeningRuns.value = runs;
     activeConversationId.value = conversation.id;
     usageLimitReached.value = false;
-    await scrollToBottom();
+    await scrollToConversationStart();
   } catch (err) {
     if (err?.status === 401) handleUnauthorized();
     else jobError.value = err.message || 'Failed to load this conversation. Please try again.';
   } finally {
     isLoadingConversation.value = false;
+  }
+};
+
+const refreshRun = async (run) => {
+  if (!run?.refreshAction?.refreshRunId || isSending.value) return;
+  cancelActiveJob();
+  jobError.value = '';
+  isSending.value = true;
+  jobStatus.value = 'pending';
+  const pollToken = activePollToken.value + 1;
+  const pollStartedAt = Date.now();
+  activePollToken.value = pollToken;
+
+  try {
+    const deviceFingerprint = getDeviceFingerprint();
+    const data = await requestJson('/api/agent/', {
+      method: 'POST',
+      body: { refresh_run_id: run.refreshAction.refreshRunId },
+      headers: deviceFingerprint ? { 'X-Device-Fingerprint': deviceFingerprint } : undefined,
+      auth: true,
+    });
+    const jobId = data?.job_id;
+    if (!jobId) throw new Error('The server did not return a job ID.');
+    currentJobId.value = jobId;
+    jobStatus.value = String(data?.status ?? 'pending').toLowerCase();
+    scheduleRefreshPoll(jobId, pollToken, pollStartedAt);
+  } catch (err) {
+    if (pollToken !== activePollToken.value) return;
+    if (err?.status === 401) return handleUnauthorized();
+    jobError.value = err.message || 'Unable to refresh this screen. Please try again.';
+    resetJobState();
+  }
+};
+
+const scheduleRefreshPoll = (jobId, pollToken, pollStartedAt) => {
+  clearPollTimeout();
+  pollTimeoutId = window.setTimeout(() => void pollRefreshJob(jobId, pollToken, pollStartedAt), POLL_INTERVAL_MS);
+};
+
+const pollRefreshJob = async (jobId, pollToken, pollStartedAt) => {
+  if (!jobId || pollToken !== activePollToken.value) return;
+  if (Date.now() - pollStartedAt >= POLL_TIMEOUT_MS) {
+    jobError.value = 'The refresh stayed queued for too long. Please try again.';
+    resetJobState();
+    return;
+  }
+  try {
+    const data = await requestJson(`/api/agent/${jobId}/`, { method: 'GET', params: { _ts: Date.now() }, auth: true });
+    if (pollToken !== activePollToken.value) return;
+    const status = String(data?.status ?? '').toLowerCase();
+    currentJobId.value = jobId;
+    jobStatus.value = status;
+    if (status === 'completed') {
+      resetJobState();
+      const conversation = conversations.value.find((item) => item.id === activeConversationId.value);
+      if (conversation) await selectConversation(conversation);
+      else if (activeConversationId.value) {
+        const response = await requestJson('/api/agent/', { method: 'GET', params: { conversation_id: activeConversationId.value }, auth: true });
+        conversationHistory.value = extractHistoryItems(response).flatMap(normalizeHistoryItem);
+        screeningRuns.value = extractScreeningRuns(response);
+      }
+      void loadConversations();
+      return;
+    }
+    if (status === 'failed') {
+      jobError.value = typeof data?.error === 'string' ? data.error : 'The refresh failed. Please try again.';
+      resetJobState();
+      return;
+    }
+    scheduleRefreshPoll(jobId, pollToken, pollStartedAt);
+  } catch (err) {
+    if (pollToken !== activePollToken.value) return;
+    if (err?.status === 401) return handleUnauthorized();
+    jobError.value = err.message || 'Failed to check refresh status. Please try again.';
+    resetJobState();
   }
 };
 
@@ -633,12 +823,13 @@ const cancelActiveJob = () => {
   resetJobState();
 };
 
-const updateAssistantMessage = async (messageIndex, content, blocks = undefined) => {
+const updateAssistantMessage = async (messageIndex, content, blocks = undefined, finishedAt = undefined) => {
   if (!conversationHistory.value[messageIndex]) return;
   conversationHistory.value[messageIndex] = {
     ...conversationHistory.value[messageIndex],
     content,
     ...(blocks === undefined ? {} : { blocks }),
+    ...(finishedAt === undefined ? {} : { finishedAt }),
   };
   await scrollToBottom();
 };
@@ -690,7 +881,7 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
       jobError.value = '';
       logUsedTools(data);
       logCompletedResponse(data, answer, blocks);
-      await updateAssistantMessage(messageIndex, answer || 'No response returned.', blocks);
+      await updateAssistantMessage(messageIndex, answer || 'No response returned.', blocks, data?.finished_at);
       resetJobState();
       void loadConversations();
       return;
@@ -783,7 +974,7 @@ const sendMessage = async () => {
     if (status === 'completed') {
       logUsedTools(data);
       logCompletedResponse(data, answer, blocks);
-      await updateAssistantMessage(assistantMessageIndex, answer || 'No response returned.', blocks);
+      await updateAssistantMessage(assistantMessageIndex, answer || 'No response returned.', blocks, data?.finished_at);
       resetJobState();
       void loadConversations();
       return;
@@ -868,6 +1059,39 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
+.agent-site-footer {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 2.5rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.agent-site-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.45rem 1.1rem;
+}
+
+.agent-site-footer__links a {
+  color: #94a3b8;
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.agent-site-footer__links a:hover {
+  color: #67e8f9;
+}
+
+.agent-site-footer__disclaimer {
+  max-width: 800px;
+  margin: 1.25rem auto 0;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.65;
+  text-align: center;
+}
+
 .agent-page {
   position: relative;
   display: flex;
@@ -925,9 +1149,14 @@ onUnmounted(() => {
 .agent-history-item { display: grid; gap: 0.2rem; width: 100%; padding: 0.55rem 0.6rem; border: 1px solid transparent; border-radius: 0.55rem; background: transparent; color: #cbd5e1; font: inherit; text-align: left; cursor: pointer; }
 .agent-history-item:hover, .agent-history-item.is-active { border-color: rgba(56, 189, 248, 0.25); background: rgba(30, 41, 59, 0.75); }
 .agent-history-item:disabled { cursor: wait; opacity: 0.6; }
+.agent-history-item__title-row { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
 .agent-history-item__title, .agent-history-item__preview { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agent-history-item__title-row .agent-history-item__title { min-width: 0; flex: 1; }
 .agent-history-item__title { color: #e2e8f0; font-size: 0.78rem; font-weight: 600; }
 .agent-history-item__preview { color: #94a3b8; font-size: 0.7rem; }
+.agent-history-sidebar__list:not(.agent-history-sidebar__list--runs) .agent-history-item__title { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.agent-history-sidebar__list:not(.agent-history-sidebar__list--runs) .agent-history-item__preview { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; white-space: normal; }
+.agent-history-item__freshness { flex: 0 0 auto; color: #fbbf24; font-size: 0.61rem; font-weight: 700; text-transform: uppercase; }
 .agent-history-sidebar__empty { padding: 0.25rem; color: #64748b; font-size: 0.75rem; line-height: 1.45; }
 
 .agent-wheel-surface {
@@ -1180,18 +1409,15 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 1rem;
   min-height: 240px;
-  max-height: 52vh;
-  overflow-y: auto;
   padding: 0 0.25rem 2rem 0;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
 }
-
-.agent-messages::-webkit-scrollbar { width: 4px; }
-.agent-messages::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.25);
-  border-radius: 999px;
-}
+.agent-screening-run { scroll-margin-top: 1rem; margin: 1.25rem 0; padding: 1rem; border: 1px solid rgba(56, 189, 248, 0.28); border-radius: 0.75rem; background: rgba(15, 23, 42, 0.36); }
+.agent-screening-run__heading { display: flex; justify-content: space-between; gap: 1rem; color: #cbd5e1; font-size: 0.82rem; }
+.agent-screening-run__heading strong { color: #f8fafc; }
+.agent-screening-run__metadata { display: grid; gap: 0.2rem; margin-top: 0.75rem; color: #94a3b8; font-size: 0.76rem; }
+.agent-snapshot-warning { margin-top: 0.75rem; padding: 0.7rem 0.8rem; border: 1px solid rgba(251, 191, 36, 0.42); border-radius: 0.5rem; background: rgba(120, 53, 15, 0.25); color: #fde68a; font-size: 0.8rem; line-height: 1.45; }
+.agent-refresh-btn { margin-top: 0.75rem; font-size: 0.78rem; }
+.agent-screening-run .agent-message { margin-top: 0.9rem; }
 
 .agent-message {
   display: flex;
@@ -1218,6 +1444,7 @@ onUnmounted(() => {
   letter-spacing: 0.06em;
   color: #64748b;
 }
+.agent-message-timestamp { color: #64748b; font-weight: 500; }
 
 .agent-bubble {
   padding: 0.8rem 1rem;

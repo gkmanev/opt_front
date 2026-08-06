@@ -184,6 +184,7 @@
       v-else-if="displayRoute === '/' || displayRoute === '/agent'"
       :watchlist-tickers="watchlistTickers"
       :watchlist-pending-tickers="[...watchlistPendingTickers]"
+      @navigate-route="handleRouteLinkClick"
       @login-required="goToLogin"
       @sign-up-required="goToQueryLimitSignUp"
       @open-pricing="openPricingModal"

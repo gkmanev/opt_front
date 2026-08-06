@@ -13,8 +13,8 @@
         and the choices you have over your information.
       </p>
       <div class="content-meta-row">
-        <span class="content-meta-chip">Effective: May 11, 2026</span>
-        <span class="content-meta-chip">Last updated: May 11, 2026</span>
+        <span class="content-meta-chip">Effective: July 30, 2026</span>
+        <span class="content-meta-chip">Last updated: July 30, 2026</span>
       </div>
     </div>
   </section>
@@ -64,8 +64,8 @@
 
           <h3>Subscription &amp; billing data</h3>
           <p>
-            If you subscribe to Pro, payment is handled entirely by <strong>Paddle</strong>. PutPulse
-            does not store card numbers or full payment details. We receive from Paddle: a subscription
+            If you subscribe to Pro, payment is handled entirely by <strong>Stripe</strong>. PutPulse
+            does not store card numbers or full payment details. We receive from Stripe: a subscription
             ID, a customer ID, subscription status, and billing period dates in order to manage your
             plan access.
           </p>
@@ -99,11 +99,12 @@
               email verification link, and allow you to log in.
             </li>
             <li>
-              <strong>Service delivery</strong> — enforce your plan limits (Basic vs. Pro), return
-              screener results appropriate to your tier, and display your profile information.
+              <strong>Service delivery</strong> — enforce Free and Pro plan limits, provide AI chats,
+              analyses, screener results, and conversation history appropriate to your tier, and display
+              your profile information.
             </li>
             <li>
-              <strong>Subscription management</strong> — process Paddle webhook events to activate,
+              <strong>Subscription management</strong> — process Stripe webhook events to activate,
               update, or cancel your Pro subscription.
             </li>
             <li>
@@ -152,9 +153,9 @@
           </p>
           <ul>
             <li>
-              <strong>Paddle</strong> — payment processing and subscription management. Paddle acts
-              as merchant of record and processes billing data under their own
-              <a href="https://www.paddle.com/legal/privacy" target="_blank" rel="noopener">privacy policy</a>.
+              <strong>Stripe</strong> — payment processing and subscription management. Stripe processes
+              billing data under its own
+              <a href="https://stripe.com/privacy" target="_blank" rel="noopener">privacy policy</a>.
             </li>
             <li>
               <strong>Hosting &amp; infrastructure providers</strong> — cloud servers and CDN

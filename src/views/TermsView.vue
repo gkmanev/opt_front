@@ -13,8 +13,8 @@
         accessing the service you agree to be bound by them.
       </p>
       <div class="content-meta-row">
-        <span class="content-meta-chip">Effective: May 11, 2026</span>
-        <span class="content-meta-chip">Last updated: May 11, 2026</span>
+        <span class="content-meta-chip">Effective: July 30, 2026</span>
+        <span class="content-meta-chip">Last updated: July 30, 2026</span>
       </div>
     </div>
   </section>
@@ -66,12 +66,13 @@
           </p>
           <ul>
             <li>
-              <strong>Basic (Free)</strong> — Access to a limited number of screener results per day,
-              strategy guides, and basic filters. No payment is required.
+              <strong>Free</strong> — 5 AI chats per day, 1 full stock analysis per day, 5 screener
+              results per scan, and the most recent 8 conversation-history items. No payment is required.
             </li>
             <li>
-              <strong>Pro</strong> — Full screener access, all filters, Daily Top 3 email briefing, and
-              wheel setup details, available for a monthly subscription fee as stated at checkout.
+              <strong>Pro</strong> — Unlimited AI chats, stock analyses, and screener access, plus full
+              conversation history. Pro is available for a recurring monthly subscription fee as stated
+              at checkout.
             </li>
           </ul>
           <p>
@@ -109,13 +110,13 @@
           <h2>4. Subscriptions &amp; Payments</h2>
           <h3>Billing</h3>
           <p>
-            Pro subscriptions are billed on a recurring monthly basis. Payments are processed by
-            <strong>Paddle</strong>, who acts as the merchant of record. By subscribing you authorise
-            Paddle to charge your payment method on each renewal date.
+            Pro subscriptions are billed on a recurring monthly basis. Payments are processed securely by
+            <strong>Stripe</strong>. By subscribing, you authorise Stripe to charge your payment method on
+            each renewal date.
           </p>
           <h3>Cancellation</h3>
           <p>
-            You may cancel your Pro subscription at any time via your Paddle billing portal. Cancellation
+            You may cancel your Pro subscription at any time via your Stripe billing portal. Cancellation
             takes effect at the end of the current billing period — you retain Pro access until that date
             and are not charged again after cancellation.
           </p>
@@ -133,8 +134,7 @@
           </p>
           <h3>Taxes</h3>
           <p>
-            Paddle collects and remits applicable sales taxes and VAT on your behalf. The price displayed
-            at checkout may include tax depending on your jurisdiction.
+            Applicable sales taxes and VAT, if any, are shown at checkout and depend on your jurisdiction.
           </p>
         </article>
 

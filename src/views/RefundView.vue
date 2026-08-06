@@ -13,8 +13,8 @@
         about billing. This page explains exactly how refunds work at PutPulse.
       </p>
       <div class="content-meta-row">
-        <span class="content-meta-chip">Effective: May 11, 2026</span>
-        <span class="content-meta-chip">Last updated: May 11, 2026</span>
+        <span class="content-meta-chip">Effective: July 30, 2026</span>
+        <span class="content-meta-chip">Last updated: July 30, 2026</span>
       </div>
     </div>
   </section>
@@ -26,7 +26,7 @@
       <nav class="terms-toc" aria-label="Table of contents">
         <p class="terms-toc-label">On this page</p>
         <ol class="terms-toc-list">
-          <li><a href="#free-plan">1. Free Basic Plan</a></li>
+          <li><a href="#free-plan">1. Free Plan</a></li>
           <li><a href="#cancellation">2. Cancellation</a></li>
           <li><a href="#monthly">3. Monthly Plan Refunds</a></li>
           <li><a href="#promotions">4. Promotions &amp; Discounts</a></li>
@@ -39,16 +39,16 @@
       <div class="terms-body">
 
         <article id="free-plan" class="terms-section">
-          <h2>1. Free Basic Plan</h2>
+          <h2>1. Free Plan</h2>
           <p>
             To demonstrate our commitment to you, PutPulse offers a fully functional
-            <strong>Basic plan at no cost</strong> — no credit card required, no trial period
-            that expires. The Basic plan lets you explore the screener, strategy guides, and all
-            educational content before you decide whether to upgrade.
+            <strong>Free plan at no cost</strong> — no credit card required and no trial period that
+            expires. The Free plan includes 5 AI chats per day, 1 full stock analysis per day, 5
+            screener results per scan, and the most recent 8 conversation-history items.
           </p>
           <p>
-            The Basic plan places a limit on the number of screener results returned per day.
-            Upgrading to Pro removes that limit and unlocks the full feature set.
+            Upgrading to Pro removes these limits and provides unlimited chats, stock analyses, and
+            screener access, plus full conversation history.
             <a href="/pricing" @click="navigateRoute($event, '/pricing')">View pricing.</a>
           </p>
         </article>
@@ -57,13 +57,13 @@
           <h2>2. Cancellation</h2>
           <p>
             There are no contracts or long-term commitments. You can cancel your Pro subscription
-            at any time with a single click inside your Paddle billing portal — no forms, no phone
+            at any time through your Stripe billing portal — no forms, no phone
             calls, no waiting.
           </p>
           <p>
             When you cancel, your Pro subscription remains <strong>active for the remainder of the
             current paid billing period</strong>. When that period ends, your account automatically
-            reverts to the free Basic plan. You keep your account, your history, and access to all
+            reverts to the Free plan. You keep your account and access to all
             free features indefinitely.
           </p>
         </article>
@@ -71,8 +71,9 @@
         <article id="monthly" class="terms-section">
           <h2>3. Monthly Plan Refunds</h2>
           <p>
-            <strong>Monthly Pro subscriptions are non-refundable.</strong> Because the Basic plan
-            is free and fully functional, you have every opportunity to evaluate PutPulse before
+            <strong>Monthly Pro subscriptions are non-refundable, except where required by applicable
+            law.</strong> Because the Free plan is available without an expiring trial, you have every
+            opportunity to evaluate PutPulse before
             committing to a paid plan.
           </p>
           <p>
