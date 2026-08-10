@@ -324,9 +324,16 @@ const THINKING_LABEL = 'Thinking...';
 const isQueuedStatus = (status) => ['pending', 'queued'].includes(String(status ?? '').toLowerCase());
 
 const isUsageLimitReached = (value) => {
-  if (typeof value === 'string') return /(?:daily|weekly)_limit_reached/i.test(value);
+  if (typeof value === 'string') return /(?:daily|weekly)(?:_[a-z_]+)?_limit_reached/i.test(value);
   if (Array.isArray(value)) return value.some(isUsageLimitReached);
   if (value && typeof value === 'object') return Object.values(value).some(isUsageLimitReached);
+  return false;
+};
+
+const isAnalyzeStockUsageLimit = (value) => {
+  if (typeof value === 'string') return /(?:daily|weekly)_analyze_stock_limit_reached/i.test(value);
+  if (Array.isArray(value)) return value.some(isAnalyzeStockUsageLimit);
+  if (value && typeof value === 'object') return Object.values(value).some(isAnalyzeStockUsageLimit);
   return false;
 };
 
@@ -348,6 +355,9 @@ const showUsageLimit = (value, assistantMessageIndex) => {
   usageLimitReached.value = true;
   if (Number.isInteger(assistantMessageIndex)) {
     conversationHistory.value.splice(assistantMessageIndex, 1);
+  }
+  if (isAnalyzeStockUsageLimit(value) && auth.isAuthenticated.value) {
+    emit('open-pricing');
   }
   void scrollToBottom();
   return true;
@@ -412,7 +422,20 @@ const logCompletedResponse = (data, answer, blocks) => {
   console.log('Raw backend response:', data);
   console.log('Answer:', answer);
   console.log('Blocks:', blocks);
-  console.log('Renderable structured tables:', blocks.filter(isRenderableStructuredTable));
+  const tables = blocks.filter(isRenderableStructuredTable);
+  console.log('Renderable structured tables:', tables);
+  tables.forEach((table, index) => {
+    const volumeColumn = table.columns.find((column) => column?.key === 'option_volume');
+    console.group(`Table ${index + 1}: ${table.title || 'Untitled'}`);
+    console.log('Columns:', table.columns);
+    console.table(table.rows);
+    if (volumeColumn) {
+      console.log('option_volume values:', table.rows.map((row) => row?.option_volume));
+    } else {
+      console.warn('No option_volume column returned by the endpoint.');
+    }
+    console.groupEnd();
+  });
   console.groupEnd();
 };
 
@@ -878,6 +901,7 @@ const pollJob = async (jobId, messageIndex, pollToken, pollStartedAt) => {
     jobStatus.value = status;
 
     if (status === 'completed') {
+      if (showUsageLimit(data, messageIndex)) return;
       jobError.value = '';
       logUsedTools(data);
       logCompletedResponse(data, answer, blocks);
@@ -972,6 +996,7 @@ const sendMessage = async () => {
     jobError.value = '';
 
     if (status === 'completed') {
+      if (showUsageLimit(data, assistantMessageIndex)) return;
       logUsedTools(data);
       logCompletedResponse(data, answer, blocks);
       await updateAssistantMessage(assistantMessageIndex, answer || 'No response returned.', blocks, data?.finished_at);

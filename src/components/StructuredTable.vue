@@ -37,6 +37,17 @@
                   @click="emit('toggle-watchlist', tickerValue(row[column.key]))"
                 >{{ isTickerWatched(row[column.key]) ? '★' : '☆' }}</button>
               </div>
+              <div v-else-if="isVolumeColumn(column)" class="structured-table__volume">
+                <span class="structured-table__volume-value">{{ formatValue(row[column.key], column.type) }}</span>
+                <span
+                  v-if="volumePercent(row[column.key]) !== null"
+                  class="structured-table__volume-bar"
+                  :aria-label="`${formatValue(row[column.key], column.type)} volume`"
+                  role="img"
+                >
+                  <span class="structured-table__volume-fill" :style="{ width: `${volumePercent(row[column.key])}%` }"></span>
+                </span>
+              </div>
               <template v-else>{{ formatValue(row[column.key], column.type) }}</template>
             </td>
           </tr>
@@ -69,6 +80,11 @@ const sortColumn = ref('');
 const sortDirection = ref('asc');
 const columns = computed(() => Array.isArray(props.block?.columns) ? props.block.columns.filter((column) => column?.key && column?.label) : []);
 const rows = computed(() => Array.isArray(props.block?.rows) ? props.block.rows : []);
+const volumeColumnKeys = computed(() => new Set(
+  columns.value
+    .filter((column) => /(?:^|[_\\s-])volume(?:$|[_\\s-])|volume/i.test(`${column.key} ${column.label}`))
+    .map((column) => column.key),
+));
 
 const numberFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
 const currencyFormatter = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' });
@@ -82,6 +98,28 @@ const asNumber = (value) => {
     return Number.isFinite(parsed) ? parsed : null;
   }
   return null;
+};
+
+const volumeNumber = (value) => {
+  const numeric = asNumber(value);
+  if (numeric !== null) return numeric;
+  if (typeof value !== 'string') return null;
+  const match = value.trim().replace(/,/g, '').match(/^(-?[\\d.]+)\\s*([kmb])?$/i);
+  if (!match) return null;
+  const multipliers = { k: 1e3, m: 1e6, b: 1e9 };
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed * (multipliers[match[2]?.toLowerCase()] ?? 1) : null;
+};
+
+const isVolumeColumn = (column) => volumeColumnKeys.value.has(column.key);
+const maxVolume = computed(() => {
+  const volumeKey = Array.from(volumeColumnKeys.value)[0];
+  return Math.max(0, ...rows.value.map((row) => volumeNumber(volumeKey ? row?.[volumeKey] : null) ?? 0));
+});
+const volumePercent = (value) => {
+  const volume = volumeNumber(value);
+  if (volume === null || maxVolume.value <= 0) return null;
+  return Math.max(4, Math.round((volume / maxVolume.value) * 100));
 };
 
 const localDate = (value) => {
@@ -152,6 +190,10 @@ tbody tr:last-child td { border-bottom: 0; }
 .structured-table__ticker { color: #4ade80; font-weight: 700; text-decoration: none; }
 .structured-table__ticker:hover { text-decoration: underline; }
 .structured-table__ticker-actions { display: inline-flex; align-items: center; gap: 0.3rem; }
+.structured-table__volume { display: grid; gap: 0.3rem; min-width: 5.5rem; }
+.structured-table__volume-value { font-variant-numeric: tabular-nums; }
+.structured-table__volume-bar { display: block; width: 100%; height: 0.3rem; overflow: hidden; border-radius: 999px; background: rgba(148, 163, 184, 0.22); }
+.structured-table__volume-fill { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #38bdf8, #4ade80); transition: width 180ms ease-out; }
 .structured-table__watchlist-toggle { border: 0; padding: 0; background: transparent; color: #94a3b8; font: inherit; cursor: pointer; }
 .structured-table__watchlist-toggle:hover, .structured-table__watchlist-toggle:focus-visible, .structured-table__watchlist-toggle.is-saved { color: #fbbf24; }
 .structured-table__watchlist-toggle:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; border-radius: 0.2rem; }
