@@ -47,8 +47,8 @@
     <div v-if="!isHeroMode" class="container agent-chat-wrap">
       <div class="agent-chat-header">
         <div class="agent-header-copy">
-          <span class="section-eyebrow">AI Assistant</span>
-          <h1 class="agent-title">Ask the AI Agent</h1>
+          <span class="section-eyebrow">PutPulse Assistant</span>
+          <h1 class="agent-title">Ask the PutPulse AI</h1>
           <p class="agent-subtitle muted">Ask anything about options strategies, stocks, or investment ideas.</p>
         </div>
         <button
