@@ -72,6 +72,32 @@ const marketingPages = [
     ],
   },
   {
+    path: '/vs-chatgpt',
+    title: 'PutPulse vs ChatGPT | Live Options Data for Investors',
+    description:
+      'See how PutPulse combines AI with live options chains, current market data, and company fundamentals for options investors.',
+    appHtml: `
+      <main>
+        <h1>PutPulse vs ChatGPT</h1>
+        <p>ChatGPT is a general-purpose AI assistant. PutPulse is built specifically for options investors.</p>
+        <p>PutPulse combines AI with live options chains, current market data, and current company fundamentals to screen and analyze options opportunities.</p>
+        <p>PutPulse = AI + live options data + current fundamentals + purpose-built screening.</p>
+      </main>
+    `,
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: 'PutPulse vs ChatGPT',
+        url: `${siteUrl}/vs-chatgpt`,
+        description:
+          'See how PutPulse combines AI with live options chains, current market data, and company fundamentals for options investors.',
+        isPartOf: `${siteUrl}/#website`,
+        dateModified: lastModified,
+      },
+    ],
+  },
+  {
     path: '/cash-secured-puts',
     title: 'Cash-Secured Puts Guide | PutPulse',
     description:

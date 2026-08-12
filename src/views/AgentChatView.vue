@@ -48,7 +48,7 @@
       <div class="agent-chat-header">
         <div class="agent-header-copy">
           <span class="section-eyebrow">PutPulse Assistant</span>
-          <h1 class="agent-title">Ask the PutPulse AI</h1>
+          <h1 class="agent-title">Ask the PutPulse Agent</h1>
           <p class="agent-subtitle muted">Ask anything about options strategies, stocks, or investment ideas.</p>
         </div>
         <button

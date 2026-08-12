@@ -46,11 +46,19 @@
             </a>
             <a
               class="header-nav-link"
+              :class="{ 'is-active': displayRoute === '/vs-chatgpt' }"
+              href="/vs-chatgpt"
+              @click="handleRouteLinkClick($event, '/vs-chatgpt')"
+            >
+              vs ChatGPT
+            </a>
+            <a
+              class="header-nav-link"
               :class="{ 'is-active': displayRoute === '/' || displayRoute === '/agent' }"
               href="/agent"
               @click="handleRouteLinkClick($event, '/agent')"
             >
-              AI Agent
+              PutPulse Agent
             </a>
           </nav>
         </div>
@@ -129,6 +137,11 @@
 
     <AboutView
       v-else-if="displayRoute === '/about'"
+      @navigate-route="handleRouteLinkClick"
+    />
+
+    <VsChatGptView
+      v-else-if="displayRoute === '/vs-chatgpt'"
       @navigate-route="handleRouteLinkClick"
     />
 
@@ -1184,6 +1197,7 @@
       <div class="site-footer-links">
         <a class="site-footer-link" href="/" @click="handleRouteLinkClick($event, '/')">Home</a>
         <a class="site-footer-link" href="/about" @click="handleRouteLinkClick($event, '/about')">About</a>
+        <a class="site-footer-link" href="/vs-chatgpt" @click="handleRouteLinkClick($event, '/vs-chatgpt')">vs ChatGPT</a>
         <a class="site-footer-link" href="/contact" @click="handleRouteLinkClick($event, '/contact')">Contact</a>
         <a class="site-footer-link" href="/methodology" @click="handleRouteLinkClick($event, '/methodology')">Methodology</a>
         <a class="site-footer-link" href="/pricing" @click="handleRouteLinkClick($event, '/pricing')">Pricing</a>
@@ -1339,6 +1353,7 @@ import PricingModal from './components/PricingModal.vue';
 import WheelStrategyGuide from './components/WheelStrategyGuide.vue';
 import { useAuthStore } from './stores/auth';
 import AboutView from './views/AboutView.vue';
+import VsChatGptView from './views/VsChatGptView.vue';
 import CashSecuredPutsView from './views/CashSecuredPutsView.vue';
 import CoveredCallsView from './views/CoveredCallsView.vue';
 import LoginView from './views/LoginView.vue';
@@ -1368,6 +1383,7 @@ const legacyRouteRedirects = new Map([
 const knownRoutes = new Set([
   '/',
   '/about',
+  '/vs-chatgpt',
   '/pricing',
   '/terms',
   '/privacy',
@@ -1393,6 +1409,7 @@ let authOverlayScrollY = 0;
 let isAuthOverlayScrollLocked = false;
 const marketingRoutes = new Set([
   '/about',
+  '/vs-chatgpt',
   '/pricing',
   '/terms',
   '/privacy',
@@ -1776,9 +1793,9 @@ const contentLastUpdated = '2026-04-01';
 const seoConfig = computed(() => {
   if (currentRoute.value === '/') {
     return {
-      title: 'PutPulse AI Agent',
+      title: 'PutPulse Agent',
       description:
-        'Use the PutPulse AI agent to research setups, ask trading workflow questions, and explore option ideas from a single chat interface.',
+        'Use the PutPulse Agent to research setups, ask trading workflow questions, and explore option ideas from a single chat interface.',
       robots: 'index,follow',
       canonicalPath: '/',
     };
@@ -1786,9 +1803,9 @@ const seoConfig = computed(() => {
 
   if (currentRoute.value === '/agent') {
     return {
-      title: 'PutPulse AI Agent',
+      title: 'PutPulse Agent',
       description:
-        'Use the PutPulse AI agent to research setups, ask trading workflow questions, and explore option ideas from a single chat interface.',
+        'Use the PutPulse Agent to research setups, ask trading workflow questions, and explore option ideas from a single chat interface.',
       robots: 'noindex,follow',
       canonicalPath: '/',
     };
@@ -1939,6 +1956,16 @@ const seoConfig = computed(() => {
       description: 'Verify your email address to activate your PutPulse account.',
       robots: 'noindex,follow',
       canonicalPath: '/verify-email',
+    };
+  }
+
+  if (currentRoute.value === '/vs-chatgpt') {
+    return {
+      title: 'PutPulse vs ChatGPT | Live Options Data for Investors',
+      description:
+        'See how PutPulse combines AI with live options chains, current market data, and company fundamentals for options investors.',
+      robots: 'index,follow',
+      canonicalPath: '/vs-chatgpt',
     };
   }
 

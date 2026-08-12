@@ -156,7 +156,7 @@ const steps = [
     navLabel: '1 - ASK',
     eyebrow: 'Step 1 - Just ask',
     title: 'Tell the agent your budget and goal.',
-    description: 'No screeners to configure. One message is enough - the AI agent turns it into a full income plan.',
+    description: 'No screeners to configure. One message is enough - the PutPulse Agent turns it into a full income plan.',
   },
   {
     cx: 310,
