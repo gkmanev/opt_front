@@ -31,30 +31,7 @@
       </div>
       <div class="landing-hero-art">
         <div class="landing-hero-frame">
-          <svg viewBox="0 0 320 320" role="img" aria-label="Илюстрация на сигнална гривна с бутон SOS">
-            <rect x="118" y="20" width="84" height="280" rx="42" fill="#2B2B2B" />
-            <g fill="#3A3A3A">
-              <circle cx="160" cy="250" r="5" />
-              <circle cx="160" cy="270" r="5" />
-              <circle cx="160" cy="50" r="5" />
-              <circle cx="160" cy="70" r="5" />
-            </g>
-            <rect x="88" y="92" width="144" height="136" rx="44" fill="#1E1E1E" />
-            <rect x="96" y="100" width="128" height="120" rx="38" fill="#262626" />
-            <circle cx="160" cy="160" r="38" :fill="accent" />
-            <text
-              x="160"
-              y="168"
-              text-anchor="middle"
-              font-family="Manrope, system-ui, sans-serif"
-              font-size="24"
-              font-weight="800"
-              fill="#FFFFFF"
-            >
-              SOS
-            </text>
-            <circle cx="214" cy="112" r="4" fill="#5FD08A" />
-          </svg>
+          <img :src="braceletImage" alt="Сигнална гривна с бутон SOS" />
         </div>
       </div>
     </section>
@@ -138,6 +115,8 @@
 
 <script setup>
 import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+
+import braceletImage from '../assets/sos-bracelet.png';
 
 const accent = '#C4500E';
 const contactEmail = 'office@putpulse.com';
@@ -483,7 +462,8 @@ onMounted(() => {
   justify-content: center;
 }
 
-.landing-hero-frame svg {
+.landing-hero-frame img {
+  mix-blend-mode: multiply;
   width: 78%;
   height: auto;
   display: block;
