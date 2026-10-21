@@ -15,29 +15,18 @@ const lastModified = '2026-04-11';
 const marketingPages = [
   {
     path: '/',
-    title: 'PutPulse | Cash-Secured Put Ideas and Wheel Strategy Insights',
-    description:
-      'Find cash-secured put-selling opportunities on fundamentally strong stocks, track monthly ROI targets, and follow a disciplined wheel strategy workflow.',
-    appHtml: `
-      <main>
-        <h1>Get consistent monthly income by selling PUTs</h1>
-        <p>PutPulse helps investors find cash-secured put-selling opportunities on stocks they would be comfortable owning.</p>
-        <p>The public guides explain cash-secured puts, covered calls, stock assignment, and the full wheel strategy workflow.</p>
-        <p><a href="/cash-secured-puts">Cash-Secured Puts Guide</a> <a href="/covered-calls">Covered Calls Guide</a> <a href="/wheel-strategy">Wheel Strategy Guide</a> <a href="/methodology">Methodology</a></p>
-      </main>
-    `,
-    structuredData: [
-      {
-        '@context': 'https://schema.org',
-        '@type': 'WebPage',
-        name: 'PutPulse',
-        url: `${siteUrl}/`,
-        description:
-          'Find cash-secured put-selling opportunities on fundamentally strong stocks, track monthly ROI targets, and follow a disciplined wheel strategy workflow.',
-        isPartOf: `${siteUrl}/#website`,
-        dateModified: lastModified,
-      },
-    ],
+    title: 'PutPulse | Under construction',
+    description: 'Under construction',
+    appHtml: '<main class="construction-page" style="min-height:100vh;display:grid;place-items:center;font-size:1.5rem">Under construction</main>',
+    structuredData: [],
+  },
+  {
+    path: '/opt',
+    title: 'Sign in | PutPulse',
+    description: 'Sign in with your PutPulse username and password.',
+    robots: 'noindex,follow',
+    appHtml: '<main><p>Sign in to access PutPulse.</p><a href="/login">Sign in</a></main>',
+    structuredData: [],
   },
   {
     path: '/about',
@@ -306,7 +295,7 @@ const buildPageHtml = (template, page) => {
 
   html = replaceTitle(html, page.title);
   html = replaceMetaTag(html, 'name', 'description', page.description);
-  html = replaceMetaTag(html, 'name', 'robots', 'index,follow');
+  html = replaceMetaTag(html, 'name', 'robots', page.robots ?? 'index,follow');
   html = replaceMetaTag(html, 'property', 'og:type', 'website');
   html = replaceMetaTag(html, 'property', 'og:site_name', 'PutPulse');
   html = replaceMetaTag(html, 'property', 'og:title', page.title);
@@ -338,9 +327,24 @@ const writeMarketingPage = async (template, page) => {
   await writeFile(path.join(outputDir, 'index.html'), html, 'utf8');
 };
 
+// Retain page definitions for future use without publishing these routes.
+const disabledRoutes = new Set([
+  '/about',
+  '/pricing',
+  '/vs-chatgpt',
+  '/contact',
+  '/methodology',
+  '/cash-secured-puts',
+  '/covered-calls',
+  '/wheel-strategy',
+  '/terms',
+  '/privacy',
+  '/refund-policy',
+]);
+
 const main = async () => {
   const template = await readFile(indexHtmlPath, 'utf8');
-  await Promise.all(marketingPages.map((page) => writeMarketingPage(template, page)));
+  await Promise.all(marketingPages.filter((page) => !disabledRoutes.has(page.path)).map((page) => writeMarketingPage(template, page)));
 };
 
 await main();

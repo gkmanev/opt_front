@@ -2,7 +2,7 @@
   <section class="content-page-hero">
     <div class="container">
       <div class="content-breadcrumbs">
-        <a href="/" @click="navigateRoute($event, '/')">Home</a>
+        <a href="/opt" @click="navigateRoute($event, '/opt')">Home</a>
         <span>/</span>
         <span>Cash-Secured Puts</span>
       </div>

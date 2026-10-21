@@ -3,7 +3,7 @@
     <div class="container contact-layout">
       <div class="contact-intro">
         <div class="content-breadcrumbs">
-          <a href="/" @click="navigateRoute($event, '/')">Home</a>
+          <a href="/opt" @click="navigateRoute($event, '/opt')">Home</a>
           <span>/</span>
           <span>Contact</span>
         </div>

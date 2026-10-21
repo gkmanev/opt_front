@@ -2,7 +2,7 @@
   <section class="content-page-hero">
     <div class="container">
       <div class="content-breadcrumbs">
-        <a href="/" @click="navigateRoute($event, '/')">Home</a>
+        <a href="/opt" @click="navigateRoute($event, '/opt')">Home</a>
         <span>/</span>
         <span>Refund Policy</span>
       </div>
@@ -49,7 +49,7 @@
           <p>
             Upgrading to Pro removes these limits and provides unlimited chats, stock analyses, and
             screener access, plus full conversation history.
-            <a href="/pricing" @click="navigateRoute($event, '/pricing')">View pricing.</a>
+            Review the pricing shown at checkout.
           </p>
         </article>
 
@@ -116,7 +116,7 @@
             We are proud of PutPulse and the support we provide, and we want every interaction to
             be straightforward and fair. If you have any questions about this policy before
             upgrading — or at any point during your subscription — please reach out via our
-            <a href="/contact" @click="navigateRoute($event, '/contact')">contact page</a> and
+            <a href="mailto:admin@putpulse.com">admin@putpulse.com</a> and
             we will be happy to help.
           </p>
         </article>

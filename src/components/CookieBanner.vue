@@ -4,7 +4,7 @@
       <div v-if="visible" class="cookie-banner" role="region" aria-label="Cookie notice">
         <p class="cookie-banner-text">
           We use a single essential cookie to keep you logged in. No tracking, no ads.
-          <a class="cookie-banner-link" href="/privacy#cookies" @click="onPrivacyClick">Learn more</a>
+
         </p>
         <button class="cookie-banner-btn" type="button" @click="accept">Accept</button>
       </div>

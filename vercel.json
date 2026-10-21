@@ -2,7 +2,7 @@
   "redirects": [
     {
       "source": "/daily-brief",
-      "destination": "/",
+      "destination": "/opt",
       "permanent": true
     }
   ],
@@ -24,19 +24,7 @@
       "destination": "/index.html"
     },
     {
-      "source": "/pricing",
-      "destination": "/index.html"
-    },
-    {
       "source": "/profile",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/privacy",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/refund-policy",
       "destination": "/index.html"
     },
     {
@@ -45,10 +33,6 @@
     },
     {
       "source": "/payment-success",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/terms",
       "destination": "/index.html"
     }
   ]

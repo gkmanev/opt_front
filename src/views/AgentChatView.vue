@@ -270,13 +270,10 @@
 
     <footer class="agent-site-footer">
       <div class="agent-site-footer__links" aria-label="Site links">
-        <a href="/" @click="navigateRoute($event, '/')">Home</a>
-        <a href="/about" @click="navigateRoute($event, '/about')">About</a>
-        <a href="/contact" @click="navigateRoute($event, '/contact')">Contact</a>
-        <a href="/pricing" @click="navigateRoute($event, '/pricing')">Pricing</a>
-        <a href="/terms" @click="navigateRoute($event, '/terms')">Terms of Service</a>
-        <a href="/privacy" @click="navigateRoute($event, '/privacy')">Privacy Policy</a>
-        <a href="/refund-policy" @click="navigateRoute($event, '/refund-policy')">Refund Policy</a>
+        <a href="/opt" @click="navigateRoute($event, '/opt')">Home</a>
+
+
+
         <a href="/sign-up" @click="navigateRoute($event, '/sign-up')">Start For Free</a>
       </div>
       <p class="agent-site-footer__disclaimer">

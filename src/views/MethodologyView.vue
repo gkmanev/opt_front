@@ -2,7 +2,7 @@
   <section class="content-page-hero">
     <div class="container">
       <div class="content-breadcrumbs">
-        <a href="/" @click="navigateRoute($event, '/')">Home</a>
+        <a href="/opt" @click="navigateRoute($event, '/opt')">Home</a>
         <span>/</span>
         <span>Methodology</span>
       </div>
@@ -18,7 +18,7 @@
         <span class="content-meta-chip">Educational, not advisory</span>
       </div>
       <div class="content-actions">
-        <a class="btn btn-primary" href="/" @click="navigateRoute($event, '/')">View Today's Top</a>
+        <a class="btn btn-primary" href="/opt" @click="navigateRoute($event, '/opt')">View Today's Top</a>
         <a class="btn btn-outline" href="/contact" @click="navigateRoute($event, '/contact')">Ask a Question</a>
       </div>
     </div>

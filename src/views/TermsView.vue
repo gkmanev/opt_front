@@ -2,7 +2,7 @@
   <section class="content-page-hero">
     <div class="container">
       <div class="content-breadcrumbs">
-        <a href="/" @click="navigateRoute($event, '/')">Home</a>
+        <a href="/opt" @click="navigateRoute($event, '/opt')">Home</a>
         <span>/</span>
         <span>Terms of Service</span>
       </div>
@@ -96,7 +96,7 @@
             </li>
             <li>
               Notify PutPulse immediately at
-              <a href="/contact" @click="navigateRoute($event, '/contact')">our contact page</a> if you
+              <a href="mailto:admin@putpulse.com">admin@putpulse.com</a> if you
               suspect unauthorised use of your account.
             </li>
           </ul>
@@ -124,7 +124,7 @@
           <p>
             Subscription fees are generally non-refundable except where required by applicable law or at
             PutPulse's discretion. Refund requests should be directed to
-            <a href="/contact" @click="navigateRoute($event, '/contact')">our contact page</a>.
+            <a href="mailto:admin@putpulse.com">admin@putpulse.com</a>.
           </p>
           <h3>Price changes</h3>
           <p>
@@ -254,7 +254,7 @@
           <h2>11. Contact</h2>
           <p>
             If you have questions about these Terms, please reach out via our
-            <a href="/contact" @click="navigateRoute($event, '/contact')">contact page</a>.
+            <a href="mailto:admin@putpulse.com">admin@putpulse.com</a>.
           </p>
         </article>
 

@@ -1,5 +1,14 @@
 <template>
-  <div class="app-shell">
+  <LandingView v-if="currentRoute === '/'" />
+  <main v-else-if="currentRoute === '/not-found'" class="construction-page">Page not found</main>
+  <main v-else-if="isProtectedAgentRoute && !isAuthResolved" class="construction-page" role="status">Checking session...</main>
+  <LoginView
+    v-else-if="isProtectedAgentRoute && !isAuthenticated"
+    @authenticated="goHome"
+    @back-home="navigateTo('/')"
+    @navigate-signup="goToSignUp"
+  />
+  <div v-else class="app-shell">
     <div class="page" :class="{ 'page--auth-overlay': isAuthOverlayRoute }">
     <header class="site-header">
       <div class="container header-inner">
@@ -36,25 +45,10 @@
             >
               How It Works
             </button>
+
             <a
               class="header-nav-link"
-              :class="{ 'is-active': displayRoute === '/pricing' }"
-              href="/pricing"
-              @click="handleRouteLinkClick($event, '/pricing')"
-            >
-              Pricing
-            </a>
-            <a
-              class="header-nav-link"
-              :class="{ 'is-active': displayRoute === '/vs-chatgpt' }"
-              href="/vs-chatgpt"
-              @click="handleRouteLinkClick($event, '/vs-chatgpt')"
-            >
-              vs ChatGPT
-            </a>
-            <a
-              class="header-nav-link"
-              :class="{ 'is-active': displayRoute === '/' || displayRoute === '/agent' }"
+              :class="{ 'is-active': displayRoute === '/opt' || displayRoute === '/agent' }"
               href="/agent"
               @click="handleRouteLinkClick($event, '/agent')"
             >
@@ -194,7 +188,7 @@
     />
 
     <AgentChatView
-      v-else-if="displayRoute === '/' || displayRoute === '/agent'"
+      v-else-if="(displayRoute === '/opt' || displayRoute === '/agent') && isAuthResolved && isAuthenticated"
       :watchlist-tickers="watchlistTickers"
       :watchlist-pending-tickers="[...watchlistPendingTickers]"
       @navigate-route="handleRouteLinkClick"
@@ -213,7 +207,7 @@
           <h1>Track your put-selling candidates</h1>
           <p class="muted">Save tickers to revisit their latest score, technical signal, and options setup.</p>
         </div>
-        <button class="btn btn-muted" type="button" @click="navigateTo('/')">Browse opportunities</button>
+        <button class="btn btn-muted" type="button" @click="navigateTo('/opt')">Browse opportunities</button>
       </div>
 
       <div v-if="watchlistLoading" class="watchlist-empty card">Loading your watchlist...</div>
@@ -225,7 +219,7 @@
       <div v-else-if="!watchlistTickers.length" class="watchlist-empty card">
         <h2>Your watchlist is empty</h2>
         <p class="muted">Use the star next to any ticker to save it here.</p>
-        <button class="btn btn-primary" type="button" @click="navigateTo('/')">Find tickers</button>
+        <button class="btn btn-primary" type="button" @click="navigateTo('/opt')">Find tickers</button>
       </div>
 
       <div v-else class="watchlist-grid">
@@ -655,7 +649,6 @@
         </div>
       </div>
     </section>
-
 
     <section id="screener-section" class="container">
       <div class="card">
@@ -1139,45 +1132,6 @@
       </div>
     </section>
 
-    <section class="container trust-center-section">
-      <div class="card">
-        <div class="strategy-library-grid">
-          <a
-            class="strategy-library-card"
-            href="/methodology"
-            @click="handleRouteLinkClick($event, '/methodology')"
-          >
-            <span class="strategy-library-tag">Process</span>
-            <h3>Methodology</h3>
-            <p>Understand how PutPulse narrows candidates into a shortlist and how to interpret the output.</p>
-            <span class="strategy-library-link">Read the page</span>
-          </a>
-
-          <a
-            class="strategy-library-card"
-            href="/about"
-            @click="handleRouteLinkClick($event, '/about')"
-          >
-            <span class="strategy-library-tag">Company</span>
-            <h3>About</h3>
-            <p>Learn what PutPulse is built for, who it is for, and what the product is intended to help with.</p>
-            <span class="strategy-library-link">Read the page</span>
-          </a>
-
-          <a
-            class="strategy-library-card"
-            href="/contact"
-            @click="handleRouteLinkClick($event, '/contact')"
-          >
-            <span class="strategy-library-tag">Support</span>
-            <h3>Contact</h3>
-            <p>Find the support channel, what to include in product questions, and what support can actually answer.</p>
-            <span class="strategy-library-link">Read the page</span>
-          </a>
-        </div>
-      </div>
-    </section>
-
     <section class="container cta">
       <div class="cta-card">
         <h2>Ready to start generating income?</h2>
@@ -1195,15 +1149,10 @@
 
     <footer v-if="showPublicFooter" class="container site-footer">
       <div class="site-footer-links">
-        <a class="site-footer-link" href="/" @click="handleRouteLinkClick($event, '/')">Home</a>
-        <a class="site-footer-link" href="/about" @click="handleRouteLinkClick($event, '/about')">About</a>
-        <a class="site-footer-link" href="/vs-chatgpt" @click="handleRouteLinkClick($event, '/vs-chatgpt')">vs ChatGPT</a>
-        <a class="site-footer-link" href="/contact" @click="handleRouteLinkClick($event, '/contact')">Contact</a>
-        <a class="site-footer-link" href="/methodology" @click="handleRouteLinkClick($event, '/methodology')">Methodology</a>
-        <a class="site-footer-link" href="/pricing" @click="handleRouteLinkClick($event, '/pricing')">Pricing</a>
-        <a class="site-footer-link" href="/terms" @click="handleRouteLinkClick($event, '/terms')">Terms of Service</a>
-        <a class="site-footer-link" href="/privacy" @click="handleRouteLinkClick($event, '/privacy')">Privacy Policy</a>
-        <a class="site-footer-link" href="/refund-policy" @click="handleRouteLinkClick($event, '/refund-policy')">Refund Policy</a>
+        <a class="site-footer-link" href="/opt" @click="handleRouteLinkClick($event, '/opt')">Home</a>
+
+
+
         <a class="site-footer-link" href="/sign-up" @click="handleRouteLinkClick($event, '/sign-up')">Start For Free</a>
       </div>
       <p class="site-footer-disclaimer">
@@ -1309,7 +1258,7 @@
               </section>
             </div>
             <div class="ticker-panel-footer">
-              
+
             </div>
           </aside>
         </div>
@@ -1369,56 +1318,36 @@ import VerifyEmailView from './views/VerifyEmailView.vue';
 import WheelStrategyView from './views/WheelStrategyView.vue';
 import PaymentSuccessView from './views/PaymentSuccessView.vue';
 import AgentChatView from './views/AgentChatView.vue';
+import LandingView from './views/LandingView.vue';
 
 const auth = useAuthStore();
 const mobileNavBreakpoint = 768;
-const routePath = ref(window.location.pathname || '/');
+const routePath = ref(window.location.pathname.replace(/\/+$/, '') || '/');
 const isMobileMenuOpen = ref(false);
 const isAccountMenuOpen = ref(false);
 const accountMenuRef = ref(null);
 const isScreenerTabSelected = ref(false);
 const legacyRouteRedirects = new Map([
-  ['/daily-brief', '/'],
+  ['/daily-brief', '/opt'],
 ]);
 const knownRoutes = new Set([
   '/',
-  '/about',
-  '/vs-chatgpt',
-  '/pricing',
-  '/terms',
-  '/privacy',
-  '/refund-policy',
-  '/cash-secured-puts',
-  '/contact',
-  '/covered-calls',
+  '/opt',
   '/agent',
   '/dashboard',
   '/login',
-  '/methodology',
   '/profile',
   '/payment-success',
   '/settings',
   '/sign-up',
   '/verify-email',
   '/watchlist',
-  '/wheel-strategy',
 ]);
 const authRoutes = new Set(['/login', '/sign-up', '/verify-email']);
-const authBackdropRoute = ref('/');
+const authBackdropRoute = ref('/opt');
 let authOverlayScrollY = 0;
 let isAuthOverlayScrollLocked = false;
 const marketingRoutes = new Set([
-  '/about',
-  '/vs-chatgpt',
-  '/pricing',
-  '/terms',
-  '/privacy',
-  '/refund-policy',
-  '/cash-secured-puts',
-  '/contact',
-  '/covered-calls',
-  '/methodology',
-  '/wheel-strategy',
 ]);
 const dailyBriefAuthIntent = ref(false);
 const dailyBriefCtaMessage = ref('');
@@ -1435,16 +1364,16 @@ const syncRoute = () => {
     return;
   }
 
-  routePath.value = currentPath;
+  routePath.value = currentPath.replace(/\/+$/, '') || '/';
 };
 
 const navigateTo = (path, { replace = false } = {}) => {
-  const nextPath = path || '/';
+  const nextPath = path || '/opt';
   const qIndex = nextPath.indexOf('?');
   const pathname = qIndex === -1 ? nextPath : nextPath.slice(0, qIndex);
   const search = qIndex === -1 ? '' : nextPath.slice(qIndex);
-  const targetPath = knownRoutes.has(pathname) ? pathname : '/';
-  const fullTarget = targetPath === '/' ? '/' : targetPath + search;
+  const targetPath = pathname;
+  const fullTarget = targetPath + search;
   const currentPath = window.location.pathname || '/';
 
   if (currentPath === targetPath && !search) {
@@ -1459,10 +1388,11 @@ const navigateTo = (path, { replace = false } = {}) => {
 
 const PRO_INTENT_KEY = 'putpulse.pending.pro';
 
-const currentRoute = computed(() => (knownRoutes.has(routePath.value) ? routePath.value : '/'));
+const currentRoute = computed(() => (knownRoutes.has(routePath.value) ? routePath.value : '/not-found'));
+const isProtectedAgentRoute = computed(() => currentRoute.value === '/opt' || currentRoute.value === '/agent');
 const sanitizeAuthBackdropRoute = (route) => {
-  if (!route || !knownRoutes.has(route) || authRoutes.has(route)) return '/';
-  if (route === '/profile' || route === '/settings' || route === '/payment-success') return '/';
+  if (!route || route === '/' || !knownRoutes.has(route) || authRoutes.has(route)) return '/opt';
+  if (route === '/profile' || route === '/settings' || route === '/payment-success') return '/opt';
   return route;
 };
 const isAuthOverlayRoute = computed(() => authRoutes.has(currentRoute.value));
@@ -1542,7 +1472,7 @@ watch(isAuthenticated, (authenticated) => {
   }
 }, { immediate: true });
 const isStaffUser = computed(() => auth.state.user?.is_staff === true || auth.state.user?.is_superuser === true);
-const brandHomePath = computed(() => (isStaffUser.value ? '/dashboard' : '/'));
+const brandHomePath = computed(() => (isStaffUser.value ? '/dashboard' : '/opt'));
 const authDisplayName = auth.displayName;
 const deriveUserType = (user) => {
   if (!user) return 'anonymous';
@@ -1643,7 +1573,7 @@ const goHome = () => {
   clearDailyBriefAuthIntent();
   resetDailyBriefCtaFeedback();
   currentPage.value = 'home';
-  navigateTo('/', { replace: currentRoute.value !== '/' });
+  navigateTo('/opt', { replace: currentRoute.value !== '/opt' });
 };
 const goToDashboard = ({ preserveDailyBriefIntent = false } = {}) => {
   isMobileMenuOpen.value = false;
@@ -1791,13 +1721,31 @@ const showRsiColumn = ref(false);
 const currentPage = ref('home');
 const contentLastUpdated = '2026-04-01';
 const seoConfig = computed(() => {
+  if (currentRoute.value === '/not-found') {
+    return {
+      title: 'Page not found | PutPulse',
+      description: 'Page not found',
+      robots: 'noindex,follow',
+      canonicalPath: routePath.value,
+    };
+  }
+
   if (currentRoute.value === '/') {
+    return {
+      title: 'PutPulse',
+      description: 'Гривна с бутон SOS, която следи пулса, кръвното и температурата и показва къде е вашият близък.',
+      robots: 'index,follow',
+      canonicalPath: '/',
+    };
+  }
+
+  if (currentRoute.value === '/opt') {
     return {
       title: 'PutPulse Agent',
       description:
         'Use the PutPulse Agent to research setups, ask trading workflow questions, and explore option ideas from a single chat interface.',
-      robots: 'index,follow',
-      canonicalPath: '/',
+      robots: 'noindex,follow',
+      canonicalPath: '/opt',
     };
   }
 
@@ -1807,27 +1755,7 @@ const seoConfig = computed(() => {
       description:
         'Use the PutPulse Agent to research setups, ask trading workflow questions, and explore option ideas from a single chat interface.',
       robots: 'noindex,follow',
-      canonicalPath: '/',
-    };
-  }
-
-  if (currentRoute.value === '/') {
-    if (currentPage.value === 'dailyBrief') {
-      return {
-        title: 'Daily Top 3 | PutPulse',
-        description:
-          'Review today’s curated Daily Top 3 cash-secured put ideas and premium setups from PutPulse.',
-        robots: 'index,follow',
-        canonicalPath: '/',
-      };
-    }
-
-    return {
-      title: 'PutPulse | Cash-Secured Put Ideas and Wheel Strategy Insights',
-      description:
-        'Find cash-secured put-selling opportunities on fundamentally strong stocks, track monthly ROI targets, and follow a disciplined wheel strategy workflow.',
-      robots: 'index,follow',
-      canonicalPath: '/',
+      canonicalPath: '/opt',
     };
   }
 
@@ -2248,7 +2176,6 @@ const buildWheelSetup = (contract) => {
     ],
   };
 };
-
 
 const getBreakdownTone = (value, positiveThreshold, neutralThreshold = null) => {
   const number = Number(value);
@@ -3051,7 +2978,7 @@ const handleLogout = async () => {
   clearDailyBriefAuthIntent();
   resetDailyBriefCtaFeedback();
   currentPage.value = 'home';
-  navigateTo('/', { replace: true });
+  navigateTo('/opt', { replace: true });
 };
 
 const shouldHandleClientNavigation = (event) =>
@@ -3101,7 +3028,7 @@ const handleDocumentKeydown = (event) => {
 };
 
 const navigatePublicPath = (path) => {
-  if (path === '/') {
+  if (path === '/opt') {
     goHome();
     return;
   }
@@ -3132,7 +3059,7 @@ const handleRouteLinkClick = (event, path) => {
 };
 
 const handleHomeLinkClick = (event) => {
-  handleRouteLinkClick(event, '/');
+  handleRouteLinkClick(event, '/opt');
 };
 
 const handleBrandLinkClick = (event) => {
@@ -3179,7 +3106,7 @@ const ensureCanonicalLink = () => {
   return link;
 };
 
-const buildCanonicalUrl = (path) => `${siteUrl}${path === '/' ? '/' : path}`;
+const buildCanonicalUrl = (path) => `${siteUrl}${path}`;
 
 const clearRouteStructuredData = () => {
   if (typeof document === 'undefined') return;
@@ -3238,8 +3165,6 @@ onMounted(async () => {
   syncMobileMenu();
   syncRoute();
   await auth.initialize();
-  fetchDailyBriefRows();
-  fetchWeeklyIdeas();
 });
 
 onUnmounted(() => {
@@ -3250,11 +3175,17 @@ onUnmounted(() => {
   unlockAuthOverlayScroll();
 });
 
+watch([isAuthenticated, isAuthResolved], ([signedIn, resolved]) => {
+  if (!signedIn || !resolved) return;
+  void fetchDailyBriefRows();
+  void fetchWeeklyIdeas();
+}, { immediate: true });
+
 watch([currentRoute, isAuthenticated, isAuthResolved], ([route, signedIn, authResolved]) => {
   if (!authResolved) return;
 
   if (route === '/dashboard' && !isStaffUser.value) {
-    navigateTo('/', { replace: true });
+    navigateTo('/opt', { replace: true });
     return;
   }
 
@@ -3330,7 +3261,7 @@ watch(
 
 watch(currentRoute, (route) => {
   closeAccountMenu();
-  if (route !== '/' && route !== '/dashboard') {
+  if (route !== '/opt' && route !== '/dashboard') {
     isScreenerTabSelected.value = false;
   }
 });
@@ -3640,6 +3571,13 @@ watch(
 </script>
 
 <style scoped>
+.construction-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+}
+
 .app-shell {
   position: relative;
   min-height: 100vh;

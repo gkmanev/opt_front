@@ -2,7 +2,7 @@
   <section class="content-page-hero">
     <div class="container">
       <div class="content-breadcrumbs">
-        <a href="/" @click="navigateRoute($event, '/')">Home</a>
+        <a href="/opt" @click="navigateRoute($event, '/opt')">Home</a>
         <span>/</span>
         <span>Privacy Policy</span>
       </div>
@@ -49,7 +49,7 @@
           <p>
             PutPulse ("we", "us", "our") is the data controller responsible for personal data
             processed through the Service. For privacy questions or requests please use our
-            <a href="/contact" @click="navigateRoute($event, '/contact')">contact page</a>.
+            <a href="mailto:admin@putpulse.com">admin@putpulse.com</a>.
           </p>
         </article>
 
@@ -232,7 +232,7 @@
           <p>
             No method of transmission or storage is 100% secure. If you discover a security
             vulnerability, please report it responsibly via our
-            <a href="/contact" @click="navigateRoute($event, '/contact')">contact page</a>.
+            <a href="mailto:admin@putpulse.com">admin@putpulse.com</a>.
           </p>
         </article>
 
@@ -256,7 +256,7 @@
           </ul>
           <p>
             To exercise any of these rights, contact us via our
-            <a href="/contact" @click="navigateRoute($event, '/contact')">contact page</a>.
+            <a href="mailto:admin@putpulse.com">admin@putpulse.com</a>.
             We will respond within 30 days. You also have the right to lodge a complaint with
             your local data protection authority.
           </p>
@@ -285,7 +285,7 @@
           <h2>12. Contact</h2>
           <p>
             For privacy questions, data requests, or to report a concern, please use our
-            <a href="/contact" @click="navigateRoute($event, '/contact')">contact page</a>.
+            <a href="mailto:admin@putpulse.com">admin@putpulse.com</a>.
           </p>
         </article>
 

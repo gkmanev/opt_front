@@ -2,7 +2,7 @@
   <section class="content-page-hero">
     <div class="container">
       <div class="content-breadcrumbs">
-        <a href="/" @click="navigateRoute($event, '/')">Home</a>
+        <a href="/opt" @click="navigateRoute($event, '/opt')">Home</a>
         <span>/</span>
         <span>Wheel Strategy</span>
       </div>
@@ -20,7 +20,7 @@
       </div>
       <div class="content-actions">
         <a class="btn btn-primary" href="/sign-up" @click="navigateRoute($event, '/sign-up')">Start For Free</a>
-        <a class="btn btn-outline" href="/" @click="navigateRoute($event, '/')">View Today's Top</a>
+        <a class="btn btn-outline" href="/opt" @click="navigateRoute($event, '/opt')">View Today's Top</a>
       </div>
     </div>
   </section>
