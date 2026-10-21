@@ -18,7 +18,7 @@
 
     <section id="top" class="landing-hero">
       <div class="landing-hero-text">
-        <div class="landing-pill">Умна гривна за възрастни хора</div>
+        <div class="landing-pill">Сигнално устройство за възрастни хора</div>
         <h1>Спокойствие за вас.<br />Сигурност за тях.</h1>
         <p>
           Гривна с бутон SOS, която следи пулса, кръвното и температурата и показва къде е вашият близък — от всяка
@@ -98,14 +98,34 @@
       <div class="landing-contact">
         <div class="landing-contact-text">
           <h2>Бъдете до тях, дори когато не сте</h2>
-          <p>Абонамент от [ЦЕНА] на месец. Обадете ни се и ще ви помогнем с избора.</p>
         </div>
         <div class="landing-actions">
-          <a href="tel:[ТЕЛЕФОН]" class="landing-btn landing-btn--primary">[ТЕЛЕФОН]</a>
-          <a href="mailto:[ИМЕЙЛ]" class="landing-btn landing-btn--dark-outline">Пишете ни</a>
+          <button type="button" class="landing-btn landing-btn--primary" @click="openContact">Пишете ни</button>
         </div>
       </div>
     </section>
+
+    <div v-if="isContactOpen" class="landing-modal-backdrop" @click.self="closeContact">
+      <div class="landing-modal" role="dialog" aria-modal="true" aria-labelledby="landing-modal-title">
+        <button type="button" class="landing-modal-close" aria-label="Затвори" @click="closeContact">×</button>
+        <h2 id="landing-modal-title">Пишете ни</h2>
+        <form class="landing-form" @submit.prevent="sendMessage">
+          <label class="landing-field">
+            <span>Име</span>
+            <input ref="nameInput" v-model.trim="form.name" type="text" autocomplete="name" required />
+          </label>
+          <label class="landing-field">
+            <span>Email</span>
+            <input v-model.trim="form.email" type="email" autocomplete="email" required />
+          </label>
+          <label class="landing-field">
+            <span>Коментар</span>
+            <textarea v-model.trim="form.comment" rows="5" required></textarea>
+          </label>
+          <button type="submit" class="landing-btn landing-btn--primary">Изпрати</button>
+        </form>
+      </div>
+    </div>
 
     <footer class="landing-footer">
       <div>
@@ -117,9 +137,42 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 
 const accent = '#C4500E';
+const contactEmail = 'office@putpulse.com';
+
+const isContactOpen = ref(false);
+const nameInput = ref(null);
+const form = reactive({ name: '', email: '', comment: '' });
+
+const openContact = async () => {
+  isContactOpen.value = true;
+  await nextTick();
+  nameInput.value?.focus();
+};
+
+const closeContact = () => {
+  isContactOpen.value = false;
+};
+
+const sendMessage = () => {
+  const subject = `Запитване от ${form.name}`;
+  const body = `Име: ${form.name}\nEmail: ${form.email}\n\n${form.comment}`;
+  window.location.href = `mailto:${contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  form.name = '';
+  form.email = '';
+  form.comment = '';
+  closeContact();
+};
+
+const handleKeydown = (event) => {
+  if (event.key === 'Escape' && isContactOpen.value) closeContact();
+};
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown);
+});
 
 const features = [
   {
@@ -151,6 +204,7 @@ const steps = [
 ];
 
 onMounted(() => {
+  window.addEventListener('keydown', handleKeydown);
   if (document.querySelector('link[data-landing-font]')) return;
   const link = document.createElement('link');
   link.rel = 'stylesheet';
@@ -304,6 +358,100 @@ onMounted(() => {
   background: #c4500e;
   color: #ffffff;
   font-weight: 700;
+}
+
+.landing button.landing-btn {
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.landing button.landing-btn--primary:hover {
+  background: #9a3d08;
+}
+
+.landing-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(30, 30, 30, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.landing-modal {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  background: #fbf8f4;
+  border-radius: 24px;
+  padding: 40px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+.landing .landing-modal h2 {
+  font-size: 28px;
+}
+
+.landing-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: #f1ebe3;
+  color: #1e1e1e;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.landing-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.landing-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.landing-field input,
+.landing-field textarea {
+  font: inherit;
+  font-weight: 400;
+  font-size: 17px;
+  color: #1e1e1e;
+  background: #ffffff;
+  border: 1.5px solid #d9d3cb;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.landing-field textarea {
+  resize: vertical;
+}
+
+.landing-field input:focus,
+.landing-field textarea:focus {
+  outline: none;
+  border-color: #c4500e;
+}
+
+.landing-form .landing-btn {
+  margin-top: 8px;
+  align-self: flex-start;
 }
 
 .landing .landing-btn--outline {
