@@ -15,10 +15,50 @@ const lastModified = '2026-04-11';
 const marketingPages = [
   {
     path: '/',
-    title: 'PutPulse | Under construction',
-    description: 'Under construction',
-    appHtml: '<main class="construction-page" style="min-height:100vh;display:grid;place-items:center;font-size:1.5rem">Under construction</main>',
-    structuredData: [],
+    lang: 'bg',
+    title: 'PutPulse | Сигнална гривна с бутон SOS за възрастни хора',
+    description:
+      'Гривна с бутон SOS, която следи пулса, кръвното и температурата и показва къде е вашият близък. 422 € с включен 1 год. абонамент.',
+    appHtml: `
+      <main>
+        <h1>Спокойствие за вас. Сигурност за тях.</h1>
+        <p>Сигнално устройство за възрастни хора: гривна с бутон SOS, която следи пулса, кръвното и температурата и показва къде е вашият близък — от всяка точка на света.</p>
+        <h2>Какво прави гривната</h2>
+        <ul>
+          <li><strong>Бутон SOS</strong> — едно натискане и вие получавате сигнал и обаждане.</li>
+          <li><strong>Пулс и кръвно</strong> — автоматично измерване всеки ден, без нужда от действие.</li>
+          <li><strong>Температура</strong> — следите показателите в уеб платформата по всяко време.</li>
+          <li><strong>Местоположение</strong> — виждате на картата къде е вашият близък.</li>
+        </ul>
+        <h2>Как работи</h2>
+        <ol>
+          <li><strong>Гривната</strong> — носи се като часовник. Измерва показателите и изпраща сигнал при нужда.</li>
+          <li><strong>Уеб платформата</strong> — от телефон или компютър виждате данните и получавате известия.</li>
+          <li><strong>Социален асистент</strong> — по желание, редовни посещения у дома от наш асистент.</li>
+        </ol>
+        <h2>Бъдете до тях, дори когато не сте</h2>
+        <p>Цена: 422 € с включен 1 год. абонамент.</p>
+        <p>Контакти: <a href="mailto:office@putpulse.com">office@putpulse.com</a></p>
+      </main>
+    `,
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: 'PutPulse сигнална гривна с бутон SOS',
+        description:
+          'Гривна с бутон SOS за възрастни хора, която следи пулса, кръвното и температурата и показва местоположението.',
+        brand: {
+          '@id': `${siteUrl}/#organization`,
+        },
+        offers: {
+          '@type': 'Offer',
+          price: '422',
+          priceCurrency: 'EUR',
+          url: `${siteUrl}/`,
+        },
+      },
+    ],
   },
   {
     path: '/opt',
@@ -293,6 +333,7 @@ const buildPageHtml = (template, page) => {
   const canonicalUrl = buildCanonicalUrl(page.path);
   let html = template;
 
+  if (page.lang) html = html.replace(/<html lang="[^"]*">/i, `<html lang="${page.lang}">`);
   html = replaceTitle(html, page.title);
   html = replaceMetaTag(html, 'name', 'description', page.description);
   html = replaceMetaTag(html, 'name', 'robots', page.robots ?? 'index,follow');

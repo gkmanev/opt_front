@@ -1732,7 +1732,7 @@ const seoConfig = computed(() => {
 
   if (currentRoute.value === '/') {
     return {
-      title: 'PutPulse',
+      title: 'PutPulse | Сигнална гривна с бутон SOS за възрастни хора',
       description: 'Гривна с бутон SOS, която следи пулса, кръвното и температурата и показва къде е вашият близък.',
       robots: 'index,follow',
       canonicalPath: '/',
