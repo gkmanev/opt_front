@@ -12,7 +12,7 @@
         <a href="#features">Функции</a>
         <a href="#how">Как работи</a>
         <a href="#contact">Контакти</a>
-        <a href="#contact" class="landing-nav-cta">Поръчай</a>
+        <a href="#contact" class="landing-nav-cta" @click.prevent="openOrder">Поръчай</a>
       </nav>
     </header>
 
@@ -25,7 +25,6 @@
           точка на света.
         </p>
         <div class="landing-actions">
-          <a href="#contact" class="landing-btn landing-btn--primary">Поръчай гривна</a>
           <a href="#how" class="landing-btn landing-btn--outline">Как работи</a>
         </div>
       </div>
@@ -75,6 +74,10 @@
       <div class="landing-contact">
         <div class="landing-contact-text">
           <h2>Бъдете до тях, дори когато не сте</h2>
+          <div class="landing-price">
+            <span class="landing-price-value">422 €</span>
+            <span class="landing-price-note">с включен 1 год. абонамент</span>
+          </div>
         </div>
         <div class="landing-actions">
           <button type="button" class="landing-btn landing-btn--primary" @click="openContact">Пишете ни</button>
@@ -104,6 +107,55 @@
       </div>
     </div>
 
+    <div v-if="isOrderOpen" class="landing-modal-backdrop" @click.self="closeOrder">
+      <div class="landing-modal" role="dialog" aria-modal="true" aria-labelledby="landing-order-title">
+        <button type="button" class="landing-modal-close" aria-label="Затвори" @click="closeOrder">×</button>
+        <div class="landing-modal-head">
+          <h2 id="landing-order-title">Поръчка</h2>
+          <p>{{ unitPrice }} € на брой, с включен 1 год. абонамент</p>
+        </div>
+        <form class="landing-form" @submit.prevent="sendOrder">
+          <label class="landing-field">
+            <span>Име и фамилия</span>
+            <input ref="orderNameInput" v-model.trim="order.name" type="text" autocomplete="name" required />
+          </label>
+          <div class="landing-field-row">
+            <label class="landing-field">
+              <span>Телефон</span>
+              <input v-model.trim="order.phone" type="tel" autocomplete="tel" required />
+            </label>
+            <label class="landing-field">
+              <span>Email</span>
+              <input v-model.trim="order.email" type="email" autocomplete="email" required />
+            </label>
+          </div>
+          <div class="landing-field-row">
+            <label class="landing-field">
+              <span>Град</span>
+              <input v-model.trim="order.city" type="text" autocomplete="address-level2" required />
+            </label>
+            <label class="landing-field">
+              <span>Брой</span>
+              <input v-model.number="order.quantity" type="number" min="1" max="20" required />
+            </label>
+          </div>
+          <label class="landing-field">
+            <span>Адрес за доставка</span>
+            <input v-model.trim="order.address" type="text" autocomplete="street-address" required />
+          </label>
+          <label class="landing-field">
+            <span>Бележка (по желание)</span>
+            <textarea v-model.trim="order.note" rows="3"></textarea>
+          </label>
+          <div class="landing-order-total">
+            <span>Общо</span>
+            <strong>{{ orderTotal }} €</strong>
+          </div>
+          <button type="submit" class="landing-btn landing-btn--primary">Изпрати поръчката</button>
+        </form>
+      </div>
+    </div>
+
     <footer class="landing-footer">
       <div>
         <span>© 2026 PutPulse · ЕджСинк Системс ООД</span>
@@ -114,7 +166,7 @@
 </template>
 
 <script setup>
-import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
 
 import braceletImage from '../assets/sos-bracelet.png';
 
@@ -145,8 +197,44 @@ const sendMessage = () => {
   closeContact();
 };
 
+const unitPrice = 422;
+const isOrderOpen = ref(false);
+const orderNameInput = ref(null);
+const emptyOrder = () => ({ name: '', phone: '', email: '', city: '', address: '', quantity: 1, note: '' });
+const order = reactive(emptyOrder());
+const orderTotal = computed(() => unitPrice * (Number(order.quantity) > 0 ? Number(order.quantity) : 1));
+
+const openOrder = async () => {
+  isOrderOpen.value = true;
+  await nextTick();
+  orderNameInput.value?.focus();
+};
+
+const closeOrder = () => {
+  isOrderOpen.value = false;
+};
+
+const sendOrder = () => {
+  const subject = `Поръчка от ${order.name}`;
+  const body = [
+    `Име: ${order.name}`,
+    `Телефон: ${order.phone}`,
+    `Email: ${order.email}`,
+    `Град: ${order.city}`,
+    `Адрес: ${order.address}`,
+    `Брой: ${order.quantity}`,
+    `Общо: ${orderTotal.value} €`,
+    order.note ? `\nБележка: ${order.note}` : '',
+  ].join('\n');
+  window.location.href = `mailto:${contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  Object.assign(order, emptyOrder());
+  closeOrder();
+};
+
 const handleKeydown = (event) => {
-  if (event.key === 'Escape' && isContactOpen.value) closeContact();
+  if (event.key !== 'Escape') return;
+  closeContact();
+  closeOrder();
 };
 
 onUnmounted(() => {
@@ -428,6 +516,42 @@ onMounted(() => {
   border-color: #c4500e;
 }
 
+.landing-modal {
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.landing-modal-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.landing-modal-head p {
+  font-size: 16px;
+  color: #5c5a57;
+}
+
+.landing-field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.landing-order-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: 16px;
+  border-top: 1px solid #ede7df;
+  font-size: 17px;
+}
+
+.landing-order-total strong {
+  font-size: 26px;
+  font-weight: 800;
+}
+
 .landing-form .landing-btn {
   margin-top: 8px;
   align-self: flex-start;
@@ -552,6 +676,25 @@ onMounted(() => {
 .landing-contact-text p {
   font-size: 18px;
   line-height: 1.55;
+  color: #cfcac4;
+}
+
+.landing-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.landing-price-value {
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.landing-price-note {
+  font-size: 18px;
   color: #cfcac4;
 }
 
