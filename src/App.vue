@@ -1,5 +1,5 @@
 <template>
-  <LandingView v-if="currentRoute === '/'" />
+  <component :is="LandingView" v-if="currentRoute === '/'" />
   <main v-else-if="currentRoute === '/not-found'" class="construction-page">Page not found</main>
   <main v-else-if="isProtectedAgentRoute && !isAuthResolved" class="construction-page" role="status">Checking session...</main>
   <LoginView
@@ -1318,7 +1318,11 @@ import VerifyEmailView from './views/VerifyEmailView.vue';
 import WheelStrategyView from './views/WheelStrategyView.vue';
 import PaymentSuccessView from './views/PaymentSuccessView.vue';
 import AgentChatView from './views/AgentChatView.vue';
-import LandingView from './views/LandingView.vue';
+import PutPulseLandingView from './views/LandingView.vue';
+import ProTraidLandingView from './views/LandingViewProTraid.vue';
+
+const isProTraidSite = String(import.meta.env.VITE_LANDING ?? '').trim().toLowerCase() === 'protraid';
+const LandingView = isProTraidSite ? ProTraidLandingView : PutPulseLandingView;
 
 const auth = useAuthStore();
 const mobileNavBreakpoint = 768;
@@ -1732,7 +1736,7 @@ const seoConfig = computed(() => {
 
   if (currentRoute.value === '/') {
     return {
-      title: 'PutPulse | Сигнална гривна с бутон SOS за възрастни хора',
+      title: `${isProTraidSite ? 'ProTraid Band' : 'PutPulse'} | Сигнална гривна с бутон SOS за възрастни хора`,
       description: 'Гривна с бутон SOS, която следи пулса, кръвното и температурата и показва къде е вашият близък.',
       robots: 'index,follow',
       canonicalPath: '/',

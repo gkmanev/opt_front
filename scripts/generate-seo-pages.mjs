@@ -8,7 +8,10 @@ const projectRoot = path.resolve(__dirname, '..');
 const distDir = path.join(projectRoot, 'dist');
 const indexHtmlPath = path.join(distDir, 'index.html');
 
-const siteUrl = 'https://putpulse.com';
+const isProTraidSite = String(process.env.VITE_LANDING ?? '').trim().toLowerCase() === 'protraid';
+const landingBrand = isProTraidSite ? 'ProTraid Band' : 'PutPulse';
+const landingEmail = isProTraidSite ? 'office@protraidband.com' : 'office@putpulse.com';
+const siteUrl = String(process.env.VITE_SITE_URL ?? '').trim().replace(/\/+$/, '') || 'https://putpulse.com';
 const socialImageUrl = `${siteUrl}/putpulse-dot.svg`;
 const lastModified = '2026-04-11';
 
@@ -16,7 +19,7 @@ const marketingPages = [
   {
     path: '/',
     lang: 'bg',
-    title: 'PutPulse | Сигнална гривна с бутон SOS за възрастни хора',
+    title: `${landingBrand} | Сигнална гривна с бутон SOS за възрастни хора`,
     description:
       'Гривна с бутон SOS, която следи пулса, кръвното и температурата и показва къде е вашият близък. 422 € с включен 1 год. абонамент.',
     appHtml: `
@@ -38,14 +41,14 @@ const marketingPages = [
         </ol>
         <h2>Бъдете до тях, дори когато не сте</h2>
         <p>Цена: 422 € с включен 1 год. абонамент.</p>
-        <p>Контакти: <a href="mailto:office@putpulse.com">office@putpulse.com</a></p>
+        <p>Контакти: <a href="mailto:${landingEmail}">${landingEmail}</a></p>
       </main>
     `,
     structuredData: [
       {
         '@context': 'https://schema.org',
         '@type': 'Product',
-        name: 'PutPulse сигнална гривна с бутон SOS',
+        name: `${landingBrand} сигнална гривна с бутон SOS`,
         description:
           'Гривна с бутон SOS за възрастни хора, която следи пулса, кръвното и температурата и показва местоположението.',
         brand: {
